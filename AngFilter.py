@@ -1,4 +1,6 @@
 import os
+from math import pi
+
 import pandas as pd
 
 import main
@@ -11,23 +13,24 @@ def is_timely(hour):
         return False
 
 
-def is_suitable(file):
+def is_elevated(file, max_elevation):
     col = ['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph']
     df = pd.read_csv(file, sep=' ', names=col, index_col=None, skipinitialspace=True, skiprows=16)
-    if df["Um"].max() > 1.0472:
+    if df["Um"].max() > max_elevation:
         return True
     else:
         return False
 
 
 def filter_1st(src_path, dst_path):
+    max_elevation = 60 * pi / 180
     for file in os.listdir(dst_path):
         os.remove(os.path.join(dst_path, file))
     for file in os.listdir(src_path):
-        splitted_filename = file.split("_")
-        hour = int(splitted_filename[2][0:2])
+        splited_filename = file.split("_")
+        hour = int(splited_filename[2][0:2])
         if is_timely(hour):
-            if is_suitable(os.path.join(src_path, file)):
+            if is_elevated(os.path.join(src_path, file), max_elevation):
                 os.system("copy " + os.path.join(src_path, file) + " " + os.path.join(dst_path, ""))
 
 
