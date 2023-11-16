@@ -31,13 +31,13 @@ class AngViewer:
                                                         'black', 'purple', 'pink', 'brown', 'orange', 'teal',
                                                         'coral', 'lightblue', 'lime', 'lavender', 'turquoise',
                                                         'darkgreen', 'tan', 'salmon', 'gold'])
-    plt.ylabel("Elevation")
+    plt.ylabel("Ανύψωση")
     ax = plt.gca()
     date_form = DateFormatter("%H:%M:%S")
     ax.xaxis.set_major_formatter(date_form)
-
+    ax.set_title("Περάσματα δορυφόρων")
     def draw_ang(self, df, sat_number):
-        df.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False)
+        df.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Χρόνος")
         middle_time = df["Time"].min() + (df["Time"].max() - df["Time"].min()) / 2
         ann = sat_number + "(" + str(df["Distance"].min())[0:3] + ")"
         self.ax.annotate(ann, xy=(middle_time, df["Um"].max()),
@@ -57,8 +57,8 @@ if __name__ == '__main__':
     first_stage_path = check_dirs('ANG1')
     second_stage_path = check_dirs('ANGfinal')
     smart_stage_path = check_dirs('ANGsmart')
-    AngFilter.filter_1st(src_path, first_stage_path)
-    AngFilter.filter_2nd(first_stage_path, second_stage_path)
-    AngFilter.filter_smart(src_path, smart_stage_path)
+    # AngFilter.filter_1st(src_path, first_stage_path)
+    # AngFilter.filter_2nd(first_stage_path, second_stage_path)
+    # AngFilter.filter_smart(src_path, smart_stage_path)
     app = AngViewer()
     app.run(smart_stage_path)
