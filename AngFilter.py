@@ -42,7 +42,6 @@ def filter_2nd(src_path, dst_path):
     for file in os.listdir(src_path):
         dt_str = file.split("_")[1] + file.split("_")[2][0:4]
         dt_int = int(dt_str)
-        # dt = pd.to_datetime(dt_str, format="%Y%m%d%H%M%S")
         df.loc[len(df)] = {"dt": dt_int, "file": file}
     df = df.sort_values(by="dt")
     counter = 0
@@ -55,8 +54,7 @@ def filter_2nd(src_path, dst_path):
         counter += 1
 
 
-def filter_smart(src_path, dst_path):
-    min_distance = 400000
+def filter_by_distance(src_path, dst_path, min_distance=400000):
     for file in os.listdir(dst_path):
         os.remove(os.path.join(dst_path, file))
     for file in os.listdir(src_path):
