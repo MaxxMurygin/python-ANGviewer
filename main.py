@@ -67,7 +67,8 @@ class AngViewer:
     def draw_ang(self, df, sat_number):
         df.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time")
         middle_time = df["Time"].min() + (df["Time"].max() - df["Time"].min()) / 2
-        ann = sat_number + "(" + str(df["Distance"].min())[0:3] + ")"
+        min_distance = str(df["Distance"].min() / 1000).split(".")[0]
+        ann = sat_number + "(" + min_distance + ")"
         self.ax.annotate(ann, xy=(middle_time, df["Um"].max()),
                          xytext=(-15, 15), textcoords='offset points',
                          arrowprops={'arrowstyle': '->'})
@@ -85,8 +86,8 @@ if __name__ == '__main__':
     first_stage_path = check_dirs('ANG1')
     second_stage_path = check_dirs('ANGfinal')
     smart_stage_path = check_dirs('ANGsmart')
-    AngFilter.filter_1st(src_path, first_stage_path)
-    AngFilter.filter_2nd(first_stage_path, second_stage_path)
-    AngFilter.filter_by_distance(src_path, smart_stage_path)
+    # AngFilter.filter_1st(src_path, first_stage_path)
+    # AngFilter.filter_2nd(first_stage_path, second_stage_path)
+    # AngFilter.filter_by_distance(src_path, smart_stage_path)
     app = AngViewer()
-    app.run(second_stage_path)
+    app.run(src_path)
