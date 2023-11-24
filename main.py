@@ -1,12 +1,12 @@
 import os
 from math import pi
 
+import matplotlib
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
 import AngFilter
-
 
 def read_ang(file):
     col = ['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph']
@@ -57,8 +57,8 @@ if __name__ == '__main__':
     first_stage_path = check_dirs('ANG1')
     second_stage_path = check_dirs('ANGfinal')
     smart_stage_path = check_dirs('ANGsmart')
-    # AngFilter.filter_1st(src_path, first_stage_path)
-    # AngFilter.filter_2nd(first_stage_path, second_stage_path)
-    # AngFilter.filter_smart(src_path, smart_stage_path)
+    AngFilter.filter_1st(src_path, first_stage_path)
+    AngFilter.filter_2nd(first_stage_path, second_stage_path)
+    AngFilter.filter_smart(src_path, smart_stage_path)
     app = AngViewer()
     app.run(smart_stage_path)
