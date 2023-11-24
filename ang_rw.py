@@ -1,5 +1,6 @@
 from math import pi
 import pandas as pd
+from sgp4.model import Satrec
 
 
 def get_date_from_ang(file):
@@ -38,10 +39,25 @@ def read_ang(file):
     df['Um'] = df['Um'] * 180 / pi
     return df
 
-def write(arr, file):
+
+def write_ang(arr, file):
     with open(file, "w") as f:
         for row in arr:
             f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}"
                     "{:>24.16f}{:>11.3f}\n".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
 
 
+def read_tle(file):
+    sats = dict()
+    with open(file, 'r') as file:
+        for line in file:
+            line = line.rstrip()
+            if line[0] == "0":
+                sat_name = line[2:].lower().replace(" ", "")
+            elif line[0] == "1":
+                s = line
+            elif line[0] == "2":
+                t = line
+                satellite = Satrec.twoline2rv(s, t)
+                sats[sat_name] = satellite
+    return sats

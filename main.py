@@ -3,7 +3,6 @@ from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
 import TLE_to_CPF
-import TLE_to_STR
 from ang_rw import read_ang
 import AngFilter
 
@@ -58,7 +57,6 @@ if __name__ == '__main__':
     # AngFilter.base_filter(src_path, first_stage_path, max_elevation)
     # AngFilter.thin_out(first_stage_path, second_stage_path, sieve)
     # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
-    app = AngViewer()
-    app.run(cpf)
-    # TLE_to_STR.tle_to_str(tle_file)
-    # TLE_to_CPF.tle_to_ang(tle_file)
+    # app = AngViewer()
+    # app.run(cpf)
+    TLE_to_CPF.tle_to_ang(tle_file)
