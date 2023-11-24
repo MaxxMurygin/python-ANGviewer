@@ -1,13 +1,19 @@
 import os
+import time
 from datetime import timedelta, datetime
 
-import sgp4.model
+import pandas as pd
 from sgp4.api import Satrec
 from sgp4.api import jday
 from sgp4.conveniences import sat_epoch_datetime
 from skyfield.api import EarthSatellite, load
 from skyfield.toposlib import wgs84
+from skyfield.api import utc
 
+import ang_rw
+
+# python -m jplephem excerpt 2023/1/1 2023/12/31 "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/
+# a_old_versions/de421.bsp" "de421.bsp"
 
 def read_tle(file):
     sats = dict()
@@ -27,35 +33,52 @@ def read_tle(file):
                 # print(satellite)
     return sats
 
-def write_cpf(name, sat):
-    eph = load('de421.bsp')
+
+def calc_ang(name, sat):
+    step = 1
+    horizon = 10
+    arr = []
+    eph = load('de440s.bsp')
     ts = load.timescale()
+    dt_begin = datetime(2023, 11, 24, 3, 0, 0, 0, tzinfo=utc)
+    t_begin = ts.from_datetime(dt_begin)
+    t_begin_in_sec = dt_begin.hour * 3600 + dt_begin.minute * 60 + dt_begin.second + dt_begin.microsecond / 1000000
+    dt_end = datetime(2023, 11, 24, 4, 30, 0, 0, tzinfo=utc)
+    # t_end = ts.from_datetime(dt_end)
+    iter_count = int((dt_end - dt_begin).seconds / step)
+    sunlit = 0.0
     file_name = name + "_" + str(231123) + ".ang"
     file_name = os.path.join(os.getcwd(), "CPF", file_name)
     lat = 51.3439072
     lon = 82.1771946
     height = 371.081
-    t = ts.now()
+    col = ['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph']
+    df = pd.DataFrame(columns=col)
     aolc = wgs84.latlon(lat, lon, height)
     ts = load.timescale()
     satellite = EarthSatellite.from_satrec(sat, ts)
     satellite.name = name
     difference = satellite - aolc
-    topocentric = difference.at(t)
-    print(name)
-    print(topocentric.position.km)
-    alt, az, distance = topocentric.altaz()
-    ra, dec, distance = topocentric.radec()
-    sunlit = satellite.at(t).is_sunlit(eph)
+    t_current = t_begin
+    t_current_in_sec = t_begin_in_sec + 10800
+    perf_start = datetime.now()
+    for i in range(0, iter_count, step):
+        topocentric = difference.at(t_current)
+        alt, az, distance = topocentric.altaz()
+        ra, dec, distance = topocentric.radec()
+        if alt.degrees > horizon:
+            if satellite.at(t_current).is_sunlit(eph):
+                sunlit = 1.0
+            else:
+                sunlit = 0.0
+            moment = [t_current_in_sec, distance.m, az.radians, alt.radians, ra.radians, dec.radians, sunlit]
+            arr.append(moment)
 
-    # if alt.degrees > 0:
-    #     print('The ISS is above the horizon')
-    print('Altitude:', alt)
-    print('Azimuth:', az)
-    print('Distance: {:.1f} km'.format(distance.km))
-    print("RA: ", ra)
-    print("DEC: ", dec)
-    print('Sunlight:', sunlit)
+        t_current = t_current + timedelta(seconds=step)
+        t_current_in_sec = t_current_in_sec + step
+    perf = datetime.now() - perf_start
+    print("{} sec".format(perf.seconds + perf.microseconds / 1000000))
+    ang_rw.write(arr, file_name)
 
 
 def write_cpf_sgp4(name, sat):
@@ -84,7 +107,7 @@ def write_cpf_sgp4(name, sat):
         f.write("99")
 
 
-def tle_to_cpf(file):
+def tle_to_ang(file):
     satellites = read_tle(file)
     for name in satellites.keys():
-        write_cpf(name, satellites[name])
+        calc_ang(name, satellites[name])

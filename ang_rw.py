@@ -37,3 +37,11 @@ def read_ang(file):
     df['Az'] = df['Az'] * 180 / pi
     df['Um'] = df['Um'] * 180 / pi
     return df
+
+def write(arr, file):
+    with open(file, "w") as f:
+        for row in arr:
+            f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}"
+                    "{:>24.16f}{:>11.3f}\n".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+
+

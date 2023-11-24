@@ -4,7 +4,7 @@ from matplotlib.dates import DateFormatter
 
 import TLE_to_CPF
 import TLE_to_STR
-from AngReader import read_ang
+from ang_rw import read_ang
 import AngFilter
 
 
@@ -60,4 +60,4 @@ if __name__ == '__main__':
     # app = AngViewer()
     # app.run(smart_stage_path)
     # TLE_to_STR.tle_to_str(tle_file)
-    TLE_to_CPF.tle_to_cpf(tle_file)
+    TLE_to_CPF.tle_to_ang(tle_file)
