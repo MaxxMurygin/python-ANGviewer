@@ -49,6 +49,7 @@ if __name__ == '__main__':
     first_stage_path = check_dirs('ANG1')           # Базовый фильтр
     second_stage_path = check_dirs('ANGfinal')      # Прореживание
     smart_stage_path = check_dirs('ANGsmart')       # Фильтрация по расстоянию
+    cpf = check_dirs('CPF')
 
     max_elevation = 60                              # Фильтр по УМ
     sieve = 5                                      # Прореживание
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     # AngFilter.base_filter(src_path, first_stage_path, max_elevation)
     # AngFilter.thin_out(first_stage_path, second_stage_path, sieve)
     # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
-    # app = AngViewer()
-    # app.run(smart_stage_path)
+    app = AngViewer()
+    app.run(cpf)
     # TLE_to_STR.tle_to_str(tle_file)
-    TLE_to_CPF.tle_to_ang(tle_file)
+    # TLE_to_CPF.tle_to_ang(tle_file)
