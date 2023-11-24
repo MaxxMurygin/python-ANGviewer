@@ -1,9 +1,6 @@
 import os
-from math import pi
-
 import pandas as pd
-
-import main
+from ang_rw import read_ang
 
 
 def is_timely(hour):
@@ -14,16 +11,14 @@ def is_timely(hour):
 
 
 def is_elevated(file, max_elevation):
-    col = ['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph']
-    df = pd.read_csv(file, sep=' ', names=col, index_col=None, skipinitialspace=True, skiprows=16)
+    df = read_ang(file)
     if df["Um"].max() > max_elevation:
         return True
     else:
         return False
 
 
-def filter_1st(src_path, dst_path):
-    max_elevation = 60 * pi / 180
+def base_filter(src_path, dst_path, max_elevation=60):
     for file in os.listdir(dst_path):
         os.remove(os.path.join(dst_path, file))
     for file in os.listdir(src_path):
@@ -34,20 +29,18 @@ def filter_1st(src_path, dst_path):
                 os.system("copy " + os.path.join(src_path, file) + " " + os.path.join(dst_path, ""))
 
 
-def filter_2nd(src_path, dst_path):
-    dropped_ang = 10
+def thin_out(src_path, dst_path, sieve=10):
     for file in os.listdir(dst_path):
         os.remove(os.path.join(dst_path, file))
     df = pd.DataFrame(columns=["dt", "file"])
     for file in os.listdir(src_path):
         dt_str = file.split("_")[1] + file.split("_")[2][0:4]
         dt_int = int(dt_str)
-        # dt = pd.to_datetime(dt_str, format="%Y%m%d%H%M%S")
         df.loc[len(df)] = {"dt": dt_int, "file": file}
     df = df.sort_values(by="dt")
     counter = 0
     for index, row in df.iterrows():
-        if counter == dropped_ang:
+        if counter == sieve:
             counter = 0
             file_name = row["file"]
             os.system("copy " + os.path.join(src_path, file_name) + " " + os.path.join(dst_path, ""))
@@ -55,11 +48,10 @@ def filter_2nd(src_path, dst_path):
         counter += 1
 
 
-def filter_smart(src_path, dst_path):
-    min_distance = 400000
+def filter_by_distance(src_path, dst_path, min_distance=400000):
     for file in os.listdir(dst_path):
         os.remove(os.path.join(dst_path, file))
     for file in os.listdir(src_path):
-        df = main.read_ang(os.path.join(src_path, file))
+        df = read_ang(os.path.join(src_path, file))
         if float(df["Distance"].min()) <= min_distance:
             os.system("copy " + os.path.join(src_path, file) + " " + os.path.join(dst_path, ""))

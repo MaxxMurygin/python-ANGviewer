@@ -1,21 +1,11 @@
 import os
-from math import pi
-
-import matplotlib
-import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
+import TLE_to_CPF
+import TLE_to_STR
+from ang_rw import read_ang
 import AngFilter
-
-def read_ang(file):
-    col = ['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph']
-    df = pd.read_csv(file, sep=' ', names=col, index_col=None, skipinitialspace=True, skiprows=16)
-    splited_filename = file.split("_")[1]
-    df['Time'] = pd.to_datetime(splited_filename, format="%Y%m%d") + pd.to_timedelta(df['Time'], unit='s')
-    df['Az'] = df['Az'] * 180 / pi
-    df['Um'] = df['Um'] * 180 / pi
-    return df
 
 
 def check_dirs(directory):
@@ -31,15 +21,16 @@ class AngViewer:
                                                         'black', 'purple', 'pink', 'brown', 'orange', 'teal',
                                                         'coral', 'lightblue', 'lime', 'lavender', 'turquoise',
                                                         'darkgreen', 'tan', 'salmon', 'gold'])
-    plt.ylabel("Ανύψωση")
+    plt.ylabel("Elevation")
     ax = plt.gca()
     date_form = DateFormatter("%H:%M:%S")
     ax.xaxis.set_major_formatter(date_form)
-    ax.set_title("Περάσματα δορυφόρων")
+
     def draw_ang(self, df, sat_number):
-        df.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Χρόνος")
+        df.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time")
         middle_time = df["Time"].min() + (df["Time"].max() - df["Time"].min()) / 2
-        ann = sat_number + "(" + str(df["Distance"].min())[0:3] + ")"
+        min_distance = str(df["Distance"].min() / 1000).split(".")[0]
+        ann = sat_number + "(" + min_distance + ")"
         self.ax.annotate(ann, xy=(middle_time, df["Um"].max()),
                          xytext=(-15, 15), textcoords='offset points',
                          arrowprops={'arrowstyle': '->'})
@@ -53,12 +44,21 @@ class AngViewer:
 
 
 if __name__ == '__main__':
-    src_path = check_dirs('ANGsrc')
-    first_stage_path = check_dirs('ANG1')
-    second_stage_path = check_dirs('ANGfinal')
-    smart_stage_path = check_dirs('ANGsmart')
-    AngFilter.filter_1st(src_path, first_stage_path)
-    AngFilter.filter_2nd(first_stage_path, second_stage_path)
-    AngFilter.filter_smart(src_path, smart_stage_path)
+    tle_file = os.path.join(check_dirs("TLE"), "tle.tle")
+    src_path = check_dirs('ANGsrc')                 # Источник
+    first_stage_path = check_dirs('ANG1')           # Базовый фильтр
+    second_stage_path = check_dirs('ANGfinal')      # Прореживание
+    smart_stage_path = check_dirs('ANGsmart')       # Фильтрация по расстоянию
+    cpf = check_dirs('CPF')
+
+    max_elevation = 60                              # Фильтр по УМ
+    sieve = 5                                      # Прореживание
+    min_distance = 800000                           # Фильтрация по расстоянию
+
+    # AngFilter.base_filter(src_path, first_stage_path, max_elevation)
+    # AngFilter.thin_out(first_stage_path, second_stage_path, sieve)
+    # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
     app = AngViewer()
-    app.run(smart_stage_path)
+    app.run(cpf)
+    # TLE_to_STR.tle_to_str(tle_file)
+    # TLE_to_CPF.tle_to_ang(tle_file)
