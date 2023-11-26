@@ -2,7 +2,7 @@ import os
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
-import TLE_to_CPF
+import TLE_to_ANG
 from ang_rw import read_ang
 import AngFilter
 
@@ -59,4 +59,4 @@ if __name__ == '__main__':
     # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
     # app = AngViewer()
     # app.run(cpf)
-    TLE_to_CPF.tle_to_ang(tle_file)
+    TLE_to_ANG.tle_to_ang(tle_file)
