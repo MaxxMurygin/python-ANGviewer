@@ -2,8 +2,9 @@ import os
 from datetime import timedelta, datetime
 
 import pandas
+import pandas as pd
 from skyfield.api import EarthSatellite, load
-from skyfield.api import utc
+
 from skyfield.toposlib import wgs84
 from math import pi
 import ang_rw
@@ -21,66 +22,96 @@ def rotate(angles):
             rotated.append(angle - pi)
     return rotated
 
-def calc_ang(name, sat):
-    slow_step = 1
-    fast_step = 10
-    horizon = 10
+
+def corrent_midnight(times):
+    corr_times = []
+    for time in times:
+        if time > 86400:
+            corr_times.append(time - 86400)
+        else:
+            corr_times.append(time)
+
+    return corr_times
+
+
+def find_events(dt_begin, dt_end, sats, aolc):
+    angle_of_drop = 50
+    event_df = pd.DataFrame(columns=['SatNumber', 'SatObject', 'T0Event', 'T1Event', 'T2Event'])
+    ts = load.timescale()
+    ts_begin = ts.from_datetime(dt_begin)
+    ts_end = ts.from_datetime(dt_end)
+    for s in sats.values():
+        try:
+            sat = EarthSatellite.from_satrec(s, ts)
+            difference = sat - aolc
+            t_events, events = sat.find_events(aolc, ts_begin, ts_end, altitude_degrees=10.0)
+            if len(events) > 9:
+                continue
+            print("Считаем проходы для ", sat.model.satnum_str)
+            for i in range(0, len(t_events), 3):
+                times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
+                topocentric = difference.at(t_events[i + 1])
+                alt, az, distance = topocentric.altaz()
+                if alt.degrees >= angle_of_drop:
+                    event_df.loc[len(event_df.index)] = times_list
+        except:
+            continue
+
+    return event_df
+
+
+def calc_ang(event, aolc):
     arr = []
     eph = load('de440s.bsp')
-    ts = load.timescale()
-    dt_begin = datetime(2023, 11, 24, 3, 0, 0, 0, tzinfo=utc)
-    t_begin = ts.from_datetime(dt_begin)
+    step = 1
+    satellite = event.iloc[1]
+    ts_begin = event.iloc[2]
+    ts_end = event.iloc[4]
+    dt_begin = datetime.strptime(ts_begin.utc_iso(), "%Y-%m-%dT%H:%M:%SZ")
+    dt_end = datetime.strptime(ts_end.utc_iso(), "%Y-%m-%dT%H:%M:%SZ")
     t_begin_in_sec = dt_begin.hour * 3600 + dt_begin.minute * 60 + dt_begin.second + dt_begin.microsecond / 1000000
-    dt_end = datetime(2023, 11, 24, 4, 30, 0, 0, tzinfo=utc)
-    t_end = ts.from_datetime(dt_end)
-    iter_count = int((dt_end - dt_begin).seconds / slow_step)
-    file_name = sat.satnum_str + "_" + str(231123) + ".ang"
-    file_name = os.path.join(os.getcwd(), "CPF", file_name)
+    iter_count = int((dt_end - dt_begin).seconds / step)
+    file_name = event.iloc[0] + "_" + (dt_begin + timedelta(hours=3)).strftime("%d%H") + ".ang"
+    file_name = os.path.join(os.getcwd(), "ANG", file_name)
+    difference = satellite - aolc
+    ts_current = ts_begin
+    t_current_in_sec = t_begin_in_sec + 10800
+    i = 0
+    while i < iter_count:
+        topocentric = difference.at(ts_current)
+        alt, az, distance = topocentric.altaz()
+        ra, dec, distance = topocentric.radec()
+        if satellite.at(ts_current).is_sunlit(eph):
+            sunlit = 1.0
+        else:
+            sunlit = 0.0
+        moment = [t_current_in_sec, distance.m, az.radians, alt.radians, ra.radians, dec.radians, sunlit]
+        arr.append(moment)
+        i += step
+        ts_current = ts_current + timedelta(seconds=step)
+        t_current_in_sec = t_current_in_sec + step
+
+    df = pandas.DataFrame(arr, columns=['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph'])
+    df["Az"] = rotate(df["Az"])
+    if df["Time"].max() > 86400:
+        df["Time"] = corrent_midnight(df["Time"])
+    if df["Ph"].mean() > 0.7:
+        ang_rw.write_ang(event, df, file_name)
+
+
+def tle_to_ang(file, begin, end):
     lat = 51.3439072
     lon = 82.1771946
     height = 371.081
     aolc = wgs84.latlon(lat, lon, height)
-    ts = load.timescale()
-    satellite = EarthSatellite.from_satrec(sat, ts)
-    satellite.name = name
-    difference = satellite - aolc
-    t_current = t_begin
-    t_current_in_sec = t_begin_in_sec + 10800
+    begin = begin - timedelta(hours=3)
+    end = end - timedelta(hours=3)
     perf_start = datetime.now()
-    i = 0
-    t_events, events = satellite.find_events(aolc, t_begin, t_end, altitude_degrees=10.0)
-    for ti, event in zip(t_events, events):
-        if event == 0:
-            beg = ti
-        elif event == 1:
-            culm = ti
-
-    while i < iter_count:
-        topocentric = difference.at(t_current)
-        alt, az, distance = topocentric.altaz()
-        ra, dec, distance = topocentric.radec()
-        if alt.degrees > horizon:
-            if satellite.at(t_current).is_sunlit(eph):
-                sunlit = 1.0
-            else:
-                sunlit = 0.0
-            moment = [t_current_in_sec, distance.m, az.radians, alt.radians, ra.radians, dec.radians, sunlit]
-            arr.append(moment)
-            i += slow_step
-            t_current = t_current + timedelta(seconds=slow_step)
-            t_current_in_sec = t_current_in_sec + slow_step
-        else:
-            i += fast_step
-            t_current = t_current + timedelta(seconds=fast_step)
-            t_current_in_sec = t_current_in_sec + fast_step
-    df = pandas.DataFrame(arr, columns=['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph'])
-    df["Az"] = rotate(df["Az"])
+    events = find_events(begin, end, ang_rw.read_tle(file), aolc)
     perf = datetime.now() - perf_start
-    print("{} sec".format(perf.seconds + perf.microseconds / 1000000))
-    ang_rw.write_ang(arr, file_name)
-
-
-def tle_to_ang(file):
-    satellites = ang_rw.read_tle(file)
-    for name in satellites.keys():
-        calc_ang(name, satellites[name])
+    print("Время расчета зон: {} sec".format(perf.seconds + perf.microseconds / 1000000))
+    for index, event in events.iterrows():
+        perf_start = datetime.now()
+        calc_ang(event, aolc)
+        perf = datetime.now() - perf_start
+        print("Расчет прохода {}:{} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))

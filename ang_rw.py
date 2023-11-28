@@ -1,5 +1,6 @@
 from math import pi
 import pandas as pd
+from datetime import timedelta, datetime
 from sgp4.model import Satrec
 
 
@@ -40,11 +41,40 @@ def read_ang(file):
     return df
 
 
-def write_ang(arr, file):
+def make_header(sat_number, dt_begin, dt_end, row_qty):
+    begin = dt_begin.strftime("%d%m%Y%H%M%S")
+    end = dt_end.strftime("%d%m%Y%H%M%S")
+    header = ("        {0}\n"
+              "          0\n"
+              "{1}\n"
+              "{2}\n"
+              "{3}\n"
+              "{4}\n"
+              "{5}\n"
+              "   11520.00000000000\n"
+              "  -9923272.694086982\n"
+              "  -7073844.960020865\n"
+              "   1738405.263049087\n"
+              "  -493.8364305504591\n"
+              "   2028.899182646693\n"
+              "   5284.609081293160\n"
+              "      22122\n"
+              "       {6}\n").format(sat_number, begin[0:8], begin[8:],
+                                     end[0:8], end[8:], begin[0:8], row_qty)
+    return header
+
+
+def write_ang(event, df, file):
+    sat_number = event.iloc[0]
+    dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
+    dt_end = datetime.strptime(event.iloc[4].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
+    row_qty = len(df)
     with open(file, "w") as f:
-        for row in arr:
-            f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}"
-                    "{:>24.16f}{:>11.3f}\n".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+        f.write(make_header(sat_number, dt_begin, dt_end, row_qty))
+        for index, row in df.iterrows():
+            f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
+                    "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
+                                         row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
 
 
 def read_tle(file):

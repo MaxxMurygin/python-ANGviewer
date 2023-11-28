@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+from skyfield.api import utc
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
@@ -26,8 +28,13 @@ class AngViewer:
     ax.xaxis.set_major_formatter(date_form)
 
     def draw_ang(self, df, sat_number):
-        df.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time")
-        middle_time = df["Time"].min() + (df["Time"].max() - df["Time"].min()) / 2
+        df_shadow = df[df['Ph'] == 0.0]
+        df_shine = df[df['Ph'] != 0.0]
+        if df_shine.size != 0:
+            df_shine.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time")
+        if df_shadow.size != 0:
+            df_shadow.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time", color="white")
+        middle_time = df.iloc[df["Um"].idxmax()]["Time"]
         min_distance = str(df["Distance"].min() / 1000).split(".")[0]
         ann = sat_number + "(" + min_distance + ")"
         self.ax.annotate(ann, xy=(middle_time, df["Um"].max()),
@@ -44,19 +51,26 @@ class AngViewer:
 
 if __name__ == '__main__':
     tle_file = os.path.join(check_dirs("TLE"), "tle.tle")
-    src_path = check_dirs('ANGsrc')                 # Источник
-    first_stage_path = check_dirs('ANG1')           # Базовый фильтр
-    second_stage_path = check_dirs('ANGfinal')      # Прореживание
-    smart_stage_path = check_dirs('ANGsmart')       # Фильтрация по расстоянию
-    cpf = check_dirs('CPF')
-
-    max_elevation = 60                              # Фильтр по УМ
-    sieve = 5                                      # Прореживание
-    min_distance = 800000                           # Фильтрация по расстоянию
+    ang_path = check_dirs('ANG')
+    # src_path = check_dirs('ANGsrc')                 # Источник
+    # first_stage_path = check_dirs('ANG1')           # Базовый фильтр
+    # second_stage_path = check_dirs('ANGfinal')      # Прореживание
+    # smart_stage_path = check_dirs('ANGsmart')       # Фильтрация по расстоянию
+    #
+    # max_elevation = 60                              # Фильтр по УМ
+    # sieve = 5                                      # Прореживание
+    # min_distance = 800000                           # Фильтрация по расстоянию
 
     # AngFilter.base_filter(src_path, first_stage_path, max_elevation)
     # AngFilter.thin_out(first_stage_path, second_stage_path, sieve)
     # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
-    # app = AngViewer()
-    # app.run(cpf)
-    TLE_to_ANG.tle_to_ang(tle_file)
+
+
+    # !!!!!!!!!!ВРЕМЯ УКАЗЫВАТЬ ДМВ!!!!!!!!
+    begin = datetime(2023, 11, 28, 15, 0, 0, 0, tzinfo=utc)
+    end = datetime(2023, 11, 29, 4, 0, 0, 0, tzinfo=utc)
+
+    TLE_to_ANG.tle_to_ang(tle_file, begin, end)
+
+    app = AngViewer()
+    app.run(ang_path)
