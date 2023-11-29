@@ -5,7 +5,7 @@ from skyfield.api import utc
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
-import TLE_to_ANG
+from TLE_to_ANG import AngCalculator
 from ang_rw import read_ang
 import AngFilter
 
@@ -67,25 +67,10 @@ class AngViewer:
 if __name__ == '__main__':
     tle_file = os.path.join(check_dirs("TLE"))
     ang_path = check_dirs('ANG')
-    # src_path = check_dirs('ANGsrc')                 # Источник
-    # first_stage_path = check_dirs('ANG1')           # Базовый фильтр
-    # second_stage_path = check_dirs('ANGfinal')      # Прореживание
-    # smart_stage_path = check_dirs('ANGsmart')       # Фильтрация по расстоянию
-    #
-    # max_elevation = 60                              # Фильтр по УМ
-    # sieve = 5                                      # Прореживание
-    # min_distance = 800000                           # Фильтрация по расстоянию
-
-    # AngFilter.base_filter(src_path, first_stage_path, max_elevation)
-    # AngFilter.thin_out(first_stage_path, second_stage_path, sieve)
-    # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
-
     conf = get_conf()
-    # !!!!!!!!!!ВРЕМЯ УКАЗЫВАТЬ ДМВ!!!!!!!!
-    begin = datetime(2023, 11, 28, 15, 0, 0, 0, tzinfo=utc)
-    end = datetime(2023, 11, 29, 4, 0, 0, 0, tzinfo=utc)
 
-    TLE_to_ANG.tle_to_ang(tle_file, begin, end)
+    calc = AngCalculator(conf)
+    calc.tle_to_ang()
 
-    # app = AngViewer()
-    # app.run(ang_path)
+    app = AngViewer()
+    app.run(ang_path)

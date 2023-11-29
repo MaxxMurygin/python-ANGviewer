@@ -5,6 +5,45 @@ from datetime import timedelta, datetime
 from sgp4.model import Satrec
 
 
+def read_tle(tle_dir):
+    satellites = dict()
+    for file in os.listdir(tle_dir):
+        with open(os.path.join(tle_dir, file), 'r') as f:
+            for line in f:
+                line = line.rstrip()
+                if line[0] == "1":
+                    s = line
+                    sat_number = s[2:7]
+                elif line[0] == "2":
+                    t = line
+                    satellite = Satrec.twoline2rv(s, t)
+                    satellites[sat_number] = satellite
+    return satellites
+
+
+def make_header(sat_number, dt_begin, dt_end, row_qty):
+    begin = dt_begin.strftime("%d%m%Y%H%M%S")
+    end = dt_end.strftime("%d%m%Y%H%M%S")
+    header = ("        {0}\n"
+              "          0\n"
+              "{1}\n"
+              "{2}\n"
+              "{3}\n"
+              "{4}\n"
+              "{5}\n"
+              "   11520.00000000000\n"
+              "  -9923272.694086982\n"
+              "  -7073844.960020865\n"
+              "   1738405.263049087\n"
+              "  -493.8364305504591\n"
+              "   2028.899182646693\n"
+              "   5284.609081293160\n"
+              "      22122\n"
+              "       {6}\n").format(sat_number, begin[0:8], begin[8:],
+                                     end[0:8], end[8:], begin[0:8], row_qty)
+    return header
+
+
 def get_date_from_ang(file):
     date = ""
     counter = 0
@@ -42,53 +81,16 @@ def read_ang(file):
     return df
 
 
-def make_header(sat_number, dt_begin, dt_end, row_qty):
-    begin = dt_begin.strftime("%d%m%Y%H%M%S")
-    end = dt_end.strftime("%d%m%Y%H%M%S")
-    header = ("        {0}\n"
-              "          0\n"
-              "{1}\n"
-              "{2}\n"
-              "{3}\n"
-              "{4}\n"
-              "{5}\n"
-              "   11520.00000000000\n"
-              "  -9923272.694086982\n"
-              "  -7073844.960020865\n"
-              "   1738405.263049087\n"
-              "  -493.8364305504591\n"
-              "   2028.899182646693\n"
-              "   5284.609081293160\n"
-              "      22122\n"
-              "       {6}\n").format(sat_number, begin[0:8], begin[8:],
-                                     end[0:8], end[8:], begin[0:8], row_qty)
-    return header
+class Writer:
 
-
-def write_ang(event, df, file):
-    sat_number = event.iloc[0]
-    dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
-    dt_end = datetime.strptime(event.iloc[4].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
-    row_qty = len(df)
-    with open(file, "w") as f:
-        f.write(make_header(sat_number, dt_begin, dt_end, row_qty))
-        for _, row in df.iterrows():
-            f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
-                    "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
-                                         row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
-
-
-def read_tle(tle_dir):
-    satellites = dict()
-    for file in os.listdir(tle_dir):
-        with open(os.path.join(tle_dir, file), 'r') as f:
-            for line in f:
-                line = line.rstrip()
-                if line[0] == "1":
-                    s = line
-                    sat_number = s[2:7]
-                elif line[0] == "2":
-                    t = line
-                    satellite = Satrec.twoline2rv(s, t)
-                    satellites[sat_number] = satellite
-    return satellites
+    def write_ang(self, event, df, file):
+        sat_number = event.iloc[0]
+        dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
+        dt_end = datetime.strptime(event.iloc[4].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
+        row_qty = len(df)
+        with open(file, "w") as f:
+            f.write(make_header(sat_number, dt_begin, dt_end, row_qty))
+            for _, row in df.iterrows():
+                f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
+                        "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
+                                             row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
