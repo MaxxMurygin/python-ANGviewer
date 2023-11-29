@@ -46,6 +46,7 @@ class AngCalculator:
         self.ang_dir = conf["angdirectory"]
         self.filter_by_elevate = bool(conf["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["filter_by_distance"] == "True")
+        self.delete_existing = bool(conf["delete_existing"] == "True")
         self.min_distance = int(conf["min_distance"])
         self.max_distance = int(conf["max_distance"])
         self.angle_of_drop = int(conf["max_elevation"])
@@ -125,8 +126,11 @@ class AngCalculator:
         events = self.find_events(read_tle(self.tle_dir))
         perf = datetime.now() - perf_start
         print("Время расчета зон: {} sec".format(perf.seconds + perf.microseconds / 1000000))
+        if self.delete_existing:
+            for file in os.listdir(self.ang_dir):
+                os.remove(os.path.join(self.ang_dir, file))
         for _, event in events.iterrows():
             perf_start = datetime.now()
             self.calc_ang(event)
             perf = datetime.now() - perf_start
-            print("Расчет прохода {}:{} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))
+            print("Расчет прохода {}: {} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))

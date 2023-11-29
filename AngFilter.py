@@ -29,12 +29,10 @@ def base_filter(src_path, dst_path, max_elevation=60):
                 os.system("copy " + os.path.join(src_path, file) + " " + os.path.join(dst_path, ""))
 
 
-def thin_out(src_path, dst_path, sieve=10):
-    for file in os.listdir(dst_path):
-        os.remove(os.path.join(dst_path, file))
+def thin_out(src_path, sieve=10):
     df = pd.DataFrame(columns=["dt", "file"])
     for file in os.listdir(src_path):
-        dt_str = file.split("_")[1] + file.split("_")[2][0:4]
+        dt_str = file.split("_")[1].replace(".ang", "")
         dt_int = int(dt_str)
         df.loc[len(df)] = {"dt": dt_int, "file": file}
     df = df.sort_values(by="dt")
@@ -42,9 +40,9 @@ def thin_out(src_path, dst_path, sieve=10):
     for index, row in df.iterrows():
         if counter == sieve:
             counter = 0
-            file_name = row["file"]
-            os.system("copy " + os.path.join(src_path, file_name) + " " + os.path.join(dst_path, ""))
             continue
+        else:
+            os.remove(os.path.join(src_path, row["file"]))
         counter += 1
 
 

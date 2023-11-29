@@ -1,13 +1,11 @@
 import os
 from configparser import ConfigParser
-from datetime import datetime
-from skyfield.api import utc
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
+import AngFilter
 from TLE_to_ANG import AngCalculator
 from ang_rw import read_ang
-import AngFilter
 
 
 def check_dirs(directory):
@@ -59,18 +57,21 @@ class AngViewer:
     def run(self, path):
         file_list = os.listdir(path)
         for file in file_list:
-            sat_nElevber = file.split(sep='_')[0]
-            self.draw_ang(read_ang(os.path.join(path, file)), sat_nElevber)
+            sat_number = file.split(sep='_')[0]
+            self.draw_ang(read_ang(os.path.join(path, file)), sat_number)
         plt.show()
 
 
 if __name__ == '__main__':
-    tle_file = os.path.join(check_dirs("TLE"))
-    ang_path = check_dirs('ANG')
     conf = get_conf()
+    ang_dir = conf["angdirectory"]
 
-    calc = AngCalculator(conf)
+    calc = AngCalculator(conf)                      # Расчет
     calc.tle_to_ang()
 
-    app = AngViewer()
-    app.run(ang_path)
+    if bool(conf["filter_by_sieve"] == "True"):     # Прореживание
+        sieve = int(conf["sieve"])
+        AngFilter.thin_out(ang_dir, sieve)
+
+    app = AngViewer()                               # Отображение
+    app.run(ang_dir)
