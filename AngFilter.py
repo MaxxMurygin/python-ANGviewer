@@ -12,7 +12,7 @@ def is_timely(hour):
 
 def is_elevated(file, max_elevation):
     df = read_ang(file)
-    if df["Um"].max() > max_elevation:
+    if df["Elev"].max() > max_elevation:
         return True
     else:
         return False

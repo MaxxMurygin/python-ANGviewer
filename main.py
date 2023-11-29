@@ -1,4 +1,5 @@
 import os
+from configparser import ConfigParser
 from datetime import datetime
 from skyfield.api import utc
 from matplotlib import pyplot as plt
@@ -16,6 +17,20 @@ def check_dirs(directory):
     return full_path
 
 
+def get_conf(filename='config.conf'):
+    parser = ConfigParser(inline_comment_prefixes="#")
+    parser.read(os.path.join(os.getcwd(), filename))
+    conf = {}
+    try:
+        for section in parser.sections():
+            items = parser.items(section)
+            conf.update(items)
+    except Exception as err:
+        # logging.error(str(err))
+        return
+    return conf
+
+
 class AngViewer:
     plt.rcParams["figure.figsize"] = [18, 8]
     plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['blue', 'green', 'red', 'cyan', 'magenta', 'yellow',
@@ -31,26 +46,26 @@ class AngViewer:
         df_shadow = df[df['Ph'] == 0.0]
         df_shine = df[df['Ph'] != 0.0]
         if df_shine.size != 0:
-            df_shine.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time")
+            df_shine.plot(x='Time', y='Elev', grid=True, ax=self.ax, legend=False, xlabel="Time", marker="1")
         if df_shadow.size != 0:
-            df_shadow.plot(x='Time', y='Um', grid=True, ax=self.ax, legend=False, xlabel="Time", color="white")
-        middle_time = df.iloc[df["Um"].idxmax()]["Time"]
+            df_shadow.plot(x='Time', y='Elev', grid=True, ax=self.ax, legend=False, xlabel="Time", color="grey")
+        middle_time = df.iloc[df["Elev"].idxmax()]["Time"]
         min_distance = str(df["Distance"].min() / 1000).split(".")[0]
         ann = sat_number + "(" + min_distance + ")"
-        self.ax.annotate(ann, xy=(middle_time, df["Um"].max()),
+        self.ax.annotate(ann, xy=(middle_time, df["Elev"].max()),
                          xytext=(-15, 15), textcoords='offset points',
                          arrowprops={'arrowstyle': '->'})
 
     def run(self, path):
         file_list = os.listdir(path)
         for file in file_list:
-            sat_number = file.split(sep='_')[0]
-            self.draw_ang(read_ang(os.path.join(path, file)), sat_number)
+            sat_nElevber = file.split(sep='_')[0]
+            self.draw_ang(read_ang(os.path.join(path, file)), sat_nElevber)
         plt.show()
 
 
 if __name__ == '__main__':
-    tle_file = os.path.join(check_dirs("TLE"), "tle.tle")
+    tle_file = os.path.join(check_dirs("TLE"))
     ang_path = check_dirs('ANG')
     # src_path = check_dirs('ANGsrc')                 # Источник
     # first_stage_path = check_dirs('ANG1')           # Базовый фильтр
@@ -65,12 +80,12 @@ if __name__ == '__main__':
     # AngFilter.thin_out(first_stage_path, second_stage_path, sieve)
     # AngFilter.filter_by_distance(second_stage_path, smart_stage_path, min_distance)
 
-
+    conf = get_conf()
     # !!!!!!!!!!ВРЕМЯ УКАЗЫВАТЬ ДМВ!!!!!!!!
     begin = datetime(2023, 11, 28, 15, 0, 0, 0, tzinfo=utc)
     end = datetime(2023, 11, 29, 4, 0, 0, 0, tzinfo=utc)
 
     TLE_to_ANG.tle_to_ang(tle_file, begin, end)
 
-    app = AngViewer()
-    app.run(ang_path)
+    # app = AngViewer()
+    # app.run(ang_path)

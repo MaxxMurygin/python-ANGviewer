@@ -36,7 +36,7 @@ def corrent_midnight(times):
 
 def find_events(dt_begin, dt_end, sats, aolc):
     angle_of_drop = 50
-    event_df = pd.DataFrame(columns=['SatNumber', 'SatObject', 'T0Event', 'T1Event', 'T2Event'])
+    event_df = pd.DataFrame(columns=['SatNElevber', 'SatObject', 'T0Event', 'T1Event', 'T2Event'])
     ts = load.timescale()
     ts_begin = ts.from_datetime(dt_begin)
     ts_end = ts.from_datetime(dt_end)
@@ -47,9 +47,9 @@ def find_events(dt_begin, dt_end, sats, aolc):
             t_events, events = sat.find_events(aolc, ts_begin, ts_end, altitude_degrees=10.0)
             if len(events) > 9:
                 continue
-            print("Считаем проходы для ", sat.model.satnum_str)
+            print("Считаем проходы для ", sat.model.satnElev_str)
             for i in range(0, len(t_events), 3):
-                times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
+                times_list = [sat.model.satnElev_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
                 topocentric = difference.at(t_events[i + 1])
                 alt, az, distance = topocentric.altaz()
                 if alt.degrees >= angle_of_drop:
@@ -69,29 +69,30 @@ def calc_ang(event, aolc):
     ts_end = event.iloc[4]
     dt_begin = datetime.strptime(ts_begin.utc_iso(), "%Y-%m-%dT%H:%M:%SZ")
     dt_end = datetime.strptime(ts_end.utc_iso(), "%Y-%m-%dT%H:%M:%SZ")
-    t_begin_in_sec = dt_begin.hour * 3600 + dt_begin.minute * 60 + dt_begin.second + dt_begin.microsecond / 1000000
-    iter_count = int((dt_end - dt_begin).seconds / step)
+
+    t_current_in_sec = (dt_begin.hour * 3600 + dt_begin.minute * 60 + dt_begin.second +
+                      dt_begin.microsecond / 1000000 + 10800)
+    t_end_in_sec = (dt_end.hour * 3600 + dt_end.minute * 60 + dt_end.second +
+                    dt_end.microsecond / 1000000 + 10800)
     file_name = event.iloc[0] + "_" + (dt_begin + timedelta(hours=3)).strftime("%d%H") + ".ang"
     file_name = os.path.join(os.getcwd(), "ANG", file_name)
     difference = satellite - aolc
     ts_current = ts_begin
-    t_current_in_sec = t_begin_in_sec + 10800
-    i = 0
-    while i < iter_count:
+
+    while t_current_in_sec < t_end_in_sec:
         topocentric = difference.at(ts_current)
         alt, az, distance = topocentric.altaz()
-        ra, dec, distance = topocentric.radec()
+        ra, dec, _ = topocentric.radec()
         if satellite.at(ts_current).is_sunlit(eph):
             sunlit = 1.0
         else:
             sunlit = 0.0
         moment = [t_current_in_sec, distance.m, az.radians, alt.radians, ra.radians, dec.radians, sunlit]
         arr.append(moment)
-        i += step
         ts_current = ts_current + timedelta(seconds=step)
         t_current_in_sec = t_current_in_sec + step
 
-    df = pandas.DataFrame(arr, columns=['Time', 'Distance', 'Az', 'Um', 'RA', 'DEC', 'Ph'])
+    df = pandas.DataFrame(arr, columns=['Time', 'Distance', 'Az', 'Elev', 'RA', 'DEC', 'Ph'])
     df["Az"] = rotate(df["Az"])
     if df["Time"].max() > 86400:
         df["Time"] = corrent_midnight(df["Time"])
