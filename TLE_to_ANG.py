@@ -1,15 +1,14 @@
-import logging
 import os
 from datetime import timedelta, datetime
+from math import pi
 
 import pandas
 import pandas as pd
 from skyfield.api import EarthSatellite, load
 from skyfield.api import utc
-
 from skyfield.toposlib import wgs84
-from math import pi
-from ang_rw import Writer, read_tle
+
+import ang_rw
 
 
 # python -m jplephem excerpt 2023/1/1 2023/12/31 "https://naif.jpl.nasa.gov/pub/
@@ -37,6 +36,7 @@ def corrent_midnight(times):
 
 
 class AngCalculator:
+    ang_list = list()
     def __init__(self, conf, satellites):
 
         self.aolc = wgs84.latlon(float(conf["lat"]), float(conf["lon"]), float(conf["height"]))
@@ -53,7 +53,7 @@ class AngCalculator:
         self.max_distance = int(conf["max_distance"])
         self.angle_of_drop = int(conf["max_elevation"])
         self.satellites = satellites
-        self.writer = Writer().write_ang
+
 
     def find_events(self, sats):
         event_df = pd.DataFrame(columns=['SatNumber', 'SatObject', 'T0Event', 'T1Event', 'T2Event'])
@@ -123,7 +123,11 @@ class AngCalculator:
         if df["Time"].max() > 86400:
             df["Time"] = corrent_midnight(df["Time"])
         if df["Ph"].mean() > 0.7:
-            self.writer(event, df, file_name)
+            # ang_item = [event, df, file_name]
+            self.ang_list.append([event, df, file_name])
+            # ang_rw.write_ang(event, df, file_name)
+            # self.writer(event, df, file_name)
+
 
     def tle_to_ang(self):
         perf_start = datetime.now()
@@ -138,3 +142,4 @@ class AngCalculator:
             self.calc_ang(event)
             perf = datetime.now() - perf_start
             print("Расчет прохода {}: {} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))
+        print(self.ang_list)

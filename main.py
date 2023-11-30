@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import os
 import threading
 from configparser import ConfigParser
@@ -71,7 +72,8 @@ def run_calc(conf, satellites):
     threads_qty = int(conf["threads"])
     threading_enabled = bool(conf["threading"] == "True")
     splited_salellites = list()
-    threads = list()
+    processes = list()
+    ang_calculator_list = list()
 
     if threading_enabled:
         if len(satellites) < threads_qty:
@@ -87,17 +89,19 @@ def run_calc(conf, satellites):
                 i = 0
             else:
                 i += 1
-        print()
         perf_start = datetime.now()
         for sats in splited_salellites:
-            thread = threading.Thread(target=AngCalculator(conf, sats).tle_to_ang)
-            threads.append(thread)
-            thread.start()
-        for index, thread in enumerate(threads):
-            thread.join()
-
+            ang_calculator_list.append(AngCalculator(conf, sats))
+        for ac in ang_calculator_list:
+            process = multiprocessing.Process(target=ac.tle_to_ang)
+            processes.append(process)
+            process.start()
+        for _, process in enumerate(processes):
+            process.join()
         perf = datetime.now() - perf_start
         print("Время многопоточного расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
+        for ac in ang_calculator_list:
+            print(ac.ang_list)
 
     else:
         perf_start = datetime.now()

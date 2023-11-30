@@ -81,16 +81,16 @@ def read_ang(file):
     return df
 
 
-class Writer:
+# class Writer:
 
-    def write_ang(self, event, df, file):
-        sat_number = event.iloc[0]
-        dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
-        dt_end = datetime.strptime(event.iloc[4].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
-        row_qty = len(df)
-        with open(file, "w") as f:
-            f.write(make_header(sat_number, dt_begin, dt_end, row_qty))
-            for _, row in df.iterrows():
-                f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
-                        "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
-                                             row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
+def write_ang(event, df, file):
+    sat_number = event.iloc[0]
+    dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
+    dt_end = datetime.strptime(event.iloc[4].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
+    row_qty = len(df)
+    with open(file, "w") as f:
+        f.write(make_header(sat_number, dt_begin, dt_end, row_qty))
+        for _, row in df.iterrows():
+            f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
+                    "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
+                                         row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
