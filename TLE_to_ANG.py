@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta, datetime
 
@@ -36,7 +37,8 @@ def corrent_midnight(times):
 
 
 class AngCalculator:
-    def __init__(self, conf):
+    def __init__(self, conf, satellites):
+
         self.aolc = wgs84.latlon(float(conf["lat"]), float(conf["lon"]), float(conf["height"]))
         self.begin = (datetime.strptime(conf["tbegin"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
                       timedelta(hours=3))
@@ -50,6 +52,7 @@ class AngCalculator:
         self.min_distance = int(conf["min_distance"])
         self.max_distance = int(conf["max_distance"])
         self.angle_of_drop = int(conf["max_elevation"])
+        self.satellites = satellites
         self.writer = Writer().write_ang
 
     def find_events(self, sats):
@@ -64,7 +67,8 @@ class AngCalculator:
                 t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=10.0)
                 # if len(events) > 18:
                 #     continue
-                print("Считаем проходы для ", sat.model.satnum_str)
+                # logging.info("Считаем проходы для ", sat.model.satnum_str)
+                # print("Считаем проходы для ", sat.model.satnum_str)
                 for i in range(0, len(t_events), 3):
                     times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
                     topocentric = difference.at(t_events[i + 1])
@@ -123,7 +127,7 @@ class AngCalculator:
 
     def tle_to_ang(self):
         perf_start = datetime.now()
-        events = self.find_events(read_tle(self.tle_dir))
+        events = self.find_events(self.satellites)
         perf = datetime.now() - perf_start
         print("Время расчета зон: {} sec".format(perf.seconds + perf.microseconds / 1000000))
         if self.delete_existing:
