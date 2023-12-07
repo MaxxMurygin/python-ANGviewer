@@ -60,7 +60,7 @@ class AngViewer:
                          xytext=(-15, 15), textcoords='offset points',
                          arrowprops={'arrowstyle': '->'})
 
-    def run(self, path):
+    def view(self, path):
         file_list = os.listdir(path)
         for file in file_list:
             sat_number = file.split(sep='_')[0]
@@ -70,52 +70,44 @@ class AngViewer:
 
 def run_calc(conf, satellites):
     threads_qty = int(conf["threads"])
-    threading_enabled = bool(conf["threading"] == "True")
     splited_salellites = list()
     processes = list()
     ang_calculator_list = list()
 
-    if threading_enabled:
-        if len(satellites) < threads_qty:
-            for i in range(0, len(satellites)):
-                splited_salellites.append(dict())
-        else:
-            for i in range(0, threads_qty):
-                splited_salellites.append(dict())
-        i = 0
-        for key, value in satellites.items():
-            splited_salellites[i].update({key:value})
-            if i == len(splited_salellites) - 1:
-                i = 0
-            else:
-                i += 1
-        perf_start = datetime.now()
-        for sats in splited_salellites:
-            ang_calculator_list.append(AngCalculator(conf, sats))
-        for ac in ang_calculator_list:
-            process = multiprocessing.Process(target=ac.tle_to_ang)
-            processes.append(process)
-            process.start()
-        for _, process in enumerate(processes):
-            process.join()
-        perf = datetime.now() - perf_start
-        print("Время многопоточного расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
-        for ac in ang_calculator_list:
-            print(ac.ang_list)
+    manager = multiprocessing.Manager()
+    lock = manager.Lock()
+    global_ang_list = manager.list()
 
+    if len(satellites) < threads_qty:
+        for i in range(0, len(satellites)):
+            splited_salellites.append(dict())
     else:
-        perf_start = datetime.now()
-        calc = AngCalculator(conf, satellites)                      # Расчет
-        calc.tle_to_ang()
-        perf = datetime.now() - perf_start
-        print("Время однопоточного расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
-
+        for i in range(0, threads_qty):
+            splited_salellites.append(dict())
+    i = 0
+    for key, value in satellites.items():
+        splited_salellites[i].update({key: value})
+        if i == len(splited_salellites) - 1:
+            i = 0
+        else:
+            i += 1
+    perf_start = datetime.now()
+    for sats in splited_salellites:
+        ang_calculator_list.append(AngCalculator(conf, sats))
+    for ac in ang_calculator_list:
+        process = multiprocessing.Process(target=ac.tle_to_ang, args=(global_ang_list, lock))
+        processes.append(process)
+        process.start()
+    for _, process in enumerate(processes):
+        process.join()
+    perf = datetime.now() - perf_start
+    print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
+    for items in global_ang_list:
+        for item in items:
+            ang_rw.write_ang(item[0], item[1], item[2])
 
 
 if __name__ == '__main__':
-    # format = "%(asctime)s: %(message)s"
-    # logging.basicConfig(format=format, level=logging.INFO,
-    #                     datefmt="%H:%M:%S")
     conf = get_conf()
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
@@ -123,9 +115,9 @@ if __name__ == '__main__':
     satellites = ang_rw.read_tle(tle_dir)
     run_calc(conf, satellites)
 
-    if bool(conf["filter_by_sieve"] == "True"):     # Прореживание
+    if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
         sieve = int(conf["sieve"])
         AngFilter.thin_out(ang_dir, sieve)
 
-    app = AngViewer()                               # Отображение
-    app.run(ang_dir)
+    app = AngViewer()  # Отображение
+    app.view(ang_dir)

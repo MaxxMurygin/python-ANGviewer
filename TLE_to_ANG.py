@@ -37,6 +37,7 @@ def corrent_midnight(times):
 
 class AngCalculator:
     ang_list = list()
+
     def __init__(self, conf, satellites):
 
         self.aolc = wgs84.latlon(float(conf["lat"]), float(conf["lon"]), float(conf["height"]))
@@ -53,7 +54,6 @@ class AngCalculator:
         self.max_distance = int(conf["max_distance"])
         self.angle_of_drop = int(conf["max_elevation"])
         self.satellites = satellites
-
 
     def find_events(self, sats):
         event_df = pd.DataFrame(columns=['SatNumber', 'SatObject', 'T0Event', 'T1Event', 'T2Event'])
@@ -122,24 +122,29 @@ class AngCalculator:
         df["Az"] = rotate(df["Az"])
         if df["Time"].max() > 86400:
             df["Time"] = corrent_midnight(df["Time"])
-        if df["Ph"].mean() > 0.7:
-            # ang_item = [event, df, file_name]
-            self.ang_list.append([event, df, file_name])
-            # ang_rw.write_ang(event, df, file_name)
-            # self.writer(event, df, file_name)
 
+        return [event, df, file_name]
+        # if df["Ph"].mean() > 0.7:
+        #     self.ang_list.append([event, df, file_name])
+        #     # ang_rw.write_ang(event, df, file_name)
 
-    def tle_to_ang(self):
-        perf_start = datetime.now()
+    def tle_to_ang(self, global_list, lock):
+        local_list = list()
+        # perf_start = datetime.now()
         events = self.find_events(self.satellites)
-        perf = datetime.now() - perf_start
-        print("Время расчета зон: {} sec".format(perf.seconds + perf.microseconds / 1000000))
+        # perf = datetime.now() - perf_start
+        # print("Время расчета зон: {} sec".format(perf.seconds + perf.microseconds / 1000000))
         if self.delete_existing:
             for file in os.listdir(self.ang_dir):
                 os.remove(os.path.join(self.ang_dir, file))
         for _, event in events.iterrows():
-            perf_start = datetime.now()
-            self.calc_ang(event)
-            perf = datetime.now() - perf_start
-            print("Расчет прохода {}: {} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))
-        print(self.ang_list)
+            # perf_start = datetime.now()
+            item = self.calc_ang(event)
+            local_list.append(item)
+            # perf = datetime.now() - perf_start
+            # print("Расчет прохода {}: {} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))
+        lock.acquire()
+        try:
+            global_list.append(local_list)
+        finally:
+            lock.release()
