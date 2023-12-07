@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 from datetime import timedelta, datetime
 from math import pi
@@ -7,8 +8,6 @@ import pandas as pd
 from skyfield.api import EarthSatellite, load
 from skyfield.api import utc
 from skyfield.toposlib import wgs84
-
-import ang_rw
 
 
 # python -m jplephem excerpt 2023/1/1 2023/12/31 "https://naif.jpl.nasa.gov/pub/
@@ -56,7 +55,7 @@ class AngCalculator:
         self.satellites = satellites
 
     def find_events(self, sats):
-        event_df = pd.DataFrame(columns=['SatNumber', 'SatObject', 'T0Event', 'T1Event', 'T2Event'])
+        event_df = pd.DataFrame(columns=["SatNumber", "SatObject", "T0Event", "T1Event", "T2Event"])
         ts = load.timescale()
         ts_begin = ts.from_datetime(self.begin)
         ts_end = ts.from_datetime(self.end)
@@ -88,7 +87,7 @@ class AngCalculator:
 
     def calc_ang(self, event):
         arr = []
-        eph = load('de440s.bsp')
+        eph = load("de440s.bsp")
         step = 1
         satellite = event.iloc[1]
         ts_begin = event.iloc[2]
@@ -118,7 +117,7 @@ class AngCalculator:
             ts_current = ts_current + timedelta(seconds=step)
             t_current_in_sec = t_current_in_sec + step
 
-        df = pandas.DataFrame(arr, columns=['Time', 'Distance', 'Az', 'Elev', 'RA', 'DEC', 'Ph'])
+        df = pandas.DataFrame(arr, columns=["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"])
         df["Az"] = rotate(df["Az"])
         if df["Time"].max() > 86400:
             df["Time"] = corrent_midnight(df["Time"])
@@ -130,21 +129,21 @@ class AngCalculator:
 
     def tle_to_ang(self, global_list, lock):
         local_list = list()
-        # perf_start = datetime.now()
+        proc_name = multiprocessing.current_process().name
+        perf_start = datetime.now()
         events = self.find_events(self.satellites)
-        # perf = datetime.now() - perf_start
-        # print("Время расчета зон: {} sec".format(perf.seconds + perf.microseconds / 1000000))
+        perf = datetime.now() - perf_start
+        print("*{}* Время расчета зон: {} sec".format(proc_name, perf.seconds + perf.microseconds / 1000000))
         if self.delete_existing:
             for file in os.listdir(self.ang_dir):
                 os.remove(os.path.join(self.ang_dir, file))
         for _, event in events.iterrows():
-            # perf_start = datetime.now()
+            perf_start = datetime.now()
             item = self.calc_ang(event)
             local_list.append(item)
-            # perf = datetime.now() - perf_start
-            # print("Расчет прохода {}: {} sec".format(event.iloc[0], perf.seconds + perf.microseconds / 1000000))
-        lock.acquire()
-        try:
+            perf = datetime.now() - perf_start
+
+            print("*{}* Расчет прохода {}: {} sec".format(proc_name, event.iloc[0],
+                                                        perf.seconds + perf.microseconds / 1000000))
+        with lock:
             global_list.append(local_list)
-        finally:
-            lock.release()

@@ -1,14 +1,12 @@
 import logging
 import multiprocessing
 import os
-import threading
 from configparser import ConfigParser
 from datetime import datetime
 
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 
-import AngFilter
 import ang_rw
 from TLE_to_ANG import AngCalculator
 from ang_rw import read_ang
@@ -37,33 +35,34 @@ def get_conf(filename='config.conf'):
 
 class AngViewer:
     plt.rcParams["figure.figsize"] = [18, 8]
-    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['blue', 'green', 'red', 'cyan', 'magenta', 'yellow',
-                                                        'black', 'purple', 'pink', 'brown', 'orange', 'teal',
-                                                        'coral', 'lightblue', 'lime', 'lavender', 'turquoise',
-                                                        'darkgreen', 'tan', 'salmon', 'gold'])
+    plt.rcParams["axes.prop_cycle"] = plt.cycler(color=["blue", "green", "red", "cyan", "magenta", "yellow",
+                                                        "black", "purple", "pink", "brown", "orange", "teal",
+                                                        "coral", "lightblue", "lime", "lavender", "turquoise",
+                                                        "darkgreen", "tan", "salmon", "gold"])
     plt.ylabel("Elevation")
     ax = plt.gca()
     date_form = DateFormatter("%H:%M:%S")
     ax.xaxis.set_major_formatter(date_form)
 
     def draw_ang(self, df, sat_number):
-        df_shadow = df[df['Ph'] == 0.0]
-        df_shine = df[df['Ph'] != 0.0]
+        df_shadow = df[df["Ph"] == 0.0]
+        df_shine = df[df["Ph"] != 0.0]
         if df_shine.size != 0:
-            df_shine.plot(x='Time', y='Elev', grid=True, ax=self.ax, legend=False, xlabel="Time", marker="1")
+            df_shine.plot(x="Time", y="Elev", grid=True, ax=self.ax, legend=False, xlabel="Time", marker="1",
+                          linestyle="None")
         if df_shadow.size != 0:
-            df_shadow.plot(x='Time', y='Elev', grid=True, ax=self.ax, legend=False, xlabel="Time", color="grey")
+            df_shadow.plot(x="Time", y="Elev", grid=True, ax=self.ax, legend=False, xlabel="Time", color="grey")
         middle_time = df.iloc[df["Elev"].idxmax()]["Time"]
         min_distance = str(df["Distance"].min() / 1000).split(".")[0]
         ann = sat_number + "(" + min_distance + ")"
         self.ax.annotate(ann, xy=(middle_time, df["Elev"].max()),
-                         xytext=(-15, 15), textcoords='offset points',
-                         arrowprops={'arrowstyle': '->'})
+                         xytext=(-15, 15), textcoords="offset points",
+                         arrowprops={"arrowstyle": "->"})
 
     def view(self, path):
         file_list = os.listdir(path)
         for file in file_list:
-            sat_number = file.split(sep='_')[0]
+            sat_number = file.split(sep="_")[0]
             self.draw_ang(read_ang(os.path.join(path, file)), sat_number)
         plt.show()
 
@@ -107,7 +106,10 @@ def run_calc(conf, satellites):
             ang_rw.write_ang(item[0], item[1], item[2])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG,
+                        format='(%(threadName)-10s) %(message)s', )
+
     conf = get_conf()
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
@@ -115,9 +117,9 @@ if __name__ == '__main__':
     satellites = ang_rw.read_tle(tle_dir)
     run_calc(conf, satellites)
 
-    if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
-        sieve = int(conf["sieve"])
-        AngFilter.thin_out(ang_dir, sieve)
+    # if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
+    #     sieve = int(conf["sieve"])
+    #     AngFilter.thin_out(ang_dir, sieve)
 
     app = AngViewer()  # Отображение
     app.view(ang_dir)
