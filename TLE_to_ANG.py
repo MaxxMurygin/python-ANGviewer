@@ -48,10 +48,12 @@ class AngCalculator:
         self.ang_dir = conf["angdirectory"]
         self.filter_by_elevate = bool(conf["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["filter_by_distance"] == "True")
+        self.filter_by_sunlite = bool(conf["filter_by_sunlite"] == "True")
         self.delete_existing = bool(conf["delete_existing"] == "True")
         self.min_distance = int(conf["min_distance"])
         self.max_distance = int(conf["max_distance"])
         self.angle_of_drop = int(conf["max_elevation"])
+        self.sunlite = float(conf["sunlite"])
         self.satellites = satellites
 
     def find_events(self, sats):
@@ -66,8 +68,6 @@ class AngCalculator:
                 t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=10.0)
                 # if len(events) > 18:
                 #     continue
-                # logging.info("Считаем проходы для ", sat.model.satnum_str)
-                # print("Считаем проходы для ", sat.model.satnum_str)
                 for i in range(0, len(t_events), 3):
                     times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
                     topocentric = difference.at(t_events[i + 1])
@@ -80,7 +80,7 @@ class AngCalculator:
                             event_df.loc[len(event_df.index)] = times_list
                     else:
                         event_df.loc[len(event_df.index)] = times_list
-            except Exception as e:
+            except:
                 continue
 
         return event_df
@@ -121,11 +121,12 @@ class AngCalculator:
         df["Az"] = rotate(df["Az"])
         if df["Time"].max() > 86400:
             df["Time"] = corrent_midnight(df["Time"])
-
+        if self.filter_by_sunlite:
+            if df["Ph"].mean() > self.sunlite:
+                return [event, df, file_name]
+            else:
+                return 0
         return [event, df, file_name]
-        # if df["Ph"].mean() > 0.7:
-        #     self.ang_list.append([event, df, file_name])
-        #     # ang_rw.write_ang(event, df, file_name)
 
     def tle_to_ang(self, global_list, lock):
         local_list = list()
@@ -140,10 +141,10 @@ class AngCalculator:
         for _, event in events.iterrows():
             perf_start = datetime.now()
             item = self.calc_ang(event)
-            local_list.append(item)
+            if item != 0:
+                local_list.append(item)
             perf = datetime.now() - perf_start
-
             print("*{}* Расчет прохода {}: {} sec".format(proc_name, event.iloc[0],
-                                                        perf.seconds + perf.microseconds / 1000000))
+                                                          perf.seconds + perf.microseconds / 1000000))
         with lock:
             global_list.append(local_list)
