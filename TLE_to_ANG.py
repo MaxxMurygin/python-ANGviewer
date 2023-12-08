@@ -2,7 +2,6 @@ import multiprocessing
 import os
 from datetime import timedelta, datetime
 from math import pi
-
 import pandas
 import pandas as pd
 from skyfield.api import EarthSatellite, load
@@ -23,7 +22,7 @@ def rotate(angles):
     return rotated
 
 
-def corrent_midnight(times):
+def correct_midnight(times):
     corr_times = []
     for time in times:
         if time > 86400:
@@ -120,7 +119,7 @@ class AngCalculator:
         df = pandas.DataFrame(arr, columns=["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"])
         df["Az"] = rotate(df["Az"])
         if df["Time"].max() > 86400:
-            df["Time"] = corrent_midnight(df["Time"])
+            df["Time"] = correct_midnight(df["Time"])
         if self.filter_by_sunlite:
             if df["Ph"].mean() > self.sunlite:
                 return [event, df, file_name]

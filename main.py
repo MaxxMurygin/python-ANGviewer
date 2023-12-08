@@ -3,10 +3,8 @@ import multiprocessing
 import os
 from configparser import ConfigParser
 from datetime import datetime
-
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
-
 import ang_rw
 from TLE_to_ANG import AngCalculator
 from ang_rw import read_ang
