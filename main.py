@@ -6,6 +6,7 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 import ang_rw
+import downloader
 from TLE_to_ANG import AngCalculator
 from ang_rw import read_ang
 
@@ -111,6 +112,11 @@ if __name__ == "__main__":
     conf = get_conf()
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
+    norad_cred = {"identity": conf["identity"], "password": conf["password"]}
+    download = bool(conf["download"] == "True")
+
+    if download:
+        downloader.download_tle(tle_dir, norad_cred)
 
     satellites = ang_rw.read_tle(tle_dir)
     run_calc(conf, satellites)
@@ -121,3 +127,4 @@ if __name__ == "__main__":
 
     app = AngViewer()  # Отображение
     app.view(ang_dir)
+
