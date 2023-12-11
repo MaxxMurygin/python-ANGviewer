@@ -33,6 +33,17 @@ def correct_midnight(times):
     return corr_times
 
 
+def get_step_by_distance(dst):
+    if dst <= 1000:
+        return 1
+    elif 1000 < dst <= 10000:
+        return 2
+    elif 10000 < dst <= 25000:
+        return 8
+    else:
+        return 120
+
+
 class AngCalculator:
     ang_list = list()
 
@@ -56,21 +67,22 @@ class AngCalculator:
         self.satellites = satellites
 
     def find_events(self, sats):
-        event_df = pd.DataFrame(columns=["SatNumber", "SatObject", "T0Event", "T1Event", "T2Event"])
+        event_df = pd.DataFrame(columns=["SatNumber", "SatObject", "T0Event", "T1Event", "T2Event", "Step"])
         ts = load.timescale()
         ts_begin = ts.from_datetime(self.begin)
         ts_end = ts.from_datetime(self.end)
-        for s in sats.values():
+        for sat in sats.values():
             try:
-                sat = EarthSatellite.from_satrec(s, ts)
                 difference = sat - self.aolc
                 t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=10.0)
                 # if len(events) > 18:
                 #     continue
                 for i in range(0, len(t_events), 3):
-                    times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
+                    # times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
                     topocentric = difference.at(t_events[i + 1])
                     alt, az, distance = topocentric.altaz()
+                    step = get_step_by_distance(distance.km)
+                    times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2], step]
                     if self.filter_by_distance:
                         if not self.min_distance <= distance.km <= self.max_distance:
                             continue
@@ -87,7 +99,7 @@ class AngCalculator:
     def calc_ang(self, event):
         arr = []
         eph = load("de440s.bsp")
-        step = 1
+        step = event.iloc[5]
         satellite = event.iloc[1]
         ts_begin = event.iloc[2]
         ts_end = event.iloc[4]

@@ -5,10 +5,23 @@ from configparser import ConfigParser
 from datetime import datetime
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
-import ang_rw
+import file_operations
 import downloader
 from TLE_to_ANG import AngCalculator
-from ang_rw import read_ang
+from file_operations import read_ang
+
+
+def dict_from_df(cat_df):
+    sat_dict = dict()
+    for index, sat in cat_df.iterrows():
+        sat_dict.update({index: sat["SATNAME"]})
+
+    return sat_dict
+
+def filter_cat_by_period(min_period, max_period, cat_df):
+    cat_df = cat_df[cat_df["PERIOD"] > min_period]
+    cat_df = cat_df[cat_df["PERIOD"] < max_period]
+    return cat_df
 
 
 def check_dirs(directory):
@@ -102,7 +115,7 @@ def run_calc(conf, satellites):
     print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
     for items in global_ang_list:
         for item in items:
-            ang_rw.write_ang(item[0], item[1], item[2])
+            file_operations.write_ang(item[0], item[1], item[2])
 
 
 if __name__ == "__main__":
@@ -114,11 +127,18 @@ if __name__ == "__main__":
     tle_dir = conf["tledirectory"]
     norad_cred = {"identity": conf["identity"], "password": conf["password"]}
     download = bool(conf["download"] == "True")
+    period_filter = bool(conf["filter_by_period"] == "True")
 
     if download:
         downloader.download_tle(tle_dir, norad_cred)
 
-    satellites = ang_rw.read_tle(tle_dir)
+    cat = file_operations.read_satcat()
+    if period_filter:
+        min_period = int(conf["min_period"])
+        max_period = int(conf["max_period"])
+        cat = filter_cat_by_period(min_period, max_period,cat)
+    needed_sat = dict_from_df(cat)
+    satellites = file_operations.read_tle(tle_dir,needed_sat)
     run_calc(conf, satellites)
 
     # if bool(conf["filter_by_sieve"] == "True"):  # Прореживание

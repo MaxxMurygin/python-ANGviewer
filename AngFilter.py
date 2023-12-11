@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from ang_rw import read_ang
+from file_operations import read_ang
 
 
 def is_timely(hour):
