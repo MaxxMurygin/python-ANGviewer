@@ -2,7 +2,7 @@ import os
 
 import pandas
 
-from main import get_conf
+from utils import get_conf
 
 
 class EffectiveManager:
