@@ -18,6 +18,7 @@ def dict_from_df(cat_df):
 
     return sat_dict
 
+
 def filter_cat_by_period(min_period, max_period, cat_df):
     cat_df = cat_df[cat_df["PERIOD"] > min_period]
     cat_df = cat_df[cat_df["PERIOD"] < max_period]
@@ -57,6 +58,8 @@ class AngViewer:
     ax.xaxis.set_major_formatter(date_form)
 
     def draw_ang(self, df, sat_number):
+        if len(df) < 5:
+            return
         df_shadow = df[df["Ph"] == 0.0]
         df_shine = df[df["Ph"] != 0.0]
         if df_shine.size != 0:
@@ -136,10 +139,10 @@ if __name__ == "__main__":
     if period_filter:
         min_period = int(conf["min_period"])
         max_period = int(conf["max_period"])
-        cat = filter_cat_by_period(min_period, max_period,cat)
+        cat = filter_cat_by_period(min_period, max_period, cat)
     needed_sat = dict_from_df(cat)
-    satellites = file_operations.read_tle(tle_dir,needed_sat)
-    run_calc(conf, satellites)
+    # satellites = file_operations.read_tle(tle_dir, needed_sat)
+    # run_calc(conf, satellites)
 
     # if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
     #     sieve = int(conf["sieve"])
@@ -147,4 +150,3 @@ if __name__ == "__main__":
 
     app = AngViewer()  # Отображение
     app.view(ang_dir)
-

@@ -42,7 +42,8 @@ def download_tle(tle_dir, norad_cred):
     dl_http(url_leo, tle_leo, norad_cred)
     download_satcat(norad_cred)
 
-def download_satcat(norad_cred, cat_dir = "CAT"):
+
+def download_satcat(norad_cred, cat_dir="CAT"):
     satcat_file = os.path.join(os.getcwd(), cat_dir, "satcat.csv")
     if os.path.isfile(satcat_file):
         satcat_file_time = datetime.fromtimestamp(os.path.getmtime(satcat_file))

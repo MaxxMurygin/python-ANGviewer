@@ -1,4 +1,5 @@
 import os
+import re
 from math import pi
 import pandas as pd
 from datetime import timedelta, datetime
@@ -8,12 +9,15 @@ from sgp4.model import Satrec
 
 def read_satcat(satcat_file="satcat.csv"):
     file = os.path.join(os.getcwd(), "CAT", satcat_file)
-    col = ["INTLDES,NORAD_CAT_ID", "OBJECT_TYPE", "SATNAME", "COUNTRY", "LAUNCH", "SITE", "DECAY", "PERIOD",
-           "INCLINATION", "APOGEE", "PERIGEE", "COMMENT", "COMMENTCODE", "RCSVALUE","RCS_SIZE", "FILE", "LAUNCH_YEAR",
-           "LAUNCH_NUM", "LAUNCH_PIECE", "CURRENT", "OBJECT_NAME", "OBJECT_ID", "OBJECT_NUMBER"]
+    # col = ["INTLDES,NORAD_CAT_ID", "OBJECT_TYPE", "SATNAME", "COUNTRY", "LAUNCH", "SITE", "DECAY", "PERIOD",
+    #        "INCLINATION", "APOGEE", "PERIGEE", "COMMENT", "COMMENTCODE", "RCSVALUE","RCS_SIZE", "FILE", "LAUNCH_YEAR",
+    #        "LAUNCH_NUM", "LAUNCH_PIECE", "CURRENT", "OBJECT_NAME", "OBJECT_ID", "OBJECT_NUMBER"]
     cat_df = pd.read_csv(file, index_col=1)
-    cat_df = cat_df[cat_df["DECAY"].isna()]
+    cat_df = cat_df.loc[cat_df["DECAY"].isna()]
+    # cat_df['SATNAME'] = cat_df['SATNAME'].astype('string')
+    # test_df = cat_df.loc[cat_df['SATNAME'].str.contains('GLOnASS|lageos', flags=re.IGNORECASE)]
     print()
+
     return cat_df
 
 

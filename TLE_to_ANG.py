@@ -34,9 +34,9 @@ def correct_midnight(times):
 
 
 def get_step_by_distance(dst):
-    if dst <= 1000:
+    if dst <= 3000:
         return 1
-    elif 1000 < dst <= 10000:
+    elif 3000 < dst <= 10000:
         return 2
     elif 10000 < dst <= 25000:
         return 8
