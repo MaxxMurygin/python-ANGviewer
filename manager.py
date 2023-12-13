@@ -42,7 +42,8 @@ class EffectiveManager:
 
     def get_ang_list(self):
         files = os.listdir(os.path.join(os.getcwd(), "ANG"))
-        empty_df = pandas.DataFrame()
+        col = ["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"]
+        empty_df = pandas.DataFrame(columns=col)
         for file in files:
             full_path = os.path.join(os.getcwd(), "ANG", file)
             satnum = get_satnum_from_ang(full_path)

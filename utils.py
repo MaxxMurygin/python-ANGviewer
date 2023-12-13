@@ -134,8 +134,8 @@ if __name__ == "__main__":
     # for norad_id in ang_list.keys():
     #     ang = ang_list.get(norad_id)
     #     for a in ang:
-    #         fn = a.filename
-    #         d = a.data
+    #         fn = manager.Ang.get_filename(a)
+    #         d = manager.Ang.get_data(a)
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
     norad_cred = {"identity": conf["identity"], "password": conf["password"]}
