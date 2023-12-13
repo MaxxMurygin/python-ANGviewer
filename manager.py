@@ -2,20 +2,49 @@ import os
 
 import pandas
 
-from utils import get_conf
+from file_operations import get_satnum_from_ang, read_ang
+
+
+# from utils import get_conf
 
 
 class EffectiveManager:
-    def __init__(self, config: str):
-        cat_df = pandas.DataFrame()
-        ang_df = pandas.DataFrame()
-        ang_list = list()
-        ang_dict = dict()
-        config = get_conf(config)
+    def __init__(self, config):
+        self.cat_df = pandas.DataFrame()
+        self.ang_df = pandas.DataFrame()
+        self.ang_list = list()
+        self.ang_dict = dict()
+        # self.config = get_conf(config)
 
-    def get_ang_list(self):
-
-        return os.listdir(os.path.join(os.getcwd(), "ANG"))
+    class Ang:
+        def __init__(self, filename, dataframe):
+            self.filename = filename
+            self.data = dataframe
 
     def get_ang_list_with_data(self):
-        return dict()
+        files = os.listdir(os.path.join(os.getcwd(), "ANG"))
+        for file in files:
+            full_path = os.path.join(os.getcwd(), "ANG", file)
+            satnum = get_satnum_from_ang(full_path)
+            df_ang = read_ang(full_path)
+            single_ang = self.Ang(file, df_ang)
+            if satnum in self.ang_dict:
+                self.ang_dict[satnum].append(single_ang)
+            else:
+                self.ang_dict[satnum] = [single_ang]
+
+        return self.ang_dict
+
+    def get_ang_list(self):
+        files = os.listdir(os.path.join(os.getcwd(), "ANG"))
+        empty_df = pandas.DataFrame()
+        for file in files:
+            full_path = os.path.join(os.getcwd(), "ANG", file)
+            satnum = get_satnum_from_ang(full_path)
+            single_ang = self.Ang(file, empty_df)
+            if satnum in self.ang_dict:
+                self.ang_dict[satnum].append(single_ang)
+            else:
+                self.ang_dict[satnum] = [single_ang]
+
+        return self.ang_dict

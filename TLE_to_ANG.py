@@ -82,7 +82,7 @@ class AngCalculator:
                     topocentric = difference.at(t_events[i + 1])
                     alt, az, distance = topocentric.altaz()
                     step = get_step_by_distance(distance.km)
-                    times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2], step]
+                    times_list = [str(sat.model.satnum), sat, t_events[i], t_events[i + 1], t_events[i + 2], step]
                     if self.filter_by_distance:
                         if not self.min_distance <= distance.km <= self.max_distance:
                             continue

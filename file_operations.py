@@ -77,6 +77,11 @@ def get_date_from_ang(file):
     return date
 
 
+def get_satnum_from_ang(file):
+    with open(file, "r") as f:
+        first_line = f.readline()
+    return int(first_line)
+
 def read_ang(file):
     midnight_index = 0
     col = ["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"]

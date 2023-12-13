@@ -9,6 +9,7 @@ import file_operations
 import downloader
 from TLE_to_ANG import AngCalculator
 from file_operations import read_ang
+from manager import EffectiveManager
 
 
 def dict_from_df(cat_df):
@@ -125,7 +126,11 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='(%(threadName)-10s) %(message)s', )
 
+
+
     conf = get_conf()
+    # manager = EffectiveManager(conf)
+    # blabla = manager.get_ang_list()
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
     norad_cred = {"identity": conf["identity"], "password": conf["password"]}
@@ -141,8 +146,8 @@ if __name__ == "__main__":
         max_period = int(conf["max_period"])
         cat = filter_cat_by_period(min_period, max_period, cat)
     needed_sat = dict_from_df(cat)
-    # satellites = file_operations.read_tle(tle_dir, needed_sat)
-    # run_calc(conf, satellites)
+    satellites = file_operations.read_tle(tle_dir, needed_sat)
+    run_calc(conf, satellites)
 
     # if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
     #     sieve = int(conf["sieve"])
