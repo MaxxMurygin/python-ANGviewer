@@ -14,12 +14,17 @@ class EffectiveManager:
         self.ang_df = pandas.DataFrame()
         self.ang_list = list()
         self.ang_dict = dict()
-        # self.config = get_conf(config)
+        self.config = config
 
     class Ang:
         def __init__(self, filename, dataframe):
             self.filename = filename
             self.data = dataframe
+        def get_filename(self):
+            return self.filename
+
+        def get_data(self):
+            return self.data
 
     def get_ang_list_with_data(self):
         files = os.listdir(os.path.join(os.getcwd(), "ANG"))
