@@ -130,14 +130,14 @@ if __name__ == "__main__":
 
     conf = get_conf()
     manager = EffectiveManager(conf)
-    ang_list = manager.get_ang_list()
+    ang_list = manager.get_ang_list_with_data()
     for norad_id in ang_list.keys():
-        ang = ang_list.get(norad_id)
+        current_sat = ang_list.get(norad_id)
         print(norad_id)
-        for a in ang:
-            f = manager.Ang.get_filename(a)
-            d = manager.Ang.get_data(a)
-            print(f)
+        for ang in current_sat.keys():
+            # f = manager.Ang.get_filename(a)
+            d = current_sat.get(ang)
+            print(ang)
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
     norad_cred = {"identity": conf["identity"], "password": conf["password"]}
@@ -152,13 +152,13 @@ if __name__ == "__main__":
         min_period = int(conf["min_period"])
         max_period = int(conf["max_period"])
         cat = filter_cat_by_period(min_period, max_period, cat)
-    needed_sat = dict_from_df(cat)
-    satellites = file_operations.read_tle(tle_dir, needed_sat)
-    run_calc(conf, satellites)
+    # needed_sat = dict_from_df(cat)
+    # satellites = file_operations.read_tle(tle_dir, needed_sat)
+    # run_calc(conf, satellites)
 
     # if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
     #     sieve = int(conf["sieve"])
     #     AngFilter.thin_out(ang_dir, sieve)
 
-    app = AngViewer()  # Отображение
-    app.view(ang_dir)
+    # app = AngViewer()  # Отображение
+    # app.view(ang_dir)
