@@ -129,13 +129,15 @@ if __name__ == "__main__":
 
 
     conf = get_conf()
-    # manager = EffectiveManager(conf)
-    # ang_list = manager.get_ang_list()
-    # for norad_id in ang_list.keys():
-    #     ang = ang_list.get(norad_id)
-    #     for a in ang:
-    #         fn = manager.Ang.get_filename(a)
-    #         d = manager.Ang.get_data(a)
+    manager = EffectiveManager(conf)
+    ang_list = manager.get_ang_list()
+    for norad_id in ang_list.keys():
+        ang = ang_list.get(norad_id)
+        print(norad_id)
+        for a in ang:
+            f = manager.Ang.get_filename(a)
+            d = manager.Ang.get_data(a)
+            print(f)
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
     norad_cred = {"identity": conf["identity"], "password": conf["password"]}
