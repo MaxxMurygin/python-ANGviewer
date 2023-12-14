@@ -130,14 +130,14 @@ if __name__ == "__main__":
 
     conf = get_conf()
     manager = EffectiveManager(conf)
-    ang_list = manager.get_ang_list_with_data()
-    for norad_id in ang_list.keys():
-        current_sat = ang_list.get(norad_id)
+    all_angs = manager.get_ang_dict()
+    for norad_id in all_angs.keys():
+        current_sat = all_angs.get(norad_id)
         print(norad_id)
         for ang in current_sat.keys():
-            # f = manager.Ang.get_filename(a)
             d = current_sat.get(ang)
-            print(ang)
+            print(ang, d)
+
     ang_dir = conf["angdirectory"]
     tle_dir = conf["tledirectory"]
     norad_cred = {"identity": conf["identity"], "password": conf["password"]}

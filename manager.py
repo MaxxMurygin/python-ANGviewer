@@ -26,7 +26,7 @@ class EffectiveManager:
     #     def get_data(self):
     #         return self.data
 
-    def get_ang_list_with_data(self):
+    def get_ang_dict_with_data(self):
         files = os.listdir(os.path.join(os.getcwd(), "ANG"))
         for file in files:
             full_path = os.path.join(os.getcwd(), "ANG", file)
@@ -40,7 +40,7 @@ class EffectiveManager:
 
         return self.ang_dict
 
-    def get_ang_list(self):
+    def get_ang_dict(self):
         files = os.listdir(os.path.join(os.getcwd(), "ANG"))
         col = ["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"]
         empty_df = pandas.DataFrame(columns=col)
