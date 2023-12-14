@@ -39,8 +39,9 @@ def get_conf(filename='config.conf'):
     conf = {}
     try:
         for section in parser.sections():
-            items = parser.items(section)
-            conf.update(items)
+            conf[section] = {}
+            for key, val in parser.items(section):
+                conf[section][key] = val
     except Exception as err:
         # logging.error(str(err))
         return
@@ -84,14 +85,14 @@ class AngViewer:
 
 
 def run_calc(conf, satellites):
-    threads_qty = int(conf["threads"])
+    threads_qty = int(conf["System"]["threads"])
     splited_salellites = list()
     processes = list()
     ang_calculator_list = list()
 
-    manager = multiprocessing.Manager()
-    lock = manager.Lock()
-    global_ang_list = manager.list()
+    mp_manager = multiprocessing.Manager()
+    lock = mp_manager.Lock()
+    global_ang_list = mp_manager.list()
 
     if len(satellites) < threads_qty:
         for i in range(0, len(satellites)):
@@ -126,8 +127,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='(%(threadName)-10s) %(message)s', )
 
-
-
     conf = get_conf()
     manager = EffectiveManager(conf)
     all_angs = manager.get_ang_dict()
@@ -138,27 +137,27 @@ if __name__ == "__main__":
             d = current_sat.get(ang)
             print(ang, d)
 
-    ang_dir = conf["angdirectory"]
-    tle_dir = conf["tledirectory"]
-    norad_cred = {"identity": conf["identity"], "password": conf["password"]}
-    download = bool(conf["download"] == "True")
-    period_filter = bool(conf["filter_by_period"] == "True")
+    ang_dir = conf["Path"]["angdirectory"]
+    tle_dir = conf["Path"]["tledirectory"]
+    norad_cred = {"identity": conf["TLE"]["identity"], "password": conf["TLE"]["password"]}
+    download = bool(conf["TLE"]["download"] == "True")
+    period_filter = bool(conf["Filter"]["filter_by_period"] == "True")
 
     if download:
         downloader.download_tle(tle_dir, norad_cred)
 
     cat = file_operations.read_satcat()
     if period_filter:
-        min_period = int(conf["min_period"])
-        max_period = int(conf["max_period"])
+        min_period = float(conf["Filter"]["min_period"])
+        max_period = float(conf["Filter"]["max_period"])
         cat = filter_cat_by_period(min_period, max_period, cat)
-    # needed_sat = dict_from_df(cat)
-    # satellites = file_operations.read_tle(tle_dir, needed_sat)
-    # run_calc(conf, satellites)
+    needed_sat = dict_from_df(cat)
+    satellites = file_operations.read_tle(tle_dir, needed_sat)
+    run_calc(conf, satellites)
 
     # if bool(conf["filter_by_sieve"] == "True"):  # Прореживание
     #     sieve = int(conf["sieve"])
     #     AngFilter.thin_out(ang_dir, sieve)
 
-    # app = AngViewer()  # Отображение
-    # app.view(ang_dir)
+    app = AngViewer()  # Отображение
+    app.view(ang_dir)

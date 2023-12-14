@@ -49,21 +49,23 @@ class AngCalculator:
 
     def __init__(self, conf, satellites):
 
-        self.aolc = wgs84.latlon(float(conf["lat"]), float(conf["lon"]), float(conf["height"]))
-        self.begin = (datetime.strptime(conf["tbegin"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
+        self.aolc = wgs84.latlon(float(conf["Coordinates"]["lat"]), float(conf["Coordinates"]["lon"]),
+                                 float(conf["Coordinates"]["height"]))
+        self.begin = (datetime.strptime(conf["Basic"]["tbegin"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
                       timedelta(hours=3))
-        self.end = (datetime.strptime(conf["tend"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
+        self.end = (datetime.strptime(conf["Basic"]["tend"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
                     timedelta(hours=3))
-        self.tle_dir = conf["tledirectory"]
-        self.ang_dir = conf["angdirectory"]
-        self.filter_by_elevate = bool(conf["filter_by_elevation"] == "True")
-        self.filter_by_distance = bool(conf["filter_by_distance"] == "True")
-        self.filter_by_sunlite = bool(conf["filter_by_sunlite"] == "True")
-        self.delete_existing = bool(conf["delete_existing"] == "True")
-        self.min_distance = int(conf["min_distance"])
-        self.max_distance = int(conf["max_distance"])
-        self.angle_of_drop = int(conf["max_elevation"])
-        self.sunlite = float(conf["sunlite"])
+        self.tle_dir = conf["Path"]["tledirectory"]
+        self.ang_dir = conf["Path"]["angdirectory"]
+        self.filter_by_elevate = bool(conf["Filter"]["filter_by_elevation"] == "True")
+        self.filter_by_distance = bool(conf["Filter"]["filter_by_distance"] == "True")
+        self.filter_by_sunlite = bool(conf["Filter"]["filter_by_sunlite"] == "True")
+        self.delete_existing = bool(conf["Path"]["delete_existing"] == "True")
+        self.min_distance = int(conf["Filter"]["min_distance"])
+        self.max_distance = int(conf["Filter"]["max_distance"])
+        self.min_elevation = int(conf["Filter"]["min_elevation"])
+        self.max_elevation = int(conf["Filter"]["max_elevation"])
+        self.sunlite = float(conf["Filter"]["sunlite"])
         self.satellites = satellites
 
     def find_events(self, sats):
@@ -78,7 +80,6 @@ class AngCalculator:
                 # if len(events) > 18:
                 #     continue
                 for i in range(0, len(t_events), 3):
-                    # times_list = [sat.model.satnum_str, sat, t_events[i], t_events[i + 1], t_events[i + 2]]
                     topocentric = difference.at(t_events[i + 1])
                     alt, az, distance = topocentric.altaz()
                     step = get_step_by_distance(distance.km)
@@ -87,7 +88,7 @@ class AngCalculator:
                         if not self.min_distance <= distance.km <= self.max_distance:
                             continue
                     if self.filter_by_elevate:
-                        if alt.degrees >= self.angle_of_drop:
+                        if self.max_elevation >= alt.degrees >= self.min_elevation:
                             event_df.loc[len(event_df.index)] = times_list
                     else:
                         event_df.loc[len(event_df.index)] = times_list
@@ -145,7 +146,7 @@ class AngCalculator:
         perf_start = datetime.now()
         events = self.find_events(self.satellites)
         perf = datetime.now() - perf_start
-        print("*{}* Время расчета зон: {} sec".format(proc_name, perf.seconds + perf.microseconds / 1000000))
+        print(f"*{proc_name}* Время расчета зон: {perf.seconds + perf.microseconds / 1000000} sec")
         if self.delete_existing:
             for file in os.listdir(self.ang_dir):
                 os.remove(os.path.join(self.ang_dir, file))
@@ -155,7 +156,6 @@ class AngCalculator:
             if item != 0:
                 local_list.append(item)
             perf = datetime.now() - perf_start
-            print("*{}* Расчет прохода {}: {} sec".format(proc_name, event.iloc[0],
-                                                          perf.seconds + perf.microseconds / 1000000))
+            print(f"*{proc_name}* Расчет прохода {event.iloc[0]}: {perf.seconds + perf.microseconds / 1000000} sec")
         with lock:
             global_list.append(local_list)
