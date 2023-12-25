@@ -33,8 +33,6 @@ def read_tle(tle_dir, needed_sat):
                 line = line.rstrip()
                 if line[0] == "1":
                     s = line
-
-
                 elif line[0] == "2":
                     t = line
                     try:
@@ -92,6 +90,7 @@ def get_satnum_from_ang(file):
         first_line = f.readline()
     return int(first_line)
 
+
 def read_ang(file):
     midnight_index = 0
     col = ["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"]
@@ -117,8 +116,6 @@ def read_ang(file):
     return df
 
 
-# class Writer:
-
 def write_ang(event, df, file):
     sat_number = event.iloc[0]
     dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
@@ -130,3 +127,9 @@ def write_ang(event, df, file):
             f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
                     "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
                                          row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
+
+
+def write_config(conf, config_file="test.ini"):
+    file = os.path.join(os.getcwd(), config_file)
+    with open(file, 'w') as configfile:
+        conf.write(configfile)
