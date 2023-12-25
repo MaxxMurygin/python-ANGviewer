@@ -66,6 +66,7 @@ class AngCalculator:
         self.min_elevation = int(conf["Filter"]["min_elevation"])
         self.max_elevation = int(conf["Filter"]["max_elevation"])
         self.sunlite = float(conf["Filter"]["sunlite"])
+        self.horizon = float(conf["Basic"]["horizon"])
         self.satellites = satellites
 
     def find_events(self, sats):
@@ -76,7 +77,7 @@ class AngCalculator:
         for sat in sats.values():
             try:
                 difference = sat - self.aolc
-                t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=10.0)
+                t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=self.horizon)
                 # if len(events) > 18:
                 #     continue
                 for i in range(0, len(t_events), 3):

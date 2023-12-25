@@ -2,7 +2,7 @@ import os
 
 import pandas
 
-from file_operations import get_satnum_from_ang, read_ang
+from file_operations import get_satnum_from_ang, read_ang, read_satcat
 
 
 # from utils import get_conf
@@ -15,16 +15,7 @@ class EffectiveManager:
         self.ang_list = list()
         self.ang_dict = dict()
         self.config = config
-
-    # class Ang:
-    #     def __init__(self, filename, dataframe):
-    #         self.filename = filename
-    #         self.data = dataframe
-    #     def get_filename(self):
-    #         return self.filename
-    #
-    #     def get_data(self):
-    #         return self.data
+        self.catalog = read_satcat()
 
     def get_ang_dict_with_data(self):
         files = os.listdir(os.path.join(os.getcwd(), "ANG"))
@@ -54,3 +45,6 @@ class EffectiveManager:
                 self.ang_dict[satnum] = single_ang
 
         return self.ang_dict
+
+    def get_sat_info(self, id):
+        return self.catalog.loc[[id]]

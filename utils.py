@@ -133,9 +133,13 @@ if __name__ == "__main__":
     for norad_id in all_angs.keys():
         current_sat = all_angs.get(norad_id)
         print(norad_id)
+        info = manager.get_sat_info(norad_id)
+        print(info)
         for ang in current_sat.keys():
             d = current_sat.get(ang)
             print(ang, d)
+
+
 
     ang_dir = conf["Path"]["angdirectory"]
     tle_dir = conf["Path"]["tledirectory"]
