@@ -15,6 +15,8 @@ def read_satcat(satcat_file="satcat.csv"):
     cat_df = pd.read_csv(file, index_col=1)
     cat_df = cat_df.loc[cat_df["DECAY"].isna()]
     cat_df = cat_df.loc[cat_df["PERIOD"].notna()]
+    cat_df["OBJECT_TYPE"] = cat_df["OBJECT_TYPE"].astype("string")
+    cat_df = cat_df.loc[cat_df["OBJECT_TYPE"].str.contains("PAYLOAD")]
     # cat_df['SATNAME'] = cat_df['SATNAME'].astype('string')
     # test_df = cat_df.loc[cat_df['SATNAME'].str.contains('GLOnASS|lageos', flags=re.IGNORECASE)]
     print()
@@ -31,14 +33,21 @@ def read_tle(tle_dir, needed_sat):
                 line = line.rstrip()
                 if line[0] == "1":
                     s = line
-                    sat_number = s[2:7]
+
+
                 elif line[0] == "2":
                     t = line
+                    try:
+                        sat_number = int(s[2:7])
+                    except:
+                        continue
+                    if sat_number not in needed_sat:
+                        continue
                     satrec = Satrec.twoline2rv(s, t)
-                    if satrec.satnum in needed_sat:
-                        sat = EarthSatellite.from_satrec(satrec, ts)
-                        sat.name = needed_sat.get(satrec.satnum)
-                        satellites[sat_number] = sat
+                    # if satrec.satnum in needed_sat:
+                    sat = EarthSatellite.from_satrec(satrec, ts)
+                    sat.name = needed_sat.get(satrec.satnum)
+                    satellites[sat_number] = sat
     print("КА в выборке: {}".format(len(satellites)))
     return satellites
 
