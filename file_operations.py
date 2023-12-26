@@ -1,10 +1,12 @@
+import logging
 import os
-import re
-from math import pi
-import pandas as pd
+from configparser import ConfigParser
 from datetime import timedelta, datetime
-from skyfield.api import EarthSatellite, load
+from math import pi
+
+import pandas as pd
 from sgp4.model import Satrec
+from skyfield.api import EarthSatellite, load
 
 
 def read_satcat(satcat_file="satcat.csv"):
@@ -19,8 +21,6 @@ def read_satcat(satcat_file="satcat.csv"):
     cat_df = cat_df.loc[cat_df["OBJECT_TYPE"].str.contains("PAYLOAD")]
     # cat_df['SATNAME'] = cat_df['SATNAME'].astype('string')
     # test_df = cat_df.loc[cat_df['SATNAME'].str.contains('GLOnASS|lageos', flags=re.IGNORECASE)]
-    print()
-
     return cat_df
 
 
@@ -37,7 +37,8 @@ def read_tle(tle_dir, needed_sat):
                     t = line
                     try:
                         sat_number = int(s[2:7])
-                    except:
+                    except ValueError as e:
+                        logging.error(str(e))
                         continue
                     if sat_number not in needed_sat:
                         continue
@@ -129,7 +130,9 @@ def write_ang(event, df, file):
                                          row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
 
 
-def write_config(conf, config_file="test.ini"):
+def write_config(conf, config_file="default.conf"):
+    parser = ConfigParser(inline_comment_prefixes="#")
+    parser.read_dict(conf)
     file = os.path.join(os.getcwd(), config_file)
     with open(file, 'w') as configfile:
-        conf.write(configfile)
+        parser.write(configfile)

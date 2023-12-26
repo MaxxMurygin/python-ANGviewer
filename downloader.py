@@ -39,15 +39,14 @@ def download_tle(tle_dir, norad_cred):
     url_heo = ("https://www.space-track.org/basicspacedata/query/class/gp/"
                "EPOCH/%3Enow-30/ECCENTRICITY/%3E0.25/OBJECT_TYPE/payload/orderby/NORAD_CAT_ID,EPOCH/format/3le")
     tle_heo = os.path.join(os.getcwd(), tle_dir, "heo.tle")
-    dl_http(url_leo, tle_leo, norad_cred)
-    download_satcat(norad_cred)
+    dl_http(url_full_catalog, tle_full, norad_cred)
 
 
-def download_satcat(norad_cred, cat_dir="CAT"):
+def download_cat(norad_cred, cat_dir="CAT"):
     satcat_file = os.path.join(os.getcwd(), cat_dir, "satcat.csv")
     if os.path.isfile(satcat_file):
-        satcat_file_time = datetime.fromtimestamp(os.path.getmtime(satcat_file))
-        if datetime.now() - satcat_file_time < timedelta(days=30):
+        cat_file_time = datetime.fromtimestamp(os.path.getmtime(satcat_file))
+        if datetime.now() - cat_file_time < timedelta(days=30):
             return
     url = "https://www.space-track.org/basicspacedata/query/class/satcat/orderby/NORAD_CAT_ID%20asc/format/csv"
     dl_http(url, satcat_file, norad_cred)
