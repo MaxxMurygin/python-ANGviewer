@@ -4,20 +4,6 @@ from configparser import ConfigParser
 
 from manager import EffectiveManager
 
-
-
-import multiprocessing
-import os
-from configparser import ConfigParser
-from datetime import datetime
-from matplotlib import pyplot as plt
-from matplotlib.dates import DateFormatter
-import file_operations
-import downloader
-from TLE_to_ANG import AngCalculator
-from file_operations import read_ang
-
-
 #----------gui-----------------
 import sys
 from gui_ANGviewer.guiFormMainCode import guiFormMain,QtWidgets
@@ -50,6 +36,14 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = guiFormMain(manager)
     window.show()
+
+
+    window.figGraphTime.tight_layout()
+    window.figGraphTime.canvas.draw()
+    window.figGraphPolar.tight_layout()
+    window.figGraphPolar.canvas.draw()
+    window.repaint()
+
     sys.exit(app.exec_())
 
 
