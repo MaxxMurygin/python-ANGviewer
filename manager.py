@@ -4,10 +4,9 @@ import pandas
 
 from file_operations import get_satnum_from_ang, read_ang, read_satcat
 
-# from gui_ANGviewer.guiFormMainCode import guiFormMain,QtWidgets
-# from PyQt5 import QtWidgets
 
 # from utils import get_conf
+
 
 class EffectiveManager:
     def __init__(self, config):

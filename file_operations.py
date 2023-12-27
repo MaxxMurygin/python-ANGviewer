@@ -1,13 +1,14 @@
+import logging
 import os
-import re
+from configparser import ConfigParser
+from datetime import timedelta, datetime
 from math import pi
 import pandas as pd
-from datetime import timedelta, datetime
-from skyfield.api import EarthSatellite, load
 from sgp4.model import Satrec
+from skyfield.api import EarthSatellite, load
 
 
-def read_satcat(satcat_file="satcat.csv"):
+def read_catalog(satcat_file="catalog.csv"):
     file = os.path.join(os.getcwd(), "CAT", satcat_file)
     # col = ["INTLDES,NORAD_CAT_ID", "OBJECT_TYPE", "SATNAME", "COUNTRY", "LAUNCH", "SITE", "DECAY", "PERIOD",
     #        "INCLINATION", "APOGEE", "PERIGEE", "COMMENT", "COMMENTCODE", "RCSVALUE","RCS_SIZE", "FILE", "LAUNCH_YEAR",
@@ -19,35 +20,30 @@ def read_satcat(satcat_file="satcat.csv"):
     cat_df = cat_df.loc[cat_df["OBJECT_TYPE"].str.contains("PAYLOAD")]
     # cat_df['SATNAME'] = cat_df['SATNAME'].astype('string')
     # test_df = cat_df.loc[cat_df['SATNAME'].str.contains('GLOnASS|lageos', flags=re.IGNORECASE)]
-    print()
-
     return cat_df
 
 
-def read_tle(tle_dir, needed_sat):
+def read_tle(tle_dir, tle_file, needed_sat):
     ts = load.timescale()
     satellites = dict()
-    for file in os.listdir(tle_dir):
-        with open(os.path.join(tle_dir, file), "r") as f:
-            for line in f:
-                line = line.rstrip()
-                if line[0] == "1":
-                    s = line
-
-
-                elif line[0] == "2":
-                    t = line
-                    try:
-                        sat_number = int(s[2:7])
-                    except:
-                        continue
-                    if sat_number not in needed_sat:
-                        continue
-                    satrec = Satrec.twoline2rv(s, t)
-                    # if satrec.satnum in needed_sat:
-                    sat = EarthSatellite.from_satrec(satrec, ts)
-                    sat.name = needed_sat.get(satrec.satnum)
-                    satellites[sat_number] = sat
+    with open(os.path.join(tle_dir, tle_file), "r") as f:
+        for line in f:
+            line = line.rstrip()
+            if line[0] == "1":
+                s = line
+            elif line[0] == "2":
+                t = line
+                try:
+                    sat_number = int(s[2:7])
+                except ValueError as e:
+                    logging.error(str(e))
+                    continue
+                if sat_number not in needed_sat:
+                    continue
+                satrec = Satrec.twoline2rv(s, t)
+                sat = EarthSatellite.from_satrec(satrec, ts)
+                sat.name = needed_sat.get(satrec.satnum)
+                satellites[sat_number] = sat
     print("КА в выборке: {}".format(len(satellites)))
     return satellites
 
@@ -87,10 +83,11 @@ def get_date_from_ang(file):
     return date
 
 
-def get_satnum_from_ang(file):
+def get_sat_number_from_ang(file):
     with open(file, "r") as f:
         first_line = f.readline()
     return int(first_line)
+
 
 def read_ang(file):
     midnight_index = 0
@@ -117,8 +114,6 @@ def read_ang(file):
     return df
 
 
-# class Writer:
-
 def write_ang(event, df, file):
     sat_number = event.iloc[0]
     dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
@@ -130,3 +125,11 @@ def write_ang(event, df, file):
             f.write("{:>20.11f}{:>24.9f}{:>24.16f}{:>24.16f}{:>24.16f}{:>24.16f}"
                     "{:>11.3f}\n".format(row.iloc[0], row.iloc[1], row.iloc[2],
                                          row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6]))
+
+
+def write_config(conf, config_file="default.conf"):
+    parser = ConfigParser(inline_comment_prefixes="#")
+    parser.read_dict(conf)
+    file = os.path.join(os.getcwd(), config_file)
+    with open(file, 'w') as configfile:
+        parser.write(configfile)
