@@ -10,7 +10,7 @@ import file_operations
 import utils
 from calculator import Calculator
 from file_operations import get_sat_number_from_ang, read_ang, read_catalog, write_config
-from utils import get_config_from_file, filter_catalog_by_period, catalog_df_to_dict
+from utils import get_config_from_file, filter_catalog, catalog_df_to_dict
 
 
 class EffectiveManager:
@@ -26,13 +26,10 @@ class EffectiveManager:
         self.status = ""
 
     def calculate(self, tle_file):
-        period_filter = bool(self.config["Filter"]["filter_by_period"] == "True")
-
+        filter_enabled = bool(self.config["Filter"]["filter_enabled"] == "True")
         cat = file_operations.read_catalog()
-        if period_filter:
-            min_period = float(self.config["Filter"]["min_period"])
-            max_period = float(self.config["Filter"]["max_period"])
-            cat = filter_catalog_by_period(min_period, max_period, cat)
+        if filter_enabled:
+            cat = filter_catalog(self.config, cat)
         needed_sat = catalog_df_to_dict(cat)
         satellites = file_operations.read_tle(self.tle_dir, tle_file, needed_sat)
         self.__run_calc(satellites)
@@ -116,6 +113,9 @@ class EffectiveManager:
 
     def get_status(self):
         return self.status
+
+    def terminate(self):
+        pass
 
     def copy_to_dst(self, dst):
         try:

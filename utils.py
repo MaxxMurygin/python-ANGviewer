@@ -45,9 +45,11 @@ def catalog_df_to_dict(cat_df):
     return sat_dict
 
 
-def filter_catalog_by_period(min_period, max_period, cat_df):
-    cat_df = cat_df[cat_df["PERIOD"] > min_period]
-    cat_df = cat_df[cat_df["PERIOD"] < max_period]
+def filter_catalog(config, cat_df):
+    period_filter = bool(config["Filter"]["filter_by_period"] == "True")
+    if period_filter:
+        cat_df = cat_df[cat_df["PERIOD"] > float(config["Filter"]["min_period"])]
+        cat_df = cat_df[cat_df["PERIOD"] < float(config["Filter"]["max_period"])]
     return cat_df
 
 
