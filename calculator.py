@@ -2,63 +2,31 @@ import logging
 import multiprocessing
 import os
 from datetime import timedelta, datetime
-from math import pi
-
 import pandas
 import pandas as pd
 from skyfield.api import load
 from skyfield.api import utc
 from skyfield.toposlib import wgs84
+from utils import get_step_by_distance, rotate_by_pi, correct_midnight
 
 
 # python -m jplephem excerpt 2023/1/1 2023/12/31 "https://naif.jpl.nasa.gov/pub/
 # naif/generic_kernels/spk/planets/de440s.bsp" "de440s.bsp"
 
-def rotate(angles):
-    rotated = []
-    for angle in angles:
-        if angle < pi:
-            rotated.append(angle + pi)
-        else:
-            rotated.append(angle - pi)
-    return rotated
 
-
-def correct_midnight(times):
-    corr_times = []
-    for time in times:
-        if time > 86400:
-            corr_times.append(time - 86400)
-        else:
-            corr_times.append(time)
-
-    return corr_times
-
-
-def get_step_by_distance(dst):
-    if dst <= 3000:
-        return 1
-    elif 3000 < dst <= 10000:
-        return 2
-    elif 10000 < dst <= 25000:
-        return 8
-    else:
-        return 120
-
-
-class AngCalculator:
+class Calculator:
     ang_list = list()
 
     def __init__(self, conf, satellites):
 
         self.aolc = wgs84.latlon(float(conf["Coordinates"]["lat"]), float(conf["Coordinates"]["lon"]),
                                  float(conf["Coordinates"]["height"]))
-        self.begin = (datetime.strptime(conf["Basic"]["tbegin"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
+        self.begin = (datetime.strptime(conf["Basic"]["t_begin"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
                       timedelta(hours=3))
-        self.end = (datetime.strptime(conf["Basic"]["tend"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
+        self.end = (datetime.strptime(conf["Basic"]["t_end"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
                     timedelta(hours=3))
-        self.tle_dir = conf["Path"]["tledirectory"]
-        self.ang_dir = conf["Path"]["angdirectory"]
+        self.tle_dir = conf["Path"]["tle_directory"]
+        self.ang_dir = conf["Path"]["ang_directory"]
         self.filter_by_elevate = bool(conf["Filter"]["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["Filter"]["filter_by_distance"] == "True")
         self.filter_by_sunlite = bool(conf["Filter"]["filter_by_sunlite"] == "True")
@@ -100,7 +68,7 @@ class AngCalculator:
                 continue
         return event_df
 
-    def calc_ang(self, event):
+    def calculate_ang_from_event(self, event):
         arr = []
         eph = load("de440s.bsp")
         step = event.iloc[5]
@@ -133,7 +101,7 @@ class AngCalculator:
             t_current_in_sec = t_current_in_sec + step
 
         df = pandas.DataFrame(arr, columns=["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"])
-        df["Az"] = rotate(df["Az"])
+        df["Az"] = rotate_by_pi(df["Az"])
         if df["Time"].max() > 86400:
             df["Time"] = correct_midnight(df["Time"])
         if self.filter_by_sunlite:
@@ -143,7 +111,7 @@ class AngCalculator:
                 return 0
         return [event, df, file_name]
 
-    def tle_to_ang(self, global_list, lock):
+    def calculate(self, global_list, lock):
         local_list = list()
         proc_name = multiprocessing.current_process().name
         perf_start = datetime.now()
@@ -155,7 +123,7 @@ class AngCalculator:
                 os.remove(os.path.join(self.ang_dir, file))
         for _, event in events.iterrows():
             perf_start = datetime.now()
-            item = self.calc_ang(event)
+            item = self.calculate_ang_from_event(event)
             if item != 0:
                 local_list.append(item)
             perf = datetime.now() - perf_start

@@ -3,13 +3,12 @@ import os
 from configparser import ConfigParser
 from datetime import timedelta, datetime
 from math import pi
-
 import pandas as pd
 from sgp4.model import Satrec
 from skyfield.api import EarthSatellite, load
 
 
-def read_satcat(satcat_file="satcat.csv"):
+def read_catalog(satcat_file="catalog.csv"):
     file = os.path.join(os.getcwd(), "CAT", satcat_file)
     # col = ["INTLDES,NORAD_CAT_ID", "OBJECT_TYPE", "SATNAME", "COUNTRY", "LAUNCH", "SITE", "DECAY", "PERIOD",
     #        "INCLINATION", "APOGEE", "PERIGEE", "COMMENT", "COMMENTCODE", "RCSVALUE","RCS_SIZE", "FILE", "LAUNCH_YEAR",
@@ -24,29 +23,27 @@ def read_satcat(satcat_file="satcat.csv"):
     return cat_df
 
 
-def read_tle(tle_dir, needed_sat):
+def read_tle(tle_dir, tle_file, needed_sat):
     ts = load.timescale()
     satellites = dict()
-    for file in os.listdir(tle_dir):
-        with open(os.path.join(tle_dir, file), "r") as f:
-            for line in f:
-                line = line.rstrip()
-                if line[0] == "1":
-                    s = line
-                elif line[0] == "2":
-                    t = line
-                    try:
-                        sat_number = int(s[2:7])
-                    except ValueError as e:
-                        logging.error(str(e))
-                        continue
-                    if sat_number not in needed_sat:
-                        continue
-                    satrec = Satrec.twoline2rv(s, t)
-                    # if satrec.satnum in needed_sat:
-                    sat = EarthSatellite.from_satrec(satrec, ts)
-                    sat.name = needed_sat.get(satrec.satnum)
-                    satellites[sat_number] = sat
+    with open(os.path.join(tle_dir, tle_file), "r") as f:
+        for line in f:
+            line = line.rstrip()
+            if line[0] == "1":
+                s = line
+            elif line[0] == "2":
+                t = line
+                try:
+                    sat_number = int(s[2:7])
+                except ValueError as e:
+                    logging.error(str(e))
+                    continue
+                if sat_number not in needed_sat:
+                    continue
+                satrec = Satrec.twoline2rv(s, t)
+                sat = EarthSatellite.from_satrec(satrec, ts)
+                sat.name = needed_sat.get(satrec.satnum)
+                satellites[sat_number] = sat
     print("КА в выборке: {}".format(len(satellites)))
     return satellites
 
@@ -86,7 +83,7 @@ def get_date_from_ang(file):
     return date
 
 
-def get_satnum_from_ang(file):
+def get_sat_number_from_ang(file):
     with open(file, "r") as f:
         first_line = f.readline()
     return int(first_line)

@@ -1,11 +1,43 @@
 import logging
 import os
 from configparser import ConfigParser, NoSectionError, NoOptionError
-
+from math import pi
 import pandas as pd
 
 
-def dict_from_df(cat_df):
+def get_step_by_distance(dst):
+    if dst <= 3000:
+        return 1
+    elif 3000 < dst <= 10000:
+        return 2
+    elif 10000 < dst <= 25000:
+        return 8
+    else:
+        return 120
+
+
+def correct_midnight(times):
+    corr_times = []
+    for time in times:
+        if time > 86400:
+            corr_times.append(time - 86400)
+        else:
+            corr_times.append(time)
+
+    return corr_times
+
+
+def rotate_by_pi(angles):
+    rotated = []
+    for angle in angles:
+        if angle < pi:
+            rotated.append(angle + pi)
+        else:
+            rotated.append(angle - pi)
+    return rotated
+
+
+def catalog_df_to_dict(cat_df):
     sat_dict = dict()
     for index, sat in cat_df.iterrows():
         sat_dict.update({index: sat["SATNAME"]})
@@ -13,7 +45,7 @@ def dict_from_df(cat_df):
     return sat_dict
 
 
-def filter_cat_by_period(min_period, max_period, cat_df):
+def filter_catalog_by_period(min_period, max_period, cat_df):
     cat_df = cat_df[cat_df["PERIOD"] > min_period]
     cat_df = cat_df[cat_df["PERIOD"] < max_period]
     return cat_df
@@ -26,7 +58,7 @@ def check_dirs(directory):
     return full_path
 
 
-def get_conf(filename='config.conf'):
+def get_config_from_file(filename='config.conf'):
     parser = ConfigParser(inline_comment_prefixes="#")
     parser.read(os.path.join(os.getcwd(), filename))
     conf = {}

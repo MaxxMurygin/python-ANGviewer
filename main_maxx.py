@@ -1,5 +1,4 @@
 import logging
-
 from manager import EffectiveManager
 from viewer import Viewer
 
@@ -9,13 +8,22 @@ if __name__ == "__main__":
 
     config_file = "config.conf"
     manager = EffectiveManager(config_file)
-    conf = manager.get_conf()
-    ang_dir = conf["Path"]["angdirectory"]
+    conf = manager.get_config()
+    ang_dir = conf["Path"]["ang_directory"]
 
-    # manager.download_cat()
+    conf["Path"]["ang_directory"] = "ang1_directory" # Test config change, set & write
+    manager.save_config_to_file("test.conf")
+    manager.set_config(conf)
+    manager.save_config_to_file("test.conf")
+    manager.open_config_from_file("config.conf")
+    manager.save_config_to_file("test.conf")
+
+    # manager.download_cat() # Test downloader
     # manager.download_tle()
 
-    manager.calculate()
+    # manager.copy_to_dst("c:\!nu\EOP")
+
+    manager.calculate(conf["TLE"]["default_file"])
 
     app = Viewer()  # Отображение
     app.view(ang_dir)
