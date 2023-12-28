@@ -111,21 +111,27 @@ class Calculator:
                 return 0
         return [event, df, file_name]
 
-    def calculate(self, global_list, lock):
+    def calculate(self, global_list, commander, counter, lock):
         local_list = list()
         proc_name = multiprocessing.current_process().name
         perf_start = datetime.now()
+
         events = self.find_events(self.satellites)
+        events_qty = len(events)
         perf = datetime.now() - perf_start
         print(f"*{proc_name}* Время расчета зон: {perf.seconds + perf.microseconds / 1000000} sec")
         if self.delete_existing:
             for file in os.listdir(self.ang_dir):
                 os.remove(os.path.join(self.ang_dir, file))
+        count = 0
         for _, event in events.iterrows():
+            count += 1
             perf_start = datetime.now()
             item = self.calculate_ang_from_event(event)
             if item != 0:
                 local_list.append(item)
+
+            counter[proc_name] = count / events_qty
             perf = datetime.now() - perf_start
             print(f"*{proc_name}* Расчет прохода {event.iloc[0]}: {perf.seconds + perf.microseconds / 1000000} sec")
         with lock:

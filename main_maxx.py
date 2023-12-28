@@ -11,12 +11,12 @@ if __name__ == "__main__":
     conf = manager.get_config()
     ang_dir = conf["Path"]["ang_directory"]
 
-    conf["Path"]["ang_directory"] = "ang1_directory" # Test config change, set & write
-    manager.save_config_to_file("test.conf")
-    manager.set_config(conf)
-    manager.save_config_to_file("test.conf")
-    manager.open_config_from_file("config.conf")
-    manager.save_config_to_file("test.conf")
+    # conf["Path"]["ang_directory"] = "ang1_directory" # Test config change, set & write
+    # manager.save_config_to_file("test.conf")
+    # manager.set_config(conf)
+    # manager.save_config_to_file("test.conf")
+    # manager.open_config_from_file("config.conf")
+    # manager.save_config_to_file("test.conf")
 
     # manager.download_cat() # Test downloader
     # manager.download_tle()
