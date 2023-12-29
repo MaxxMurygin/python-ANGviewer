@@ -1,6 +1,7 @@
 import logging
 import multiprocessing
 import os
+from array import array
 from datetime import timedelta, datetime
 import pandas
 import pandas as pd
@@ -12,6 +13,42 @@ from utils import get_step_by_distance, rotate_by_pi, correct_midnight
 
 # python -m jplephem excerpt 2023/1/1 2023/12/31 "https://naif.jpl.nasa.gov/pub/
 # naif/generic_kernels/spk/planets/de440s.bsp" "de440s.bsp"
+
+def events_to_list(t_events, events):
+    t, e = list(), list()
+    for i in range(0, len(events), 1):
+        t.append(t_events[i])
+        e.append(events[i])
+
+    return t, e
+
+
+def correct_borders(t_events, events, ts_begin, ts_end):
+    if events[0] == 2:
+        events = [1] + events
+        t_events = [ts_begin] + t_events
+    if events[0] == 1:
+        events = [0] + events
+        t_events = [ts_begin] + t_events
+    if events[len(events) - 1] == 0:
+        events.append(1)
+        t_events.append(ts_end)
+    if events[len(events) - 1] == 1:
+        events.append(2)
+        t_events.append(ts_end)
+
+    return t_events, events
+
+
+# def correct_border_end(t_events, events, ts_begin, ts_end):
+#     if events[len(events) - 1] == 0:
+#         events.append(1)
+#         t_events.append(ts_end)
+#     if events[len(events) - 1] == 1:
+#         events.append(2)
+#         t_events.append(ts_end)
+#
+#     return t_events, events
 
 
 class Calculator:
@@ -48,13 +85,23 @@ class Calculator:
             try:
                 difference = sat - self.aolc
                 t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=self.horizon)
-                # if len(events) > 18:
-                #     continue
+
+                if len(events) == 0:
+                    continue
+                t_events, events = events_to_list(t_events, events)
+                len_events = len(events)
+
+                if events[0] != 0 or events[len_events - 1] != 2:
+                    t_events, events = correct_borders(t_events, events, ts_begin, ts_end)
+                # if events[len_events - 1] != 2:
+                #     t_events, events = correct_border_end(t_events, events, ts_begin, ts_end)
+
                 for i in range(0, len(t_events), 3):
                     topocentric = difference.at(t_events[i + 1])
                     alt, az, distance = topocentric.altaz()
                     step = get_step_by_distance(distance.km)
                     times_list = [str(sat.model.satnum), sat, t_events[i], t_events[i + 1], t_events[i + 2], step]
+
                     if self.filter_by_distance:
                         if not self.min_distance <= distance.km <= self.max_distance:
                             continue
@@ -65,6 +112,7 @@ class Calculator:
                         event_df.loc[len(event_df.index)] = times_list
             except Exception as e:
                 logging.error(str(e) + "(find_events)")
+                logging.error(f"{sat.model.satnum} : {t_events} {events}")
                 continue
         return event_df
 
@@ -111,21 +159,27 @@ class Calculator:
                 return 0
         return [event, df, file_name]
 
-    def calculate(self, global_list, lock):
+    def calculate(self, global_list, commander, counter, lock):
         local_list = list()
         proc_name = multiprocessing.current_process().name
         perf_start = datetime.now()
+
         events = self.find_events(self.satellites)
+        events_qty = len(events)
         perf = datetime.now() - perf_start
         print(f"*{proc_name}* Время расчета зон: {perf.seconds + perf.microseconds / 1000000} sec")
         if self.delete_existing:
             for file in os.listdir(self.ang_dir):
                 os.remove(os.path.join(self.ang_dir, file))
+        count = 0
         for _, event in events.iterrows():
+            count += 1
             perf_start = datetime.now()
             item = self.calculate_ang_from_event(event)
             if item != 0:
                 local_list.append(item)
+
+            counter[proc_name] = count / events_qty
             perf = datetime.now() - perf_start
             print(f"*{proc_name}* Расчет прохода {event.iloc[0]}: {perf.seconds + perf.microseconds / 1000000} sec")
         with lock:

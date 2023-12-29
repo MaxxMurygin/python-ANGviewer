@@ -4,6 +4,8 @@ import multiprocessing
 import os
 import shutil
 from datetime import datetime
+from time import sleep
+
 import pandas
 import downloader
 import file_operations
@@ -24,6 +26,11 @@ class EffectiveManager:
         self.tle_dir = self.config["Path"]["tle_directory"]
         self.ang_dir = self.config["Path"]["ang_directory"]
         self.status = ""
+        self.mp_manager = multiprocessing.Manager()
+        self.lock = self.mp_manager.Lock()
+        self.global_ang_list = self.mp_manager.list()
+        self.global_counter = self.mp_manager.dict()
+        self.global_commander = ""
 
     def calculate(self, tle_file):
         filter_enabled = bool(self.config["Filter"]["filter_enabled"] == "True")
@@ -32,7 +39,9 @@ class EffectiveManager:
             cat = filter_catalog(self.config, cat)
         needed_sat = catalog_df_to_dict(cat)
         satellites = file_operations.read_tle(self.tle_dir, tle_file, needed_sat)
+        self.status = "Идет расчет"
         self.__run_calc(satellites)
+        self.status = ""
 
     def get_ang_dict_with_data(self):
         self.status = "Чтение ang файлов"
@@ -115,6 +124,7 @@ class EffectiveManager:
         return self.status
 
     def terminate(self):
+        self.global_commander.value = "STOP"
         pass
 
     def copy_to_dst(self, dst):
@@ -134,11 +144,6 @@ class EffectiveManager:
         splited_satellites = list()
         processes = list()
         calculator_list = list()
-
-        mp_manager = multiprocessing.Manager()
-        lock = mp_manager.Lock()
-        global_ang_list = mp_manager.list()
-
         if len(satellites) < threads_qty:
             for i in range(0, len(satellites)):
                 splited_satellites.append(dict())
@@ -156,15 +161,27 @@ class EffectiveManager:
         for sats in splited_satellites:
             calculator_list.append(Calculator(self.config, sats))
         for ac in calculator_list:
-            process = multiprocessing.Process(target=ac.calculate, args=(global_ang_list, lock))
+            process = multiprocessing.Process(target=ac.calculate, args=(self.global_ang_list, self.global_commander,
+                                                                         self.global_counter, self.lock))
             processes.append(process)
             process.start()
-        for _, process in enumerate(processes):
-            process.join()
+        is_alive = True
+        while is_alive:
+            is_alive = False
+            for proc in processes:
+                if self.global_commander == "STOP":
+                    if proc.is_alive():
+                        proc.terminate()
+                if proc.is_alive():
+                    is_alive = True
+            with self.lock:
+                self.status = f"{sum(self.global_counter.values()) / threads_qty * 100} % complete"
+            print(self.status)
+            sleep(2)
         perf = datetime.now() - perf_start
         print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
         self.status = "Идет запись результатов расчета..."
-        for items in global_ang_list:
+        for items in self.global_ang_list:
             for item in items:
                 file_operations.write_ang(item[0], item[1], item[2])
         self.status = ""

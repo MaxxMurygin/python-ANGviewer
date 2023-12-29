@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from configparser import ConfigParser, NoSectionError, NoOptionError
 from math import pi
 import pandas as pd
@@ -47,9 +48,14 @@ def catalog_df_to_dict(cat_df):
 
 def filter_catalog(config, cat_df):
     period_filter = bool(config["Filter"]["filter_by_period"] == "True")
+    name_filter = bool(config["Filter"]["filter_by_name"] == "True")
+    names_string = config["Filter"]["names_string"]
     if period_filter:
         cat_df = cat_df[cat_df["PERIOD"] > float(config["Filter"]["min_period"])]
         cat_df = cat_df[cat_df["PERIOD"] < float(config["Filter"]["max_period"])]
+    if name_filter:
+        cat_df["SATNAME"] = cat_df["SATNAME"].astype("string")
+        cat_df = cat_df.loc[cat_df['SATNAME'].str.contains(names_string, flags=re.IGNORECASE)]
     return cat_df
 
 

@@ -18,8 +18,6 @@ def read_catalog(satcat_file="catalog.csv"):
     cat_df = cat_df.loc[cat_df["PERIOD"].notna()]
     cat_df["OBJECT_TYPE"] = cat_df["OBJECT_TYPE"].astype("string")
     cat_df = cat_df.loc[cat_df["OBJECT_TYPE"].str.contains("PAYLOAD")]
-    # cat_df['SATNAME'] = cat_df['SATNAME'].astype('string')
-    # test_df = cat_df.loc[cat_df['SATNAME'].str.contains('GLOnASS|lageos', flags=re.IGNORECASE)]
     return cat_df
 
 

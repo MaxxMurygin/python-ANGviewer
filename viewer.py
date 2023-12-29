@@ -18,6 +18,9 @@ class Viewer:
     def draw_ang(self, df, sat_number):
         if len(df) < 5:
             return
+        if sat_number == "28786":
+            print()
+        print(df)
         df_shadow = df[df["Ph"] == 0.0]
         df_shine = df[df["Ph"] != 0.0]
         if df_shine.size != 0:
@@ -36,5 +39,6 @@ class Viewer:
         file_list = os.listdir(path)
         for file in file_list:
             sat_number = file.split(sep="_")[0]
+            print(sat_number)
             self.draw_ang(read_ang(os.path.join(path, file)), sat_number)
         plt.show()
