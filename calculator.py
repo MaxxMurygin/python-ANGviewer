@@ -1,6 +1,7 @@
 import logging
 import multiprocessing
 import os
+from array import array
 from datetime import timedelta, datetime
 import pandas
 import pandas as pd
@@ -48,13 +49,19 @@ class Calculator:
             try:
                 difference = sat - self.aolc
                 t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=self.horizon)
-                # if len(events) > 18:
-                #     continue
+                if len(events) == 0:
+                    continue
+                if events[0] != 0 or events[len(events) - 1] != 2:
+                    print(events, len(events))
+                    t_events, events = correct_events(t_events, events, ts_begin, ts_end)
+                    print(events, len(events))
                 for i in range(0, len(t_events), 3):
+
                     topocentric = difference.at(t_events[i + 1])
                     alt, az, distance = topocentric.altaz()
                     step = get_step_by_distance(distance.km)
                     times_list = [str(sat.model.satnum), sat, t_events[i], t_events[i + 1], t_events[i + 2], step]
+
                     if self.filter_by_distance:
                         if not self.min_distance <= distance.km <= self.max_distance:
                             continue
@@ -65,6 +72,7 @@ class Calculator:
                         event_df.loc[len(event_df.index)] = times_list
             except Exception as e:
                 logging.error(str(e) + "(find_events)")
+                logging.error(f"{sat.model.satnum} : {t_events} {events}")
                 continue
         return event_df
 
