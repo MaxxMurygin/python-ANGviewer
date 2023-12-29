@@ -46,15 +46,9 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
              <item>
-              <widget class="QPushButton" name="buttOnlyCheck">
+              <widget class="QPushButton" name="buttDelCheck">
                <property name="text">
-                <string>Только отмеченные</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="checked">
-                <bool>false</bool>
+                <string>Удалить отмеченные</string>
                </property>
               </widget>
              </item>
@@ -66,9 +60,19 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="buttResetSelection">
+              <widget class="QPushButton" name="pushButton_3">
                <property name="text">
-                <string>Сбросить выделение</string>
+                <string>PushButton</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_4">
+               <property name="text">
+                <string>PushButton</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -85,74 +89,68 @@
                </property>
               </spacer>
              </item>
-             <item>
-              <widget class="QPushButton" name="pushDelNoCheck">
-               <property name="text">
-                <string>Удалить неотмеченные</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>
           <item>
-           <widget class="QTreeWidget" name="tableListKA">
+           <widget class="QTableWidget" name="tableListKA">
             <property name="minimumSize">
              <size>
-              <width>250</width>
+              <width>320</width>
               <height>0</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>250</width>
+              <width>320</width>
               <height>16777215</height>
              </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QTreeView::item { height: 16px;}</string>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="verticalScrollBarPolicy">
-             <enum>Qt::ScrollBarAlwaysOn</enum>
-            </property>
-            <property name="horizontalScrollBarPolicy">
-             <enum>Qt::ScrollBarAlwaysOff</enum>
-            </property>
-            <property name="autoScrollMargin">
-             <number>32</number>
             </property>
             <property name="editTriggers">
              <set>QAbstractItemView::NoEditTriggers</set>
             </property>
-            <property name="alternatingRowColors">
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="sortingEnabled">
              <bool>true</bool>
             </property>
-            <property name="selectionMode">
-             <enum>QAbstractItemView::ExtendedSelection</enum>
+            <property name="columnCount">
+             <number>4</number>
             </property>
-            <property name="indentation">
-             <number>32</number>
-            </property>
-            <property name="animated">
+            <attribute name="horizontalHeaderVisible">
              <bool>true</bool>
-            </property>
-            <property name="headerHidden">
+            </attribute>
+            <attribute name="horizontalHeaderMinimumSectionSize">
+             <number>5</number>
+            </attribute>
+            <attribute name="verticalHeaderVisible">
              <bool>false</bool>
-            </property>
-            <attribute name="headerDefaultSectionSize">
-             <number>100</number>
             </attribute>
             <column>
              <property name="text">
-              <string>NORAD</string>
+              <string/>
              </property>
             </column>
             <column>
              <property name="text">
-              <string>ANG</string>
+              <string>KA</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>ang</string>
              </property>
             </column>
            </widget>
@@ -161,13 +159,13 @@
            <widget class="QTableWidget" name="tableKAInfo">
             <property name="minimumSize">
              <size>
-              <width>230</width>
+              <width>200</width>
               <height>200</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>230</width>
+              <width>200</width>
               <height>16777215</height>
              </size>
             </property>
@@ -178,6 +176,9 @@
              <enum>QFrame::NoFrame</enum>
             </property>
             <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
              <enum>Qt::ScrollBarAlwaysOff</enum>
             </property>
             <property name="editTriggers">
@@ -205,7 +206,7 @@
              <bool>false</bool>
             </attribute>
             <attribute name="horizontalHeaderDefaultSectionSize">
-             <number>115</number>
+             <number>100</number>
             </attribute>
             <attribute name="verticalHeaderVisible">
              <bool>false</bool>
