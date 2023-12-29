@@ -14,6 +14,42 @@ from utils import get_step_by_distance, rotate_by_pi, correct_midnight
 # python -m jplephem excerpt 2023/1/1 2023/12/31 "https://naif.jpl.nasa.gov/pub/
 # naif/generic_kernels/spk/planets/de440s.bsp" "de440s.bsp"
 
+def events_to_list(t_events, events):
+    t, e = list(), list()
+    for i in range(0, len(events), 1):
+        t.append(t_events[i])
+        e.append(events[i])
+
+    return t, e
+
+
+def correct_borders(t_events, events, ts_begin, ts_end):
+    if events[0] == 2:
+        events = [1] + events
+        t_events = [ts_begin] + t_events
+    if events[0] == 1:
+        events = [0] + events
+        t_events = [ts_begin] + t_events
+    if events[len(events) - 1] == 0:
+        events.append(1)
+        t_events.append(ts_end)
+    if events[len(events) - 1] == 1:
+        events.append(2)
+        t_events.append(ts_end)
+
+    return t_events, events
+
+
+# def correct_border_end(t_events, events, ts_begin, ts_end):
+#     if events[len(events) - 1] == 0:
+#         events.append(1)
+#         t_events.append(ts_end)
+#     if events[len(events) - 1] == 1:
+#         events.append(2)
+#         t_events.append(ts_end)
+#
+#     return t_events, events
+
 
 class Calculator:
     ang_list = list()
@@ -49,14 +85,18 @@ class Calculator:
             try:
                 difference = sat - self.aolc
                 t_events, events = sat.find_events(self.aolc, ts_begin, ts_end, altitude_degrees=self.horizon)
+
                 if len(events) == 0:
                     continue
-                if events[0] != 0 or events[len(events) - 1] != 2:
-                    print(events, len(events))
-                    t_events, events = correct_events(t_events, events, ts_begin, ts_end)
-                    print(events, len(events))
-                for i in range(0, len(t_events), 3):
+                t_events, events = events_to_list(t_events, events)
+                len_events = len(events)
 
+                if events[0] != 0 or events[len_events - 1] != 2:
+                    t_events, events = correct_borders(t_events, events, ts_begin, ts_end)
+                # if events[len_events - 1] != 2:
+                #     t_events, events = correct_border_end(t_events, events, ts_begin, ts_end)
+
+                for i in range(0, len(t_events), 3):
                     topocentric = difference.at(t_events[i + 1])
                     alt, az, distance = topocentric.altaz()
                     step = get_step_by_distance(distance.km)
