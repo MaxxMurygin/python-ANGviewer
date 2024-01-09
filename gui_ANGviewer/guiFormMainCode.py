@@ -1,4 +1,5 @@
 from builtins import type
+from time import sleep
 
 from PyQt5.Qt import *
 from PyQt5.QtWidgets import *
@@ -8,6 +9,7 @@ from PyQt5.QtWidgets import *
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 from matplotlib.dates import DateFormatter,DayLocator,HourLocator,num2date
 from matplotlib.ticker import MaxNLocator
 matplotlib.use('Qt5Agg')
@@ -16,7 +18,7 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as Navigation
 
 import datetime
 
-plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
+# plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
 # date_form = DateFormatter("%H:%M:%S")
 
 
@@ -27,24 +29,40 @@ import collections
 from manager import EffectiveManager
 from gui_ANGviewer.guiFormMainAngView import *
 
+import time
+
 
 class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
     def __init__(self, manader: EffectiveManager):
         QMainWindow.__init__(self)
         self.setupUi(self)
-        self.tableListKA.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.tableListKA.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.tableListKA.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
+
+        self.tableListKA.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.tableListKA.header().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.tableKAInfo.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeToContents)
+        self.tableKAInfo.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
 
         self.manager = manader
         self.all_angs = self.manager.get_ang_dict_with_data()
-        self.ang_Line = dict()
-        self.visibleAngPolar = list()
+        self.ang_Line = dict() # Time, TimeShadow, polar, polarShadow
 
-        self.figGraphPolar,self.axGraphPolar = self.createGraphPolar()
-        self.figGraphTime,self.axGraphTime = self.createGraphTime()
+        #Select
+        self.selectAngGraph = set()
+        self.selectEffectsSel = [pe.Stroke(linewidth=5, foreground='magenta'), pe.Normal()]
+        self.selectEffectsUnsel =[pe.Stroke(), pe.Normal()]
+
+
+        InfLable = list(zip(["NUMBER", "NAME", "ID", "COUNTRY", "LAUNCH", "PERIOD"],
+                             ["OBJECT_NUMBER", "OBJECT_NAME", "OBJECT_ID", "COUNTRY", "LAUNCH", "PERIOD"]))
+
+        self.importantInf = dict(zip(range(7), InfLable))
+
+        self.figGraphPolar, self.axGraphPolar = self.createGraphPolar()
+        self.figGraphTime, self.axGraphTime = self.createGraphTime()
 
         self.tableListKA.itemSelectionChanged.connect(self.slotSelectKaList)
+        self.buttResetSelection.released.connect(self.selectionReset)
+        self.buttOnlyCheck.clicked.connect(self.showOnlyMarked)
         self.buttCalicANG.triggered.connect(self.callCalicANG)
         self.buttSetting.triggered.connect(self.callSettings)
 
@@ -52,47 +70,37 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.updateKADate()
 
     def updateKADate(self):
-        if (bool(self.all_angs)):
 
-            row = 0
+        if (bool(self.all_angs)):
 
             for norad_id in self.all_angs.keys():
 
-                self.tableListKA.insertRow(row)
-                # ------Заполнение таблици КА--------
+                itemKa = QTreeWidgetItem(self.tableListKA)
+                itemKa.setFlags(itemKa.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
+                itemKa.setCheckState(0, Qt.Unchecked)
+                itemKa.setData(0, Qt.EditRole, norad_id)
 
-                itemCheckBox = QCheckBox()
-                self.tableListKA.setCellWidget(row, 0, itemCheckBox)
-                # self.tableListKA.cellWidget(row,0).setAlignment(Qt.AlignCenter)
-                # self.tableListKA.item(row, 0).setAlignment(Qt.AlignCenter)
-
-
-                itemKa = QTableWidgetItem()
-                itemKa.setData(Qt.EditRole, norad_id)
-                self.tableListKA.setItem(row, 1, itemKa)
 
                 current_sat = self.all_angs.get(norad_id)  # Получить анги
-
-                itemCauntAng = QTableWidgetItem()
-                itemCauntAng.setTextAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
-                itemCauntAng.setData(Qt.EditRole, len(current_sat))
-                self.tableListKA.setItem(row, 2, itemCauntAng)
-
-                itemAng = QComboBox()if(len(current_sat)>1)else QTableWidgetItem()
 
                 for ang in current_sat.keys():
 
                     if (len(current_sat)>1):
 
-                        itemBox = QStandardItem()
-                        itemBox.setText(ang)
-                        itemBox.setCheckable(True)
+                        itemKa.setData(1, Qt.EditRole, "...")
 
-                        itemAng.model().appendRow(itemBox)
-                        itemAng.setLayoutDirection(QtCore.Qt.RightToLeft)
+                        itemAng = QTreeWidgetItem(itemKa)
+                        itemAng.setFlags(itemAng.flags() | Qt.ItemIsUserCheckable)
+                        itemAng.setCheckState(1, Qt.Unchecked)
+                        itemAng.setData(1, Qt.EditRole, ang)
+
+                        itemKa.addChild(itemAng)
+
                     else:
-                        print()
-                        itemAng.setData(Qt.EditRole, ang)
+                        # print()
+                        itemKa.setData(1, Qt.EditRole, ang)
+                        # itemKa.setCheckState(1, Qt.Unchecked)
+                        itemKa.setTextAlignment(1,Qt.AlignHCenter|Qt.AlignVCenter)
 
                     d = current_sat.get(ang)
                     # --------Отрисовка на графиках---------
@@ -101,29 +109,18 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
                     df_shine = d[d["Ph"] != 0.0]
 
                     self.ang_Line[ang]=[
-                        self.axGraphTime.plot(df_shine.Time.values, df_shine.Elev.values, linewidth= 1)[0],
-                        self.axGraphTime.plot(df_shadow.Time.values, df_shadow.Elev.values, linewidth= 1, color="grey")[0],
+                        self.axGraphTime.plot(df_shine.Time.values, df_shine.Elev.values, linewidth= 2,)[0],
+                        self.axGraphTime.plot(df_shadow.Time.values, df_shadow.Elev.values,
+                                              linewidth= 1, color="grey")[0],
                         self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - (df_shine.Elev.values),
-                                                visible=False, linewidth= 1)[0],
+                                                visible=False, linewidth=2)[0],
                         self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - (df_shadow.Elev.values),
-                                                visible=False, linewidth= 1, color="grey")[0]
+                                                visible=False, linewidth=1,  color="grey")[0]
                     ]
                     # ========================================
-
-                    # self.axGraphPolar.plot(np.deg2rad(d.Az.values), 90 - d.Elev.values, linestyle='', marker='.')
-                    # self.axGraphTime.plot(d.Time.values, d.Elev.values)
-
-                if (len(current_sat) > 1):
-                    self.tableListKA.setCellWidget(row, 3, itemAng)
-                else:
-                    print()
-                    self.tableListKA.setItem(row, 3, itemAng)
-
-                row += 1
-                # ===================================
+                # self.tableListKA.addTopLevelItem(itemKa);
         else:
             print("amgs_isEmpty")
-
 
     def createGraphPolar(self):
 
@@ -184,7 +181,7 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
 
         ax.format_coord = lambda x, y: 'Elevation = ' + format(y, '1.2f') + ', ' + \
-                                       'Date = ' + num2date(x).strftime("%H:%M:%S\n%m/%d/%Y")
+                                       'Date = ' + num2date(x).strftime("%H:%M:%S\n%d/%m/%Y")
 
 
         #TO DO includ limits for zoom
@@ -200,56 +197,131 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         return fig, ax
 
     def slotSelectKaList(self):
+        start_time = time.time()
 
-        #Спрятать старые
-        for ang in self.visibleAngPolar:
-            self.ang_Line[ang][2].set_visible(False)
-            self.ang_Line[ang][3].set_visible(False)
+        newSelectAng = set()
 
-        selectColumns = self.tableListKA.selectionModel().selectedRows(3)
+        if not (self.selectAngGraph):#нет выбранных
+            print()
+            for keyLines in self.ang_Line.keys():
+                self.ang_Line[keyLines][0].set(lw=2, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
+                self.ang_Line[keyLines][1].set(lw=1, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
 
-        if (len(selectColumns)==1):
-            self.fillKaInfo(self.tableListKA.item(selectColumns[0].row(), 1).data(Qt.EditRole))
-            # t = self.fillKaInfo(int(201))
-            print(1)
+        self.tableKAInfo.clear()
 
+        selectedColumns = self.tableListKA.selectedItems()
 
-        for item in selectColumns:
-            # print(int(itemCauntAng.data(Qt.EditRole)))
-            # print(self.tableListKA.item(item.row(),2).data(Qt.EditRole))
+        # Заполнение информации
+        if (len(selectedColumns)==1):
 
-            if (self.tableListKA.item(item.row(),2).data(Qt.EditRole)>1):
+            idKA = (int(selectedColumns[0].data(0, Qt.EditRole)
+                                if(selectedColumns[0].parent() is None)
+                                else selectedColumns[0].parent().data(0, Qt.EditRole)))
 
-                for InemBox in self.tableListKA.cellWidget(item.row(), 3).model().findItems("",Qt.MatchContains):
-                    self.visibleAngPolar.append(str(InemBox.text()))
-                    self.ang_Line[InemBox.text()][2].set_visible(True)
-                    self.ang_Line[InemBox.text()][3].set_visible(True)
+            self.fillKaInfo(idKA)
+
+        #===========================
+        # Selected New
+        for item in selectedColumns:
+
+            if item.data(1, Qt.EditRole) in self.selectAngGraph:
+                newSelectAng.add(item.data(1, Qt.EditRole))
+                continue #Если КА уже отображён
+
+            if (item.childCount()==0):
+                newSelectAng.add(
+                    self.selectGraph(item.data(1, Qt.EditRole))
+                )
 
             else:
-                self.visibleAngPolar.append(str(item.data()))
-                self.ang_Line[item.data()][2].set_visible(True)
-                self.ang_Line[item.data()][3].set_visible(True)
+                for childIndex in range(item.childCount()):#проход по вложенным
+                    newSelectAng.add(
+                        self.selectGraph(item.child(childIndex).data(1, Qt.EditRole))
+                    )
 
-        print("slotSelectKaList")
+        # ===========================
+        #   Unselected old
+        for item in self.selectAngGraph - newSelectAng:
+
+            self.selectAngGraph.discard(
+                self.selectGraph(item,True)
+            )
+
+
+        self.selectAngGraph.update(newSelectAng)
+
+        # print('repaint time: ', time.time() - start_time)
+
+
         self.figGraphPolar.canvas.draw()
+        self.figGraphPolar.canvas.flush_events()
+        self.figGraphTime.canvas.draw()
+        self.figGraphTime.canvas.flush_events()
         self.repaint()
-    # self.tableListKA.cellWidget(item.row(), 0).setChecked(True)
+
+        # print('end time: ', time.time() - start_time)
+        # print("\n")
 
     def fillKaInfo(self, idKa:int):
-        x=self.manager.get_sat_info(int(idKa))
+        # print("fillKaInfo")
 
+        dataKA = self.manager.get_sat_info(idKa)
 
+        for idInf, titleInf in self.importantInf.items():
+            self.tableKAInfo.insertRow(idInf)
 
+            itemLable = QTableWidgetItem()
+            itemLable.setData(Qt.EditRole, titleInf[0])
+            self.tableKAInfo.setItem(idInf, 0, itemLable)
 
+            itemInf = QTableWidgetItem()
+            itemInf.setData(Qt.EditRole, str(dataKA[titleInf[1]].values[0]))
+            self.tableKAInfo.setItem(idInf, 1, itemInf)
 
-        print("fillKaInfo")
+    def selectGraph(self, angName:str, unselection=False)->str:
+
+        self.ang_Line[angName][0].set(lw=3, zorder=2 if  (unselection)  else 3,
+                                      alpha=0.1 if  (unselection)  else 1,
+                                      path_effects=self.selectEffectsUnsel if
+                                                      (unselection)  else
+                                                      self.selectEffectsSel)
+        self.ang_Line[angName][1].set(lw=2, zorder=2 if  (unselection)  else 3,
+                                      alpha=0.1 if  (unselection)  else 1,
+                                      path_effects=self.selectEffectsUnsel if
+                                                      (unselection)  else
+                                                      self.selectEffectsSel)
+        self.ang_Line[angName][2].set_visible(not unselection)
+        self.ang_Line[angName][3].set_visible(not unselection)
+
+        return angName
+
+    def selectionReset(self):
+
+        for item in self.selectAngGraph:
+            self.selectGraph(item,True)
+        self.selectAngGraph.clear()
+
+        size2 = len(self.selectAngGraph)==0
+        if (size2):#нет выбранных
+            for keyLines in self.ang_Line.keys():
+                self.ang_Line[keyLines][0].set(lw=2, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
+                self.ang_Line[keyLines][1].set(lw=1, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
+
+        self.figGraphPolar.canvas.draw()
+        self.figGraphTime.canvas.draw()
+
+    def showOnlyMarked(self, checkState=True):
+        # print("showOnlyMarked")
+        for itemKA in self.tableListKA.findItems("*",Qt.MatchRegExp|Qt.MatchWildcard,0):
+           if itemKA.checkState(0)==Qt.Unchecked:
+               itemKA.setHidden(checkState)
+        self.repaint()
+
 
 
     def callCalicANG(self):
-
-        # self.timeKa.set_visible(not self.timeKa.get_visible())
-
         print("вызов Расчёта")
+        # self.timeKa.set_visible(not self.timeKa.get_visible())
 
     def callSettings(self):
         print("вызов настроек")
