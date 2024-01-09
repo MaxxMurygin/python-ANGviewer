@@ -9,19 +9,7 @@ import sys
 from gui_ANGviewer.guiFormMainCode import guiFormMain,QtWidgets
 #==============================
 
-def get_conf(filename='config.conf'):
-    parser = ConfigParser(inline_comment_prefixes="#")
-    parser.read(os.path.join(os.getcwd(), filename))
-    conf = {}
-    try:
-        for section in parser.sections():
-            conf[section] = {}
-            for key, val in parser.items(section):
-                conf[section][key] = val
-    except Exception as err:
-        # logging.error(str(err))
-        return
-    return conf
+
 
 
 if __name__ == "__main__":
@@ -30,8 +18,8 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib.font_manager').disabled = True
 
 
-    conf = get_conf()
-    manager = EffectiveManager(conf)
+    config_file = "config.conf"
+    manager = EffectiveManager(config_file)
 
     app = QtWidgets.QApplication(sys.argv)
     window = guiFormMain(manager)
