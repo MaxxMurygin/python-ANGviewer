@@ -45,9 +45,12 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.manager = manader
         self.all_angs = self.manager.get_ang_dict_with_data()
         self.ang_Line = dict() # Time, TimeShadow, polar, polarShadow
+        self.ang_Line_Check = set()  # Time, TimeShadow, polar, polarShadow
 
         #Select
         self.selectAngGraph = set()
+        self.listCheckAng = set()
+
         self.selectEffectsSel = [pe.Stroke(linewidth=5, foreground='magenta'), pe.Normal()]
         self.selectEffectsUnsel =[pe.Stroke(), pe.Normal()]
 
@@ -111,11 +114,14 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
                     self.ang_Line[ang]=[
                         self.axGraphTime.plot(df_shine.Time.values, df_shine.Elev.values, linewidth= 2,)[0],
                         self.axGraphTime.plot(df_shadow.Time.values, df_shadow.Elev.values,
-                                              linewidth= 1, color="grey")[0],
+                                              linewidth=1, color="grey")[0],
+                                              # linewidth= 1, color="grey", marker='.' , markersize = 1)[0],
+
                         self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - (df_shine.Elev.values),
                                                 visible=False, linewidth=2)[0],
                         self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - (df_shadow.Elev.values),
                                                 visible=False, linewidth=1,  color="grey")[0]
+                                                # visible = False, linewidth = 1, color = "grey", marker = '.', markersize = 1)[0]
                     ]
                     # ========================================
                 # self.tableListKA.addTopLevelItem(itemKa);
@@ -128,7 +134,8 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         if (hasattr(self, 'figGraphTime')):
             self.figGraphPolar.add_subplot(projection='polar')
         else:
-            fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+            fig, ax = plt.subplots(facecolor="#e5e5e5", subplot_kw={'projection': 'polar'})
+            ax.set_facecolor("#e5e5e5")
 
         ax.set_theta_zero_location("N")  # Начало север
         ax.set_theta_direction(-1)  # Отразить
@@ -156,7 +163,8 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
     def createGraphTime(self):
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(facecolor="#e5e5e5")
+        ax.set_facecolor("#e5e5e5")
 
         ax.set_ylabel("Elevation")
         ax.set_yticks(np.arange(0, 91, 10))
@@ -203,7 +211,7 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         if not (self.selectAngGraph):#нет выбранных
             print()
-            for keyLines in self.ang_Line.keys():
+            for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
                 self.ang_Line[keyLines][1].set(lw=1, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
 
@@ -303,7 +311,7 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         size2 = len(self.selectAngGraph)==0
         if (size2):#нет выбранных
-            for keyLines in self.ang_Line.keys():
+            for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
                 self.ang_Line[keyLines][1].set(lw=1, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
 
@@ -311,11 +319,36 @@ class guiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.figGraphTime.canvas.draw()
 
     def showOnlyMarked(self, checkState=True):
-        # print("showOnlyMarked")
+
+
+        for angSet in self.ang_Line.values():
+            angSet[0].set_visible(not checkState)
+            angSet[1].set_visible(not checkState)
+
+
         for itemKA in self.tableListKA.findItems("*",Qt.MatchRegExp|Qt.MatchWildcard,0):
-           if itemKA.checkState(0)==Qt.Unchecked:
-               itemKA.setHidden(checkState)
-        self.repaint()
+
+            unvisible = (itemKA.checkState(0) == Qt.Unchecked
+                                and itemKA.checkState(1) == Qt.Unchecked
+                                         and checkState)
+            itemKA.setHidden(unvisible)
+
+            if (checkState and itemKA.childCount() == 0):
+                angName = itemKA.data(1, Qt.EditRole)
+                self.ang_Line[angName][0].set_visible(not unvisible)
+                self.ang_Line[angName][1].set_visible(not unvisible)
+
+            for childIndex in range(itemKA.childCount()):  # проход по вложенным
+                unvisible = (itemKA.child(childIndex).checkState(1) != Qt.Checked
+                                    and checkState)
+                itemKA.child(childIndex).setHidden(unvisible)
+
+                angName = itemKA.child(childIndex).data(1, Qt.EditRole)
+                self.ang_Line[angName][0].set_visible(not unvisible)
+                self.ang_Line[angName][1].set_visible(not unvisible)
+
+        self.figGraphPolar.canvas.draw()
+        self.figGraphTime.canvas.draw()
 
 
 
