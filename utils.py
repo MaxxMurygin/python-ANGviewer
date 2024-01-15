@@ -82,6 +82,15 @@ def get_config_from_file(filename='config.conf'):
 
 
 def thin_out(src_path, sieve=10):
+    if sieve == 0:
+        for file in os.listdir(src_path):
+            try:
+                os.remove(os.path.join(src_path, file))
+            except IOError:
+                logging.error("<thin_out> Не могу удалить файл " + file)
+                continue
+        return
+
     df = pd.DataFrame(columns=["dt", "file"])
     for file in os.listdir(src_path):
         dt_str = file.split("_")[1].replace(".ang", "")
@@ -94,5 +103,9 @@ def thin_out(src_path, sieve=10):
             counter = 0
             continue
         else:
-            os.remove(os.path.join(src_path, row["file"]))
+            try:
+                os.remove(os.path.join(src_path, row["file"]))
+            except IOError:
+                logging.error("<thin_out> Не могу удалить файл " + row["file"])
+                continue
         counter += 1

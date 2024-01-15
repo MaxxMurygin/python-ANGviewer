@@ -23,10 +23,11 @@ if __name__ == "__main__":
 
     # manager.copy_to_dst("c:\!nu\EOP")
 
-    manager.calculate(conf["TLE"]["default_file"])
-
-    app = Viewer()  # Отображение
-    app.view(ang_dir)
+    # manager.calculate(conf["TLE"]["default_file"])
+    dt = manager.get_full_tle_date()
+    print()
+    # app = Viewer()  # Отображение
+    # app.view(ang_dir)
 
     # all_angs = manager.get_ang_dict()
     # for norad_id in all_angs.keys():

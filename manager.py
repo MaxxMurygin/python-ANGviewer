@@ -22,9 +22,12 @@ class EffectiveManager:
         self.ang_list = list()
         self.ang_dict = dict()
         self.config = get_config_from_file(config_file)
-        self.catalog = self.__get_catalog("catalog.csv")
         self.tle_dir = self.config["Path"]["tle_directory"]
         self.ang_dir = self.config["Path"]["ang_directory"]
+        self.cat_dir = self.config["Path"]["cat_directory"]
+        self.cat_file = self.config["Path"]["cat_file"]
+        self.full_tle_file = self.config["TLE"]["default_file"]
+        self.catalog = self.__get_catalog(self.cat_file)
         self.status = ""
         self.mp_manager = multiprocessing.Manager()
         self.lock = self.mp_manager.Lock()
@@ -99,12 +102,15 @@ class EffectiveManager:
     def get_sat_info(self, norad_id):
         return self.catalog.loc[[norad_id]]
 
-    def get_tle_date(self):
-        path = r"E:\demos\files_demos\sample.txt"
-        # file modification timestamp of a file
-        m_time = os.path.getmtime(path)
-        self.config["TLE"]["defaul_file"]
-        return
+    def get_full_tle_date(self):
+        path = os.path.join(os.getcwd(), self.tle_dir, self.full_tle_file)
+        m_time = datetime.fromtimestamp(os.path.getmtime(path))
+        return m_time
+
+    def get_catalog_date(self):
+        path = os.path.join(os.getcwd(), self.cat_dir, self.cat_file)
+        m_time = datetime.fromtimestamp(os.path.getmtime(path))
+        return m_time
 
     def delete_sat(self, norad_id):
         try:
@@ -113,6 +119,7 @@ class EffectiveManager:
                 for ang in angs:
                     os.remove(os.path.join(os.getcwd(), self.ang_dir, ang))
         except KeyError:
+            logging.error("<delete_sat> Не могу удалить КА № " + norad_id)
             pass
 
     def get_config(self):
@@ -134,15 +141,15 @@ class EffectiveManager:
         self.global_commander.value = "STOP"
         pass
 
-    def copy_to_dst(self, dst):
+    def copy_ang_to_dst(self, dst):
         try:
             shutil.copytree(os.path.join(os.getcwd(), self.ang_dir), dst, dirs_exist_ok=True)
         except IOError as e:
             logging.error(e)
 
-    def __get_catalog(self, file):
+    def __get_catalog(self):
         self.status = "Чтение каталога"
-        cat = read_catalog(os.path.join(os.getcwd(), "CAT", file))
+        cat = read_catalog(os.path.join(os.getcwd(), self.cat_dir, self.cat_file))
         self.status = ""
         return cat
 

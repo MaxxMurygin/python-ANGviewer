@@ -16,11 +16,6 @@ class Viewer:
     ax.xaxis.set_major_formatter(date_form)
 
     def draw_ang(self, df, sat_number):
-        # if len(df) < 5:
-        #     return
-        # if sat_number == "28786":
-        #     print()
-        # print(df)
         df_shadow = df[df["Ph"] == 0.0]
         df_shine = df[df["Ph"] != 0.0]
         if df_shine.size != 0:
