@@ -99,6 +99,13 @@ class EffectiveManager:
     def get_sat_info(self, norad_id):
         return self.catalog.loc[[norad_id]]
 
+    def get_tle_date(self):
+        path = r"E:\demos\files_demos\sample.txt"
+        # file modification timestamp of a file
+        m_time = os.path.getmtime(path)
+        self.config["TLE"]["defaul_file"]
+        return
+
     def delete_sat(self, norad_id):
         try:
             angs = self.ang_dict.pop(norad_id)

@@ -6,7 +6,7 @@ from manager import EffectiveManager
 
 #----------gui-----------------
 import sys
-from gui_ANGviewer.guiFormMainCode import guiFormMain,QtWidgets
+from gui_ANGviewer.guiFormMainCode import guiFormMain, QtWidgets
 #==============================
 
 
