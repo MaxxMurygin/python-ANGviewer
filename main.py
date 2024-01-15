@@ -6,7 +6,7 @@ from manager import EffectiveManager
 
 #----------gui-----------------
 import sys
-from gui_ANGviewer.guiFormMainCode import guiFormMain, QtWidgets
+from gui_ANGviewer.guiFormMainCode import GuiFormMain,QtWidgets
 #==============================
 
 
@@ -18,18 +18,22 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib.font_manager').disabled = True
 
 
-    config_file = "config.conf"
+    config_file: str = \
+        "currentConfigView.conf" \
+        if (os.path.exists("currentConfigView.conf"))\
+        else "config.conf"
+
     manager = EffectiveManager(config_file)
 
     app = QtWidgets.QApplication(sys.argv)
-    window = guiFormMain(manager)
+    window = GuiFormMain(manager)
     window.show()
 
 
-    window.figGraphTime.tight_layout()
-    window.figGraphTime.canvas.draw()
-    window.figGraphPolar.tight_layout()
-    window.figGraphPolar.canvas.draw()
+    window.actionView.figGraphTime.tight_layout()
+    window.actionView.figGraphTime.canvas.draw()
+    window.actionView.figGraphPolar.tight_layout()
+    window.actionView.figGraphPolar.canvas.draw()
     window.repaint()
 
     sys.exit(app.exec_())
