@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1162</width>
-    <height>704</height>
+    <height>721</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -174,19 +174,12 @@
              <bool>false</bool>
             </property>
             <layout class="QHBoxLayout" name="SettLayoutCoord">
-             <item>
-              <spacer name="horizontalSpacer_8">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
+             <property name="topMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>2</number>
+             </property>
              <item>
               <widget class="QLabel" name="SettCoordLabelLat">
                <property name="text">
@@ -424,13 +417,6 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="4">
-             <widget class="QCheckBox" name="SettPathCheckANG">
-              <property name="text">
-               <string>Удалять предыдущие целеуказания</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="2">
              <widget class="QLineEdit" name="SettPathEditTLE">
               <property name="minimumSize">
@@ -474,6 +460,13 @@
               </property>
               <property name="text">
                <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="4">
+             <widget class="QCheckBox" name="SettPathCheckANG">
+              <property name="text">
+               <string>Удалять предыдущие целеуказания</string>
               </property>
              </widget>
             </item>
@@ -537,39 +530,28 @@
            </spacer>
           </item>
           <item>
-           <widget class="QGroupBox" name="SettTLELoadBox">
-            <property name="title">
-             <string>Подгружать</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <item row="1" column="0">
-              <widget class="QLabel" name="SettTLEPassLable">
-               <property name="text">
-                <string>Пароль</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="SettTLELoadLable">
-               <property name="text">
-                <string>Логин</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="SettTLELoadLog"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="SettTLELoadPass"/>
-             </item>
-            </layout>
-           </widget>
+           <layout class="QGridLayout" name="SettTLELoadBox">
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="SettTLELoadLog"/>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="SettTLELoadLable">
+              <property name="text">
+               <string>Логин</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="SettTLEPassLable">
+              <property name="text">
+               <string>Пароль</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="SettTLELoadPass"/>
+            </item>
+           </layout>
           </item>
           <item>
            <spacer name="horizontalSpacer_2">
@@ -643,7 +625,7 @@
        <attribute name="title">
         <string>Расчёт ЦУ</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QGridLayout" name="gridLayout_3">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -656,7 +638,7 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item>
+        <item row="0" column="0">
          <layout class="QVBoxLayout" name="calicLayout">
           <item>
            <widget class="QGroupBox" name="calicTemplateBox">
@@ -664,6 +646,9 @@
              <string>Шаблоны</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">
+             <property name="sizeConstraint">
+              <enum>QLayout::SetMinAndMaxSize</enum>
+             </property>
              <property name="leftMargin">
               <number>0</number>
              </property>
@@ -684,6 +669,18 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="maximumSize">
+                <size>
+                 <width>250</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(240, 240, 240);</string>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
                <item>
                 <property name="text">
                  <string>config 1</string>
@@ -703,15 +700,30 @@
              </item>
              <item>
               <layout class="QGridLayout" name="gridLayout">
+               <property name="sizeConstraint">
+                <enum>QLayout::SetMinAndMaxSize</enum>
+               </property>
                <item row="1" column="0">
-                <widget class="QPushButton" name="calicTemplateButApply">
+                <widget class="QPushButton" name="calicTemplateButDel">
+                 <property name="maximumSize">
+                  <size>
+                   <width>120</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
                  <property name="text">
-                  <string>Применить</string>
+                  <string>Удалить шаблон</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
                 <widget class="QPushButton" name="calicTemplateButCancel">
+                 <property name="maximumSize">
+                  <size>
+                   <width>120</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
                  <property name="text">
                   <string>Отмена</string>
                  </property>
@@ -719,6 +731,12 @@
                </item>
                <item row="0" column="1">
                 <widget class="QPushButton" name="calicTemplateButSeveAs">
+                 <property name="maximumSize">
+                  <size>
+                   <width>120</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
                  <property name="text">
                   <string>Сохранить как</string>
                  </property>
@@ -726,6 +744,12 @@
                </item>
                <item row="0" column="0">
                 <widget class="QPushButton" name="calicTemplateButSeve">
+                 <property name="maximumSize">
+                  <size>
+                   <width>120</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
                  <property name="text">
                   <string>Сохранить</string>
                  </property>
@@ -736,67 +760,18 @@
             </layout>
            </widget>
           </item>
-          <item>
-           <widget class="QGroupBox" name="calicTleBox">
-            <property name="title">
-             <string>Выбор каталога</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_8">
-             <property name="leftMargin">
-              <number>1</number>
-             </property>
-             <property name="topMargin">
-              <number>1</number>
-             </property>
-             <property name="rightMargin">
-              <number>1</number>
-             </property>
-             <property name="bottomMargin">
-              <number>1</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="calicTLETableUpdateButt">
-               <property name="text">
-                <string>Обновить основной каталог</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QListWidget" name="calicTLETable">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <item>
-                <property name="text">
-                 <string>full.tle</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>my_tle.tle</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="calicTLETableSelectButt">
-               <property name="text">
-                <string>Использовать выбранный каталог</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
          </layout>
         </item>
-        <item>
+        <item row="0" column="2">
          <widget class="QGroupBox" name="calicPreFilterBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="title">
-           <string>Предрасчётная фильтрация</string>
+           <string>Фильтрация</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -838,6 +813,12 @@
               </item>
               <item>
                <widget class="QDateEdit" name="calicFilterLaunchEditMin">
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="dateTime">
                  <datetime>
                   <hour>0</hour>
@@ -868,6 +849,12 @@
               </item>
               <item>
                <widget class="QDateEdit" name="calicFilterLaunchEditMax">
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="date">
                  <date>
                   <year>2024</year>
@@ -905,6 +892,12 @@
                  <size>
                   <width>170</width>
                   <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>250</width>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="placeholderText">
@@ -1028,45 +1021,6 @@
              </layout>
             </widget>
            </item>
-           <item>
-            <widget class="QPushButton" name="calicPreFilterButt">
-             <property name="text">
-              <string>Предпросмотр</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QTableWidget" name="tableWidget">
-          <property name="minimumSize">
-           <size>
-            <width>250</width>
-            <height>0</height>
-           </size>
-          </property>
-          <column>
-           <property name="text">
-            <string>NORAD</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Имя КА</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="calicFilterBox">
-          <property name="title">
-           <string>Фильтрация при расчёте</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
             <widget class="QGroupBox" name="calicFilterTimeBox">
              <property name="title">
@@ -1289,9 +1243,204 @@
             </widget>
            </item>
            <item>
+            <spacer name="verticalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QGroupBox" name="calicFilterBox">
+          <property name="title">
+           <string>Фильтрация при расчёте</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Количество потоков для расчета:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="calicSystemStreamEdit"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="calicCheckClearCuDir">
+             <property name="text">
+              <string>Удалять предыдущие ЦУ</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="calicCheckCalculatePhase">
+             <property name="text">
+              <string>Cчитать фазу</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="Line" name="line_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="calicStartButt">
              <property name="text">
               <string>Начать расчёт</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="calicStopButt">
+             <property name="text">
+              <string>Остановиить расчёт</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="calicClearAngDirButt">
+             <property name="text">
+              <string>Очистить ANG директорию</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QGroupBox" name="calicTleBox">
+          <property name="title">
+           <string>Выбор каталога</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetMinAndMaxSize</enum>
+           </property>
+           <property name="leftMargin">
+            <number>1</number>
+           </property>
+           <property name="topMargin">
+            <number>1</number>
+           </property>
+           <property name="rightMargin">
+            <number>1</number>
+           </property>
+           <property name="bottomMargin">
+            <number>1</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" name="calicTLEAllLeyout">
+             <property name="sizeConstraint">
+              <enum>QLayout::SetMinAndMaxSize</enum>
+             </property>
+             <item>
+              <widget class="QRadioButton" name="calicTLEAllRadio">
+               <property name="text">
+                <string>Полный</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="calicTLELableDate">
+               <property name="text">
+                <string>(от 00.00.0000)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="calicTLEUpdateButt">
+               <property name="text">
+                <string>Обновить</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="Line" name="line">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="calicTLECastomRadio">
+             <property name="text">
+              <string>Пользовательский</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QListWidget" name="calicTLEList">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>350</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(240, 240, 240);</string>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <item>
+              <property name="text">
+               <string>my_tle.tle</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>my_tle2.tle</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="calicTLEUpdateListButt">
+             <property name="text">
+              <string>Обновить списоки</string>
              </property>
             </widget>
            </item>
@@ -1374,6 +1523,41 @@
                   <widget class="QPushButton" name="buttResetSelection">
                    <property name="text">
                     <string>Сбросить выделение</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_3">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="viewButtUpdateCU">
+                   <property name="text">
+                    <string>Обновить ЦУ</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="viewButtCliarCU">
+                   <property name="text">
+                    <string>Очистить ЦУ</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="viewButtMoveCU">
+                   <property name="text">
+                    <string>Переместить ЦУ</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
