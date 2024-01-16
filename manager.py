@@ -122,6 +122,10 @@ class EffectiveManager:
             logging.error("<delete_sat> Не могу удалить КА № " + norad_id)
             pass
 
+    def delete_all(self):
+        utils.thin_out(self.ang_dir, 0)
+        self.ang_dict.clear()
+
     def get_config(self):
         return copy.deepcopy(self.config)
 
