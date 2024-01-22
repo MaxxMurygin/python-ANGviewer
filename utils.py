@@ -1,3 +1,4 @@
+import linecache
 import logging
 import os
 import re
@@ -49,10 +50,14 @@ def catalog_df_to_dict(cat_df):
 def filter_catalog(config, cat_df):
     period_filter = bool(config["Filter"]["filter_by_period"] == "True")
     name_filter = bool(config["Filter"]["filter_by_name"] == "True")
+    inclination_filter = bool(config["Filter"]["filter_by_inclination"] == "True")
     names_string = config["Filter"]["names_string"]
     if period_filter:
         cat_df = cat_df[cat_df["PERIOD"] > float(config["Filter"]["min_period"])]
         cat_df = cat_df[cat_df["PERIOD"] < float(config["Filter"]["max_period"])]
+    if inclination_filter:
+        cat_df = cat_df[cat_df["INCLINATION"] > float(config["Filter"]["min_inclination"])]
+        cat_df = cat_df[cat_df["INCLINATION"] < float(config["Filter"]["max_inclination "])]
     if name_filter:
         cat_df["SATNAME"] = cat_df["SATNAME"].astype("string")
         cat_df = cat_df.loc[cat_df['SATNAME'].str.contains(names_string, flags=re.IGNORECASE)]
@@ -82,30 +87,20 @@ def get_config_from_file(filename='config.conf'):
 
 
 def thin_out(src_path, sieve=10):
-    if sieve == 0:
-        for file in os.listdir(src_path):
-            try:
-                os.remove(os.path.join(src_path, file))
-            except IOError:
-                logging.error("<thin_out> Не могу удалить файл " + file)
-                continue
-        return
-
     df = pd.DataFrame(columns=["dt", "file"])
     for file in os.listdir(src_path):
-        dt_str = file.split("_")[1].replace(".ang", "")
-        dt_int = int(dt_str)
+        path = os.path.join(src_path, file)
+        date = linecache.getline(path, 3).rstrip()
+        time = linecache.getline(path, 4).rstrip()
+        dt_int = int(date + time)
         df.loc[len(df)] = {"dt": dt_int, "file": file}
     df = df.sort_values(by="dt")
     counter = 0
     for index, row in df.iterrows():
-        if counter == sieve:
-            counter = 0
-            continue
-        else:
+        counter += 1
+        if counter >= sieve:
             try:
                 os.remove(os.path.join(src_path, row["file"]))
             except IOError:
                 logging.error("<thin_out> Не могу удалить файл " + row["file"])
-                continue
-        counter += 1
+            counter = 0
