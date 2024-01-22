@@ -1,39 +1,45 @@
 import os
+import time
+
+import threading
+
+import asyncio
+
 from builtins import type, print
-from time import sleep
+# from time import sleep
+
+import datetime
+
+import collections
+
+from configparser import ConfigParser
+
+import numpy as np
+from numpy.distutils.fcompiler import str2bool
 
 from PyQt5.Qt import *
 from PyQt5.QtWidgets import *
-# from PyQt5.QtCore import pyqtSlot
-# import pyqtgraph as pg
-
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.dates import DateFormatter, DayLocator, HourLocator, num2date
 from matplotlib.ticker import MaxNLocator
-from numpy.distutils.fcompiler import str2bool
 
-matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-
-import datetime
-
-# plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
-# date_form = DateFormatter("%H:%M:%S")
-
-
-import numpy as np
-
-import collections
 
 from manager import EffectiveManager
 from gui_ANGviewer.guiFormMainAngView import *
 
-import time
-from configparser import ConfigParser
+# import time
+
+
+matplotlib.use('Qt5Agg')
+
+
+# plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
+# date_form = DateFormatter("%H:%M:%S")
 
 
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
@@ -43,6 +49,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.manager = manader
         self.current_config = self.manager.get_config()
+        self.status_gui = ""
         # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
 
@@ -55,6 +62,16 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.action_calculate = ActionCalculate(self)
 
+        self.calicTemplateList.currentTextChanged.connect(self.action_calculate.filter_list_select)
+
+        self.calicTemplateButSeveAs.clicked.connect(self.action_calculate.calic_butt_filter_save_as)
+        self.calicTemplateButSeve.clicked.connect(self.action_calculate.calic_butt_filter_save)
+        self.calicTemplateButDel.clicked.connect(self.action_calculate.calic_butt_filter_del)
+        self.calicTemplateButCancel.clicked.connect(self.action_calculate.calic_butt_filter_cansel)
+        self.calicTLEUpdateListButt.clicked.connect(self.action_calculate.calic_butt_update_all_lists)
+        self.calicStartButt.clicked.connect(self.action_calculate.calic_butt_start)
+        self.calicStopButt.clicked.connect(self.action_calculate.calic_butt_stop)
+
         # ----------------------------View---------------------------------
         self.action_view = ActionView(self)
 
@@ -66,29 +83,70 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
         self.viewButtMoveCU.clicked.connect(self.action_view.move_cu)
 
-    def callCalicANG(self):
-        print("вызов Расчёта")
-        # self.timeKa.set_visible(not self.timeKa.get_visible())
+        self.buttSetting.triggered.connect(self.callSettings)
 
+        threading.Thread(target=loop_check_manager_state,
+                         args=(self.manager, self)).start()
+        # loop_check_manager_state(self.manager, self)
+
+    def get_status(self):
+        return self.status_gui
+    # def callCalicANG(self):
+    #     print("вызов Расчёта")
+    #     # self.timeKa.set_visible(not self.timeKa.get_visible())
+    #
     def callSettings(self):
-        print("вызов настроек")
+        t = threading.Thread(target=self.manager.calculate, args=("full.tle",))
+        t.start()
+
+        # t = threading.Thread(target=worker, args=(1,))
+        # t.start()
+        # self.main_form.manager.calculate(tle_file)
+        print("\nвызов настроек")
+
+
+async def worker(manader: EffectiveManager, tle="full.tle"):
+    manager.calculate(tle)
+    # print(f'Старт потока №{num_thread}')
+    # time.sleep(1)
+    # print(f'Завершение работы потока №{num_thread}')
+
+
+def loop_check_manager_state(manager: EffectiveManager,
+                             gui_form: GuiFormMain):
+    while True:
+
+        gui_form.statusbar.showMessage(
+            f"{manager.get_status()}{gui_form.get_status()}")
+        # gui_form.repaint()
+        time.sleep(2)
+
+    print("loopCheckManagerState")
 
 
 class ActionSettings:
-    def __init__(self, mainForm: GuiFormMain):
+    def __init__(self, main_form: GuiFormMain):
         print("__init__ actionSettings")
-        self.mainForm = mainForm
+        self.main_form = main_form
         # self.currentConfig = self.mainForm.manager.get_config()  # To Do Перенести в Main
 
-        if not (self.mainForm.current_config):
+        if not self.main_form.current_config:
             print("Упс конфига нифига")
             return
 
-        self.configViewUpdate(self.mainForm.current_config)
+        self.configViewUpdate(self.main_form.current_config)
 
-    def configViewUpdate(self, currentConfig, firstReading=False):
+    def configViewUpdate(self, current_config=dict(), firstReading=False):
+        """
+        Обновить поля в соответствии с currentConfig
+        :param current_config:
+        :param firstReading: не используется в данной версии
+        :return:
+        """
+        if not current_config:
+            return
 
-        # if firstReading:
+            # if firstReading:
         #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
         # elif (self.mainForm.SettSystemStreamEdit.value()
         #       != int(self.currentConfig["System"]['threads'])):
@@ -97,157 +155,159 @@ class ActionSettings:
         #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
         #     self.mainForm.SettSystemStreamEdit.setStyleSheet("")
 
-        self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
+        self.main_form.SettSystemStreamEdit.setValue(int(current_config["System"]['threads']))
 
-        self.mainForm.SettCoordSpinBoxLat.setValue(float(currentConfig['Coordinates']['lat']))
-        self.mainForm.SettCoordSpinBoxLon.setValue(float(currentConfig['Coordinates']['lon']))
-        self.mainForm.SettCoordSpinBoxHeight.setValue(float(currentConfig['Coordinates']['height']))
-        self.mainForm.SettCoordSpinBoxHorizont.setValue(int(currentConfig['Basic']['horizon']))
+        self.main_form.SettCoordSpinBoxLat.setValue(float(current_config['Coordinates']['lat']))
+        self.main_form.SettCoordSpinBoxLon.setValue(float(current_config['Coordinates']['lon']))
+        self.main_form.SettCoordSpinBoxHeight.setValue(float(current_config['Coordinates']['height']))
+        self.main_form.SettCoordSpinBoxHorizont.setValue(int(current_config['Basic']['horizon']))
 
-        self.mainForm.SettPathEditTLE.setText(currentConfig['Path']['tle_directory'])
-        self.mainForm.SettPathEditCAT.setText(currentConfig['Path']['cat_directory'])
+        self.main_form.SettPathEditTLE.setText(current_config['Path']['tle_directory'])
+        self.main_form.SettPathEditCAT.setText(current_config['Path']['cat_directory'])
         # self.mainForm.SettPathEditFilterConf.setText(currentConfig['Path'][])
-        self.mainForm.SettPathEditANG.setText(currentConfig['Path']['ang_directory'])
-        self.mainForm.SettPathCheckANG.setChecked(str2bool(currentConfig['Path']['delete_existing']))
+        self.main_form.SettPathEditANG.setText(current_config['Path']['ang_directory'])
+        self.main_form.SettPathCheckANG.setChecked(str2bool(current_config['Path']['delete_existing']))
 
         # self.mainForm.SettTLELoadBox.setChecked(str2bool(currentConfig['TLE']['download']))
-        self.mainForm.SettTLELoadLog.setText(currentConfig['TLE']['identity'])
-        self.mainForm.SettTLELoadPass.setText(currentConfig['TLE']['password'])
+        self.main_form.SettTLELoadLog.setText(current_config['TLE']['identity'])
+        self.main_form.SettTLELoadPass.setText(current_config['TLE']['password'])
 
     def __getPathDir__(self) -> str:
 
         cwd = os.getcwd()
-        Path = QFileDialog.getExistingDirectory(self.mainForm,
+        Path = QFileDialog.getExistingDirectory(self.main_form,
                                                 "Open Directory",
                                                 os.getcwd(),
                                                 QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
                                                 )
-        if (Path.find(cwd) < 0):
+        if Path.find(cwd) < 0:
             return "Err"
 
         return Path.replace(cwd, '')[1:]
 
     def checkApplyConfig(self):
 
-        self.mainForm.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                         (self.mainForm.SettSystemStreamEdit.value() != int(
-                                                             self.mainForm.current_config["System"]['threads']))
+        self.main_form.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                          (self.main_form.SettSystemStreamEdit.value() != int(
+                                                              self.main_form.current_config["System"]['threads']))
+                                                          else "")
+
+        self.main_form.SettCoordSpinBoxLat.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                         (self.main_form.SettCoordSpinBoxLat.value() != float(
+                                                             self.main_form.current_config['Coordinates']['lat']))
                                                          else "")
 
-        self.mainForm.SettCoordSpinBoxLat.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                        (self.mainForm.SettCoordSpinBoxLat.value() != float(
-                                                            self.mainForm.current_config['Coordinates']['lat']))
-                                                        else "")
+        self.main_form.SettCoordSpinBoxLon.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                         (self.main_form.SettCoordSpinBoxLon.value() != float(
+                                                             self.main_form.current_config['Coordinates']['lon']))
+                                                         else "")
 
-        self.mainForm.SettCoordSpinBoxLon.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                        (self.mainForm.SettCoordSpinBoxLon.value() != float(
-                                                            self.mainForm.current_config['Coordinates']['lon']))
-                                                        else "")
+        self.main_form.SettCoordSpinBoxHeight.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                            (self.main_form.SettCoordSpinBoxHeight.value() !=
+                                                             float(
+                                                                 self.main_form.current_config['Coordinates'][
+                                                                     'height']))
+                                                            else "")
 
-        self.mainForm.SettCoordSpinBoxHeight.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                           (self.mainForm.SettCoordSpinBoxHeight.value() !=
-                                                            float(
-                                                                self.mainForm.current_config['Coordinates']['height']))
-                                                           else "")
+        self.main_form.SettCoordSpinBoxHorizont.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                              (self.main_form.SettCoordSpinBoxHorizont.value() !=
+                                                               int(self.main_form.current_config['Basic']['horizon']))
+                                                              else "")
 
-        self.mainForm.SettCoordSpinBoxHorizont.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                             (self.mainForm.SettCoordSpinBoxHorizont.value() !=
-                                                              int(self.mainForm.current_config['Basic']['horizon']))
-                                                             else "")
-
-        self.mainForm.SettPathEditTLE.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                    (self.mainForm.SettPathEditTLE.text() != str(
-                                                        self.mainForm.current_config['Path']['tle_directory']))
-                                                    else "")
-
-        self.mainForm.SettPathEditCAT.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                    (self.mainForm.SettPathEditCAT.text() != str(
-                                                        self.mainForm.current_config['Path']['cat_directory']))
-                                                    else "")
-
-        self.mainForm.SettPathEditANG.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                    (self.mainForm.SettPathEditANG.text() != str(
-                                                        self.mainForm.current_config['Path']['ang_directory']))
-                                                    else "")
-
-        self.mainForm.SettPathCheckANG.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                     (self.mainForm.SettPathCheckANG.isChecked() != bool(
-                                                         str2bool(
-                                                             self.mainForm.current_config['Path']['delete_existing'])))
+        self.main_form.SettPathEditTLE.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                     (self.main_form.SettPathEditTLE.text() != str(
+                                                         self.main_form.current_config['Path']['tle_directory']))
                                                      else "")
+
+        self.main_form.SettPathEditCAT.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                     (self.main_form.SettPathEditCAT.text() != str(
+                                                         self.main_form.current_config['Path']['cat_directory']))
+                                                     else "")
+
+        self.main_form.SettPathEditANG.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                     (self.main_form.SettPathEditANG.text() != str(
+                                                         self.main_form.current_config['Path']['ang_directory']))
+                                                     else "")
+
+        self.main_form.SettPathCheckANG.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                      (self.main_form.SettPathCheckANG.isChecked() != bool(
+                                                          str2bool(
+                                                              self.main_form.current_config['Path'][
+                                                                  'delete_existing'])))
+                                                      else "")
 
         # self.mainForm.SettTLELoadBox.setStyleSheet("color: rgb(255, 0, 0);" if
         #                                            (self.mainForm.SettTLELoadBox.isChecked() != bool(
         #                                                str2bool(self.currentConfig['TLE']['download'])))
         #                                            else "")
 
-        self.mainForm.SettTLELoadLog.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                   (self.mainForm.SettTLELoadLog.text() != str(
-                                                       self.mainForm.current_config['TLE']['identity']))
-                                                   else "")
-
-        self.mainForm.SettTLELoadPass.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                    (self.mainForm.SettTLELoadPass.text() != str(
-                                                        self.mainForm.current_config['TLE']['password']))
+        self.main_form.SettTLELoadLog.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                    (self.main_form.SettTLELoadLog.text() != str(
+                                                        self.main_form.current_config['TLE']['identity']))
                                                     else "")
+
+        self.main_form.SettTLELoadPass.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                     (self.main_form.SettTLELoadPass.text() != str(
+                                                         self.main_form.current_config['TLE']['password']))
+                                                     else "")
 
     def clickedSave(self):
 
         # confi = self.currentConfig
 
-        self.mainForm.current_config["System"]['threads'] = str(self.mainForm.SettSystemStreamEdit.value())
+        self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
 
-        self.mainForm.current_config['Coordinates']['lat'] = str(self.mainForm.SettCoordSpinBoxLat.value())
-        self.mainForm.current_config['Coordinates']['lon'] = str(self.mainForm.SettCoordSpinBoxLon.value())
-        self.mainForm.current_config['Coordinates']['height'] = str(self.mainForm.SettCoordSpinBoxHeight.value())
-        self.mainForm.current_config['Basic']['horizon'] = str(self.mainForm.SettCoordSpinBoxHorizont.value())
+        self.main_form.current_config['Coordinates']['lat'] = str(self.main_form.SettCoordSpinBoxLat.value())
+        self.main_form.current_config['Coordinates']['lon'] = str(self.main_form.SettCoordSpinBoxLon.value())
+        self.main_form.current_config['Coordinates']['height'] = str(self.main_form.SettCoordSpinBoxHeight.value())
+        self.main_form.current_config['Basic']['horizon'] = str(self.main_form.SettCoordSpinBoxHorizont.value())
 
-        self.mainForm.current_config['Path']['tle_directory'] = str(self.mainForm.SettPathEditTLE.text())
-        self.mainForm.current_config['Path']['cat_directory'] = str(self.mainForm.SettPathEditCAT.text())
-        self.mainForm.current_config['Path']['ang_directory'] = str(self.mainForm.SettPathEditANG.text())
-        self.mainForm.current_config['Path']['delete_existing'] = \
-            "True" if (self.mainForm.SettPathCheckANG.isChecked()) else "False"
+        self.main_form.current_config['Path']['tle_directory'] = str(self.main_form.SettPathEditTLE.text())
+        self.main_form.current_config['Path']['cat_directory'] = str(self.main_form.SettPathEditCAT.text())
+        self.main_form.current_config['Path']['ang_directory'] = str(self.main_form.SettPathEditANG.text())
+        self.main_form.current_config['Path']['delete_existing'] = \
+            "True" if (self.main_form.SettPathCheckANG.isChecked()) else "False"
 
         # self.currentConfig['TLE']['download'] = \
         #     "True" if (self.mainForm.SettTLELoadBox.isChecked()) else "False"
-        self.mainForm.current_config['TLE']['identity'] = str(self.mainForm.SettTLELoadLog.text())
-        self.mainForm.current_config['TLE']['password'] = str(self.mainForm.SettTLELoadPass.text())
+        self.main_form.current_config['TLE']['identity'] = str(self.main_form.SettTLELoadLog.text())
+        self.main_form.current_config['TLE']['password'] = str(self.main_form.SettTLELoadPass.text())
 
-        self.mainForm.manager.set_config(self.mainForm.current_config)
-        self.mainForm.manager.save_config_to_file("currentConfigView.conf")
+        self.main_form.manager.set_config(self.main_form.current_config)
+        self.main_form.manager.save_config_to_file("currentConfigView.conf")
 
-        self.mainForm.current_config = self.mainForm.manager.get_config()
+        self.main_form.current_config = self.main_form.manager.get_config()
 
-        if not self.mainForm.current_config:
+        if not self.main_form.current_config:
             print("Упс конфига нифига")
             return
 
         self.checkApplyConfig()
-        self.configViewUpdate(self.mainForm.current_config)
+        self.configViewUpdate(self.main_form.current_config)
 
     def clickedCancel(self):
-        self.configViewUpdate(self.mainForm.current_config)
+        self.configViewUpdate(self.main_form.current_config)
         self.checkApplyConfig()
 
     def setPathTLE(self):
         path = self.__getPathDir__()
         if path != "Err":
-            self.mainForm.SettPathEditTLE.setText(path)
+            self.main_form.SettPathEditTLE.setText(path)
 
     def setPathCAT(self):
         path = self.__getPathDir__()
         if path != "Err":
-            self.mainForm.SettPathEditCAT.setText(path)
+            self.main_form.SettPathEditCAT.setText(path)
 
     def setPathConf(self):
         path = self.__getPathDir__()
         if path != "Err":
-            self.mainForm.SettPathEditFilterConf.setText(path)
+            self.main_form.SettPathEditFilterConf.setText(path)
 
     def setPathANG(self):
         path = self.__getPathDir__()
         if path != "Err":
-            self.mainForm.SettPathEditANG.setText(path)
+            self.main_form.SettPathEditANG.setText(path)
 
 
 class ActionCalculate:
@@ -273,14 +333,14 @@ class ActionCalculate:
         # self.updateFilterMoldList()
 
         self.main_form.calicTLECastomRadio.toggled.connect(self.main_form.calicTLEList.setEnabled)
-        self.main_form.calicTemplateList.itemSelectionChanged.connect(self.filter_list_select)
-
-        self.main_form.calicTemplateButSeveAs.clicked.connect(self.calic_butt_filter_save_as)
-        self.main_form.calicTemplateButSeve.clicked.connect(self.calic_butt_filter_save)
-        self.main_form.calicTemplateButDel.clicked.connect(self.calic_butt_filter_del)
-        self.main_form.calicTemplateButCancel.clicked.connect(self.calic_butt_filter_cansel)
-        self.main_form.calicTLEUpdateListButt.clicked.connect(self.calic_butt_update_all_lists)
-        self.main_form.calicStartButt.clicked.connect(self.calic_butt_start)
+        # self.main_form.calicTemplateList.itemSelectionChanged.connect(self.filter_list_select)
+        #
+        # self.main_form.calicTemplateButSeveAs.clicked.connect(self.calic_butt_filter_save_as)
+        # self.main_form.calicTemplateButSeve.clicked.connect(self.calic_butt_filter_save)
+        # self.main_form.calicTemplateButDel.clicked.connect(self.calic_butt_filter_del)
+        # self.main_form.calicTemplateButCancel.clicked.connect(self.calic_butt_filter_cansel)
+        # self.main_form.calicTLEUpdateListButt.clicked.connect(self.calic_butt_update_all_lists)
+        # self.main_form.calicStartButt.clicked.connect(self.calic_butt_start)
 
         # self.main_form.calicFilterNameBox.clicked
 
@@ -421,17 +481,25 @@ class ActionCalculate:
 
         # print("seveFilterMold")
 
-    def filter_list_select(self):
+    def filter_list_select(self, text_select_row=''):
+        """
+        Подгрузка выбранной конфигурации фильтров
 
-        selected_items = self.main_form.calicTemplateList.selectedItems()
-        if len(selected_items) == 1:
-            if selected_items[0].text().find('.conf') != -1:
-                filter_mold = read_mold_file(self.path_filter_dir, selected_items[0].text())
-                self.calic_view_update(filter_mold)
+        :param text_select_row: Текст выбранной ячейки
+        """
+        if text_select_row:
+            filter_mold = read_mold_file(self.path_filter_dir, text_select_row)
+            self.calic_view_update(filter_mold)
+
+        # selected_items = self.main_form.calicTemplateList.selectedItems()
+        # if len(selected_items) == 1:
+        #     if selected_items[0].text().find('.conf') != -1:
+        #         filter_mold = read_mold_file(self.path_filter_dir, selected_items[0].text())
+        #         self.calic_view_update(filter_mold)
 
     def filter_tle_list_update(self, path_tle_dir: str):
 
-        # self.mainForm.calicTLELableDate.setText("от {}".format(self.mainForm.manager.tle))
+        self.main_form.calicTLELableDate.setText(f"от {self.main_form.manager.get_full_tle_date()}")
 
         self.main_form.calicTLEList.clear()
         for file in os.listdir(path_tle_dir):
@@ -442,25 +510,38 @@ class ActionCalculate:
         # print("updateTleList")
 
     def calic_butt_start(self):
+        """
+        Начать расчёт целеуказаний
+        :return:
+        """
 
         self.filter_list_apply_or_save(current_config=self.main_form.current_config,
                                        flag_save_as_mold=False)
 
-        if self.main_form.calicCheckClearCuDir.isChecked():
-            self.main_form.manager.thin_out(0)
+        # if self.main_form.calicCheckClearCuDir.isChecked():
+        # self.main_form.manager.delete_all()
 
         tle_file = self.main_form.current_config["TLE"]["user_file"]
         if not tle_file:
             tle_file = self.main_form.current_config["TLE"]["default_file"]
 
-        self.main_form.manager.calculate(tle_file)
+        # self.main_form.manager.calculate(tle_file)
+        threading.Thread(target=self.main_form.manager.calculate,
+                         args=(tle_file,)).start()
 
-        self.main_form.action_view.updateKAData()
+        # self.main_form.action_view.updateKAData()
         # self.main_form.manager.get_ang_dict()
 
         # print("calicStart")
 
+    def calic_butt_stop(self):
+        self.main_form.manager.terminate()
+
     def calic_butt_filter_save(self):
+        """
+        Сохранить изменения выбранного шаблона
+        :return:
+        """
 
         selected_items = self.main_form.calicTemplateList.selectedItems()
         if len(selected_items):
@@ -469,6 +550,11 @@ class ActionCalculate:
         # print("calicButtFilterSave")
 
     def calic_butt_update_all_lists(self):
+        """
+        Пересканировать каталоги шаблонов и Tle файлов с последующим
+        обновлением списков
+        :return:
+        """
 
         selected_items_mold = self.main_form.calicTemplateList.selectedItems()
         if len(selected_items_mold):
@@ -495,6 +581,10 @@ class ActionCalculate:
                 selected_items_tle[0].setSelected(True)
 
     def calic_butt_filter_save_as(self):
+        """
+        Сохранить установленный шаблон как file_name
+        :return:
+        """
 
         file_name, ok = QInputDialog.getText(self.main_form, " ", "Имя фильтра")
 
@@ -504,7 +594,10 @@ class ActionCalculate:
         # print("calicButtFilterSaveAs")
 
     def calic_butt_filter_del(self):
-
+        """
+        Удалить выбранный шаблон
+        :return:
+        """
         selected_items = self.main_form.calicTemplateList.selectedItems()
         if len(selected_items) == 1:
             if selected_items[0].text().find('.conf') != -1:
@@ -514,6 +607,11 @@ class ActionCalculate:
         # print("calicButtFilterDel")
 
     def calic_butt_filter_cansel(self):
+        """
+        Установить последний использованный шаблон
+        :return:
+        """
+        self.main_form.calicTemplateList.setCurrentRow(-1)
         self.calic_view_update(self.main_form.current_config)
 
 
@@ -586,7 +684,8 @@ class ActionView:
         self.main_form.layoutGraphPolar.itemAt(0).widget().setMinimumSize(QtCore.QSize(300, 300))
         return fig, ax
 
-    def graph_polar_tuner(self, ax):
+    @staticmethod
+    def graph_polar_tuner(ax):
 
         ax.set_theta_zero_location("N")  # Начало север
         ax.set_theta_direction(-1)  # Отразить
@@ -595,7 +694,7 @@ class ActionView:
         ax.set_yticklabels([])
         # ax.set_yticklabels(ax.get_yticks()[::-1])
         # ax.set_rlabel_position(120)
-        if (True):
+        if True:
             labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
             compass = [n / float(len(labels)) * 2 * np.pi for n in range(len(labels))]
             compass += compass[:1]
@@ -620,7 +719,8 @@ class ActionView:
 
         return fig, ax
 
-    def graph_time_tuner(self, ax):
+    @staticmethod
+    def graph_time_tuner(ax):
         ax.set_ylabel("Elevation")
         ax.set_yticks(np.arange(0, 91, 10))
         ax.set_ylim(bottom=0, top=90, emit=1)
@@ -661,6 +761,9 @@ class ActionView:
 
     def updateKAData(self):
 
+        self.main_form.status_gui = "Построение графиков"
+
+
         if self.all_angs:
             self.clear_KA()
 
@@ -682,7 +785,7 @@ class ActionView:
 
                 for ang in current_sat.keys():
 
-                    if (len(current_sat) > 1):
+                    if len(current_sat) > 1:
 
                         itemKa.setData(1, Qt.EditRole, "...")
 
@@ -711,9 +814,9 @@ class ActionView:
                                               linewidth=1, color="grey")[0],
                         # linewidth= 1, color="grey", marker='.' , markersize = 1)[0],
 
-                        self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - (df_shine.Elev.values),
+                        self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - df_shine.Elev.values,
                                                visible=False, linewidth=2)[0],
-                        self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - (df_shadow.Elev.values),
+                        self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - df_shadow.Elev.values,
                                                visible=False, linewidth=1, color="grey")[0]
                         # visible = False, linewidth = 1, color = "grey", marker = '.', markersize = 1)[0]
                     ]
@@ -724,6 +827,8 @@ class ActionView:
             self.figGraphTime.canvas.draw()
         else:
             print("amgs_isEmpty")
+
+        self.main_form.status_gui = ""
 
         self.main_form.viewButtUpdateCU.setEnabled(True)
 
@@ -744,11 +849,11 @@ class ActionView:
             self.main_form.tableKAInfo.setItem(idInf, 1, itemInf)
 
     def slotSelectKaList(self):
-        start_time = time.time()
+        # start_time = time.time()
 
         newSelectAng = set()
 
-        if not (self.selectAngGraph):  # нет выбранных
+        if not self.selectAngGraph:  # нет выбранных
             print()
             for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
@@ -759,7 +864,7 @@ class ActionView:
         selectedColumns = self.main_form.tableListKA.selectedItems()
 
         # Заполнение информации
-        if (len(selectedColumns) == 1):
+        if len(selectedColumns) == 1:
             idKA = (int(selectedColumns[0].data(0, Qt.EditRole)
                         if (selectedColumns[0].parent() is None)
                         else selectedColumns[0].parent().data(0, Qt.EditRole)))
@@ -774,7 +879,7 @@ class ActionView:
                 newSelectAng.add(item.data(1, Qt.EditRole))
                 continue  # Если КА уже отображён
 
-            if (item.childCount() == 0):
+            if item.childCount() == 0:
                 newSelectAng.add(
                     self.selectGraph(item.data(1, Qt.EditRole))
                 )
@@ -809,15 +914,15 @@ class ActionView:
         if not self.ang_Line:
             return ''
 
-        self.ang_Line[angName][0].set(lw=3, zorder=2 if (unselection) else 3,
-                                      alpha=0.1 if (unselection) else 1,
+        self.ang_Line[angName][0].set(lw=3, zorder=2 if unselection else 3,
+                                      alpha=0.1 if unselection else 1,
                                       path_effects=self.selectEffectsUnsel if
-                                      (unselection) else
+                                      unselection else
                                       self.selectEffectsSel)
-        self.ang_Line[angName][1].set(lw=2, zorder=2 if (unselection) else 3,
-                                      alpha=0.1 if (unselection) else 1,
+        self.ang_Line[angName][1].set(lw=2, zorder=2 if unselection else 3,
+                                      alpha=0.1 if unselection else 1,
                                       path_effects=self.selectEffectsUnsel if
-                                      (unselection) else
+                                      unselection else
                                       self.selectEffectsSel)
         self.ang_Line[angName][2].set_visible(not unselection)
         self.ang_Line[angName][3].set_visible(not unselection)
@@ -834,7 +939,7 @@ class ActionView:
         self.selectAngGraph.clear()
 
         size2 = len(self.selectAngGraph) == 0
-        if (size2):  # нет выбранных
+        if size2:  # нет выбранных
             for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
                 self.ang_Line[keyLines][1].set(lw=1, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
@@ -842,37 +947,37 @@ class ActionView:
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
 
-    def showOnlyMarked(self, checkState=True):
+    def showOnlyMarked(self, check_state=True):
         """
         Отобразить только выделенные?
 
-        :param checkState Отобразить только выделенные:
+        :param check_state: Отобразить только выделенные Да/Нет:
         """
 
         for angSet in self.ang_Line.values():
-            angSet[0].set_visible(not checkState)
-            angSet[1].set_visible(not checkState)
+            angSet[0].set_visible(not check_state)
+            angSet[1].set_visible(not check_state)
 
         for itemKA in self.main_form.tableListKA.findItems("*", Qt.MatchRegExp | Qt.MatchWildcard, 0):
 
-            unvisible = (itemKA.checkState(0) == Qt.Unchecked
+            invisible = (itemKA.checkState(0) == Qt.Unchecked
                          and itemKA.checkState(1) == Qt.Unchecked
-                         and checkState)
-            itemKA.setHidden(unvisible)
+                         and check_state)
+            itemKA.setHidden(invisible)
 
-            if (checkState and itemKA.childCount() == 0):
+            if check_state and itemKA.childCount() == 0:
                 angName = itemKA.data(1, Qt.EditRole)
-                self.ang_Line[angName][0].set_visible(not unvisible)
-                self.ang_Line[angName][1].set_visible(not unvisible)
+                self.ang_Line[angName][0].set_visible(not invisible)
+                self.ang_Line[angName][1].set_visible(not invisible)
 
             for childIndex in range(itemKA.childCount()):  # проход по вложенным
-                unvisible = (itemKA.child(childIndex).checkState(1) != Qt.Checked
-                             and checkState)
-                itemKA.child(childIndex).setHidden(unvisible)
+                invisible = (itemKA.child(childIndex).checkState(1) != Qt.Checked
+                             and check_state)
+                itemKA.child(childIndex).setHidden(invisible)
 
                 angName = itemKA.child(childIndex).data(1, Qt.EditRole)
-                self.ang_Line[angName][0].set_visible(not unvisible)
-                self.ang_Line[angName][1].set_visible(not unvisible)
+                self.ang_Line[angName][0].set_visible(not invisible)
+                self.ang_Line[angName][1].set_visible(not invisible)
 
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
@@ -893,6 +998,5 @@ class ActionView:
             self.main_form.manager.copy_to_dst(path)
 
         self.main_form.viewButtMoveCU.setEnabled(True)
-
 
         print("moveAng")

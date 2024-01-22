@@ -29,6 +29,9 @@
     </property>
     <item>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
       </property>
@@ -1535,6 +1538,9 @@
                  </item>
                  <item>
                   <widget class="QPushButton" name="viewButtUpdateCU">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="text">
                     <string>Обновить ЦУ</string>
                    </property>

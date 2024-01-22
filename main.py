@@ -17,10 +17,7 @@ if __name__ == "__main__":
 
     logging.getLogger('matplotlib.font_manager').disabled = True
 
-    config_file: str = \
-        "currentConfigView.conf" \
-            if (os.path.exists("currentConfigView.conf")) \
-            else "config.conf"
+    config_file: str = "currentConfigView.conf" if (os.path.exists("currentConfigView.conf")) else "config.conf"
 
     manager = EffectiveManager(config_file)
 
