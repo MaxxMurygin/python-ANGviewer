@@ -651,11 +651,11 @@ class Ui_guiFormMain(object):
         self.viewButtSieveLabel = QtWidgets.QLabel(self.groupFiltr)
         self.viewButtSieveLabel.setObjectName("viewButtSieveLabel")
         self.verticalLayout.addWidget(self.viewButtSieveLabel)
-        self.spinBox = QtWidgets.QSpinBox(self.groupFiltr)
-        self.spinBox.setMinimum(2)
-        self.spinBox.setMaximum(10)
-        self.spinBox.setObjectName("spinBox")
-        self.verticalLayout.addWidget(self.spinBox)
+        self.viewButtSieveEdit = QtWidgets.QSpinBox(self.groupFiltr)
+        self.viewButtSieveEdit.setMinimum(2)
+        self.viewButtSieveEdit.setMaximum(10)
+        self.viewButtSieveEdit.setObjectName("viewButtSieveEdit")
+        self.verticalLayout.addWidget(self.viewButtSieveEdit)
         self.viewButtSieve = QtWidgets.QPushButton(self.groupFiltr)
         self.viewButtSieve.setObjectName("viewButtSieve")
         self.verticalLayout.addWidget(self.viewButtSieve)
@@ -726,7 +726,7 @@ class Ui_guiFormMain(object):
         self.toolBar.addAction(self.buttSetting)
 
         self.retranslateUi(guiFormMain)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(guiFormMain)
 
     def retranslateUi(self, guiFormMain):

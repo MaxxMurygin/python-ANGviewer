@@ -45,11 +45,11 @@ matplotlib.use('Qt5Agg')
 
 
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
-    def __init__(self, manader: EffectiveManager):
+    def __init__(self, manager: EffectiveManager):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
-        self.manager = manader
+        self.manager = manager
         self.current_config = self.manager.get_config()
         self.status_gui = ""
         # ----------------------------Setting--------------------------------
@@ -74,7 +74,10 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.calicTLEUpdateListButt.clicked.connect(self.action_calculate.calic_butt_update_all_lists)
         self.calicTLEUpdateButt.clicked.connect(self.action_calculate.calic_butt_tle_update)
 
-        # self.calicButtApply.clicked.connect()
+        self.calicButtApply.clicked.connect(
+            lambda: self.action_calculate.filter_list_apply_or_save(current_config=self.current_config,
+                                                                    flag_save_as_mold=False)
+        )
         self.calicButtCancel.clicked.connect(self.action_calculate.calic_butt_filter_cansel)
 
         self.calicStartButt.clicked.connect(self.action_calculate.calic_butt_start)
@@ -85,12 +88,14 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.action_view = ActionView(self)
 
         self.tableListKA.itemSelectionChanged.connect(self.action_view.slotSelectKaList)
-        self.buttResetSelection.released.connect(self.action_view.selectionReset)
-        self.buttOnlyCheck.clicked.connect(self.action_view.showOnlyMarked)
+        self.buttResetSelection.released.connect(self.action_view.view_butt_selection_reset)
+        self.buttOnlyCheck.clicked.connect(self.action_view.view_butt_show_only_marked)
 
         self.viewButtCliarCU.clicked.connect(self.action_view.clear_KA)
         self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
-        self.viewButtMoveCU.clicked.connect(self.action_view.move_cu)
+        self.viewButtMoveCU.clicked.connect(self.action_view.view_butt_move_cu)
+
+        self.viewButtSieve.clicked.connect(self.action_view.view_butt_sieve)
 
         self.buttSetting.triggered.connect(self.test)
 
@@ -129,7 +134,6 @@ class ActionSettings:
         self.main_form.label.setVisible(False)
         self.main_form.SettSystemStreamEdit.setVisible(False)
         self.main_form.SettPathCheckANG.setVisible(False)
-
 
         if not self.main_form.current_config:
             print("Упс конфига нифига")
@@ -275,7 +279,7 @@ class ActionSettings:
         self.main_form.current_config['TLE']['password'] = str(self.main_form.SettTLELoadPass.text())
 
         self.main_form.manager.set_config(self.main_form.current_config)
-        self.main_form.manager.save_config_to_file("currentConfigView.conf")
+        self.main_form.manager.save_config_to_file(self.name_current_config)
 
         self.main_form.current_config = self.main_form.manager.get_config()
 
@@ -516,8 +520,9 @@ class ActionCalculate:
             save_mold_to_file(filter_mold, self.path_filter_dir, mold_name)
         else:
             self.main_form.manager.set_config(self.main_form.current_config)
-            self.main_form.manager.save_config_to_file("currentConfigView.conf")
+            self.main_form.manager.save_config_to_file(self.name_current_config)
             self.main_form.current_config = self.main_form.manager.get_config()
+            self.calic_view_update(self.main_form.current_config)
 
         # print("seveFilterMold")
 
@@ -808,6 +813,7 @@ class ActionView:
 
         self.main_form.tableListKA.clear()
         self.all_angs.clear()
+        self.main_form.manager.delete_all()
 
         # print("claer")
 
@@ -981,7 +987,7 @@ class ActionView:
 
         return angName
 
-    def selectionReset(self):
+    def view_butt_selection_reset(self):
         """
         Отобразить всё
         """
@@ -999,7 +1005,7 @@ class ActionView:
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
 
-    def showOnlyMarked(self, check_state=True):
+    def view_butt_show_only_marked(self, check_state=True):
         """
         Отобразить только выделенные?
 
@@ -1034,7 +1040,7 @@ class ActionView:
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
 
-    def move_cu(self):
+    def view_butt_move_cu(self):
         """
         Перенос целеуказаний в новую папку
         :return:
@@ -1052,3 +1058,9 @@ class ActionView:
         self.main_form.viewButtMoveCU.setEnabled(True)
 
         print("moveAng")
+
+    def view_butt_sieve(self):
+        self.main_form.viewButtSieve.setEnabled(False)
+        self.main_form.manager.thin_out(self.main_form.viewButtSieveEdit.value())
+        self.updateKAData()
+        self.main_form.viewButtSieve.setEnabled(True)

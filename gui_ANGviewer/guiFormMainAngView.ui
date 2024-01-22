@@ -33,7 +33,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -1585,7 +1585,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QSpinBox" name="spinBox">
+                  <widget class="QSpinBox" name="viewButtSieveEdit">
                    <property name="minimum">
                     <number>2</number>
                    </property>
