@@ -4,24 +4,23 @@ from configparser import ConfigParser
 
 from manager import EffectiveManager
 
-#----------gui-----------------
+# ----------gui-----------------
 import sys
-from gui_ANGviewer.guiFormMainCode import GuiFormMain,QtWidgets
-#==============================
+from gui_ANGviewer.guiFormMainCode import GuiFormMain, QtWidgets
 
-
+# ==============================
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='(%(threadName)-10s) %(message)s', )
-    logging.getLogger('matplotlib.font_manager').disabled = True
 
+    logging.getLogger('matplotlib.font_manager').disabled = True
 
     config_file: str = \
         "currentConfigView.conf" \
-        if (os.path.exists("currentConfigView.conf"))\
-        else "config.conf"
+            if (os.path.exists("currentConfigView.conf")) \
+            else "config.conf"
 
     manager = EffectiveManager(config_file)
 
@@ -29,14 +28,12 @@ if __name__ == "__main__":
     window = GuiFormMain(manager)
     window.show()
 
-
-    window.actionView.figGraphTime.tight_layout()
-    window.actionView.figGraphTime.canvas.draw()
-    window.actionView.figGraphPolar.tight_layout()
-    window.actionView.figGraphPolar.canvas.draw()
+    window.action_view.figGraphTime.tight_layout()
+    window.action_view.figGraphTime.canvas.draw()
+    window.action_view.figGraphPolar.tight_layout()
+    window.action_view.figGraphPolar.canvas.draw()
     window.repaint()
 
     sys.exit(app.exec_())
-
 
     exit()
