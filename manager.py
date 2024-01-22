@@ -143,7 +143,7 @@ class EffectiveManager:
         return self.status
 
     def terminate(self):
-        self.global_commander.value = "STOP"
+        self.global_commander = "STOP"
         pass
 
     def copy_ang_to_dst(self, dst):
@@ -174,7 +174,9 @@ class EffectiveManager:
         splited_satellites = list()
         processes = list()
         calculator_list = list()
+        self.global_commander = ""
         self.global_counter.clear()
+        self.global_ang_list[:] = []
         if len(satellites) < threads_qty:
             for i in range(0, len(satellites)):
                 splited_satellites.append(dict())
@@ -192,7 +194,7 @@ class EffectiveManager:
         for sats in splited_satellites:
             calculator_list.append(Calculator(self.config, sats))
         for ac in calculator_list:
-            process = multiprocessing.Process(target=ac.calculate, args=(self.global_ang_list, self.global_commander,
+            process = multiprocessing.Process(target=ac.calculate, args=(self.global_ang_list,
                                                                          self.global_counter, self.lock))
             processes.append(process)
             process.start()

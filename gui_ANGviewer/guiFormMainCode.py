@@ -696,7 +696,7 @@ class ActionView:
         ax.set_yticklabels([])
         # ax.set_yticklabels(ax.get_yticks()[::-1])
         # ax.set_rlabel_position(120)
-        if True:
+        if False:
             labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
             compass = [n / float(len(labels)) * 2 * np.pi for n in range(len(labels))]
             compass += compass[:1]

@@ -159,7 +159,7 @@ class Calculator:
                 return 0
         return [event, df, file_name]
 
-    def calculate(self, global_list, commander, counter, lock):
+    def calculate(self, global_list, counter, lock):
         local_list = list()
         proc_name = multiprocessing.current_process().name
         perf_start = datetime.now()
