@@ -1,8 +1,9 @@
 import logging
 import multiprocessing
 import os
-from array import array
 from datetime import timedelta, datetime
+from math import cos
+
 import pandas
 import pandas as pd
 from skyfield.api import load
@@ -40,17 +41,6 @@ def correct_borders(t_events, events, ts_begin, ts_end):
     return t_events, events
 
 
-# def correct_border_end(t_events, events, ts_begin, ts_end):
-#     if events[len(events) - 1] == 0:
-#         events.append(1)
-#         t_events.append(ts_end)
-#     if events[len(events) - 1] == 1:
-#         events.append(2)
-#         t_events.append(ts_end)
-#
-#     return t_events, events
-
-
 class Calculator:
     ang_list = list()
 
@@ -64,6 +54,8 @@ class Calculator:
                     timedelta(hours=3))
         self.tle_dir = conf["Path"]["tle_directory"]
         self.ang_dir = conf["Path"]["ang_directory"]
+        # self.calculate_phase = bool(conf["Basic"]["calculate_phase"] == "True")
+        self.calculate_phase = True
         self.filter_by_elevate = bool(conf["Filter"]["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["Filter"]["filter_by_distance"] == "True")
         self.filter_by_sunlite = bool(conf["Filter"]["filter_by_sunlite"] == "True")
@@ -93,8 +85,6 @@ class Calculator:
 
                 if events[0] != 0 or events[len_events - 1] != 2:
                     t_events, events = correct_borders(t_events, events, ts_begin, ts_end)
-                # if events[len_events - 1] != 2:
-                #     t_events, events = correct_border_end(t_events, events, ts_begin, ts_end)
 
                 for i in range(0, len(t_events), 3):
                     topocentric = difference.at(t_events[i + 1])
@@ -111,14 +101,15 @@ class Calculator:
                     else:
                         event_df.loc[len(event_df.index)] = times_list
             except Exception as e:
-                logging.error(str(e) + "(find_events)")
-                logging.error(f"{sat.model.satnum} : {t_events} {events}")
+                logging.error(str(e) + "(find_events)" + f"ID: {sat.model.satnum}")
                 continue
         return event_df
 
     def calculate_ang_from_event(self, event):
         arr = []
         eph = load("de440s.bsp")
+        earth = eph['earth']
+        sun = eph['sun']
         step = event.iloc[5]
         satellite = event.iloc[1]
         ts_begin = event.iloc[2]
@@ -133,6 +124,9 @@ class Calculator:
         file_name = event.iloc[0] + "_" + (dt_begin + timedelta(hours=3)).strftime("%d%H") + ".ang"
         file_name = os.path.join(self.ang_dir, file_name)
         difference = satellite - self.aolc
+        ssb_obs = earth + self.aolc
+        ssb_satellite = earth + satellite
+
         ts_current = ts_begin
 
         while t_current_in_sec < t_end_in_sec:
@@ -140,10 +134,16 @@ class Calculator:
             alt, az, distance = topocentric.altaz()
             ra, dec, _ = topocentric.radec()
             if satellite.at(ts_current).is_sunlit(eph):
-                sunlit = 1.0
+                if self.calculate_phase:
+                    topocentric_sat_obs = ssb_satellite.at(ts_current).observe(ssb_obs).apparent()
+                    topocentric_sat_sun = ssb_satellite.at(ts_current).observe(sun).apparent()
+                    phase_angle = topocentric_sat_obs.separation_from(topocentric_sat_sun).radians
+                    phase = cos(phase_angle)
+                else:
+                    phase = 1.0
             else:
-                sunlit = 0.0
-            moment = [t_current_in_sec, distance.m, az.radians, alt.radians, ra.radians, dec.radians, sunlit]
+                phase = 0.0
+            moment = [t_current_in_sec, distance.m, az.radians, alt.radians, ra.radians, dec.radians, phase]
             arr.append(moment)
             ts_current = ts_current + timedelta(seconds=step)
             t_current_in_sec = t_current_in_sec + step

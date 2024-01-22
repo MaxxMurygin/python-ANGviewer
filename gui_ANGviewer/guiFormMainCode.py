@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -12,7 +13,7 @@ import datetime
 
 import collections
 
-from configparser import ConfigParser
+from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import numpy as np
 from numpy.distutils.fcompiler import str2bool
@@ -29,6 +30,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 
+import manager
 from manager import EffectiveManager
 from gui_ANGviewer.guiFormMainAngView import *
 

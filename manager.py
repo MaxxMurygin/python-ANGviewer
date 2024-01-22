@@ -27,6 +27,7 @@ class EffectiveManager:
         self.cat_dir = self.config["Path"]["cat_directory"]
         self.cat_file = self.config["Path"]["cat_file"]
         self.full_tle_file = self.config["TLE"]["default_file"]
+        self.check_files()
         self.catalog = self.__get_catalog()
         self.status = ""
         self.mp_manager = multiprocessing.Manager()
@@ -96,7 +97,7 @@ class EffectiveManager:
 
     def thin_out(self, sieve):
         self.status = "Идет прореживание..."
-        utils.thin_out(self.config, sieve)
+        utils.thin_out(self.ang_dir, sieve)
         self.status = ""
 
     def get_sat_info(self, norad_id):
@@ -151,9 +152,20 @@ class EffectiveManager:
         except IOError as e:
             logging.error(e)
 
+    def check_files(self):
+        path_tle = os.path.join(os.getcwd(), self.tle_dir, self.full_tle_file)
+        path_cat = os.path.join(os.getcwd(), self.cat_dir, self.cat_file)
+        if not os.path.isfile(path_tle):
+            self.download_tle()
+        if not os.path.isfile(path_cat):
+            self.download_cat()
+
     def __get_catalog(self):
         self.status = "Чтение каталога"
-        cat = read_catalog(os.path.join(os.getcwd(), self.cat_dir, self.cat_file))
+        cat_path = os.path.join(os.getcwd(), self.cat_dir, self.cat_file)
+        if not os.path.isfile(cat_path):
+            self.download_cat()
+        cat = read_catalog(cat_path)
         self.status = ""
         return cat
 
@@ -162,6 +174,7 @@ class EffectiveManager:
         splited_satellites = list()
         processes = list()
         calculator_list = list()
+        self.global_counter.clear()
         if len(satellites) < threads_qty:
             for i in range(0, len(satellites)):
                 splited_satellites.append(dict())
@@ -193,7 +206,7 @@ class EffectiveManager:
                 if proc.is_alive():
                     is_alive = True
             with self.lock:
-                self.status = f"{sum(self.global_counter.values()) / threads_qty * 100} % complete"
+                self.status = f"{round(sum(self.global_counter.values()) / threads_qty * 100)}% выполнено"
             print(self.status)
             sleep(2)
         perf = datetime.now() - perf_start
