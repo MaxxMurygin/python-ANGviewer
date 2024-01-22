@@ -45,11 +45,11 @@ matplotlib.use('Qt5Agg')
 
 
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
-    def __init__(self, manader: EffectiveManager):
+    def __init__(self, manager: EffectiveManager):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
-        self.manager = manader
+        self.manager = manager
         self.current_config = self.manager.get_config()
         self.status_gui = ""
         # ----------------------------Setting--------------------------------
@@ -70,54 +70,54 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.calicTemplateButSeve.clicked.connect(self.action_calculate.calic_butt_filter_save)
         self.calicTemplateButDel.clicked.connect(self.action_calculate.calic_butt_filter_del)
         self.calicTemplateButCancel.clicked.connect(self.action_calculate.calic_butt_filter_cansel)
+
         self.calicTLEUpdateListButt.clicked.connect(self.action_calculate.calic_butt_update_all_lists)
+        self.calicTLEUpdateButt.clicked.connect(self.action_calculate.calic_butt_tle_update)
+
+        self.calicButtApply.clicked.connect(
+            lambda: self.action_calculate.filter_list_apply_or_save(current_config=self.current_config,
+                                                                    flag_save_as_mold=False)
+        )
+        self.calicButtCancel.clicked.connect(self.action_calculate.calic_butt_filter_cansel)
+
         self.calicStartButt.clicked.connect(self.action_calculate.calic_butt_start)
         self.calicStopButt.clicked.connect(self.action_calculate.calic_butt_stop)
+        self.calicClearAngDirButt.clicked.connect(self.action_calculate.calic_butt_clear_ang_dir)
 
         # ----------------------------View---------------------------------
         self.action_view = ActionView(self)
 
         self.tableListKA.itemSelectionChanged.connect(self.action_view.slotSelectKaList)
-        self.buttResetSelection.released.connect(self.action_view.selectionReset)
-        self.buttOnlyCheck.clicked.connect(self.action_view.showOnlyMarked)
+        self.buttResetSelection.released.connect(self.action_view.view_butt_selection_reset)
+        self.buttOnlyCheck.clicked.connect(self.action_view.view_butt_show_only_marked)
 
         self.viewButtCliarCU.clicked.connect(self.action_view.clear_KA)
         self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
-        self.viewButtMoveCU.clicked.connect(self.action_view.move_cu)
+        self.viewButtMoveCU.clicked.connect(self.action_view.view_butt_move_cu)
 
-        self.buttSetting.triggered.connect(self.callSettings)
+        self.viewButtSieve.clicked.connect(self.action_view.view_butt_sieve)
 
-        threading.Thread(target=loop_check_manager_state,
-                         args=(self.manager, self)).start()
+        self.buttSetting.triggered.connect(self.test)
+
+        self.flag_checked_state = True
+        self.loop_check = threading.Thread(target=loop_check_manager_state,
+                                           args=(self.manager, self)).start()
+
         # loop_check_manager_state(self.manager, self)
+
+    def closeEvent(self, event):
+        self.flag_checked_state = False
 
     def get_status(self):
         return self.status_gui
-    # def callCalicANG(self):
-    #     print("вызов Расчёта")
-    #     # self.timeKa.set_visible(not self.timeKa.get_visible())
-    #
-    def callSettings(self):
-        t = threading.Thread(target=self.manager.calculate, args=("full.tle",))
-        t.start()
 
-        # t = threading.Thread(target=worker, args=(1,))
-        # t.start()
-        # self.main_form.manager.calculate(tle_file)
-        print("\nвызов настроек")
-
-
-async def worker(manader: EffectiveManager, tle="full.tle"):
-    manager.calculate(tle)
-    # print(f'Старт потока №{num_thread}')
-    # time.sleep(1)
-    # print(f'Завершение работы потока №{num_thread}')
+    def test(self, flag=False):
+        print("test")
 
 
 def loop_check_manager_state(manager: EffectiveManager,
                              gui_form: GuiFormMain):
-    while True:
-
+    while gui_form.flag_checked_state:
         gui_form.statusbar.showMessage(
             f"{manager.get_status()}{gui_form.get_status()}")
         # gui_form.repaint()
@@ -128,9 +128,12 @@ def loop_check_manager_state(manager: EffectiveManager,
 
 class ActionSettings:
     def __init__(self, main_form: GuiFormMain):
-        print("__init__ actionSettings")
+        # print("__init__ actionSettings")
         self.main_form = main_form
         # self.currentConfig = self.mainForm.manager.get_config()  # To Do Перенести в Main
+        self.main_form.label.setVisible(False)
+        self.main_form.SettSystemStreamEdit.setVisible(False)
+        self.main_form.SettPathCheckANG.setVisible(False)
 
         if not self.main_form.current_config:
             print("Упс конфига нифига")
@@ -157,7 +160,7 @@ class ActionSettings:
         #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
         #     self.mainForm.SettSystemStreamEdit.setStyleSheet("")
 
-        self.main_form.SettSystemStreamEdit.setValue(int(current_config["System"]['threads']))
+        # self.main_form.SettSystemStreamEdit.setValue(int(current_config["System"]['threads']))
 
         self.main_form.SettCoordSpinBoxLat.setValue(float(current_config['Coordinates']['lat']))
         self.main_form.SettCoordSpinBoxLon.setValue(float(current_config['Coordinates']['lon']))
@@ -168,7 +171,7 @@ class ActionSettings:
         self.main_form.SettPathEditCAT.setText(current_config['Path']['cat_directory'])
         # self.mainForm.SettPathEditFilterConf.setText(currentConfig['Path'][])
         self.main_form.SettPathEditANG.setText(current_config['Path']['ang_directory'])
-        self.main_form.SettPathCheckANG.setChecked(str2bool(current_config['Path']['delete_existing']))
+        # self.main_form.SettPathCheckANG.setChecked(str2bool(current_config['Path']['delete_existing']))
 
         # self.mainForm.SettTLELoadBox.setChecked(str2bool(currentConfig['TLE']['download']))
         self.main_form.SettTLELoadLog.setText(current_config['TLE']['identity'])
@@ -189,10 +192,10 @@ class ActionSettings:
 
     def checkApplyConfig(self):
 
-        self.main_form.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                          (self.main_form.SettSystemStreamEdit.value() != int(
-                                                              self.main_form.current_config["System"]['threads']))
-                                                          else "")
+        # self.main_form.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
+        #                                                   (self.main_form.SettSystemStreamEdit.value() != int(
+        #                                                       self.main_form.current_config["System"]['threads']))
+        #                                                   else "")
 
         self.main_form.SettCoordSpinBoxLat.setStyleSheet("background-color: rgb(255, 0, 0);" if
                                                          (self.main_form.SettCoordSpinBoxLat.value() != float(
@@ -231,12 +234,12 @@ class ActionSettings:
                                                          self.main_form.current_config['Path']['ang_directory']))
                                                      else "")
 
-        self.main_form.SettPathCheckANG.setStyleSheet("background-color: rgb(255, 0, 0);" if
-                                                      (self.main_form.SettPathCheckANG.isChecked() != bool(
-                                                          str2bool(
-                                                              self.main_form.current_config['Path'][
-                                                                  'delete_existing'])))
-                                                      else "")
+        # self.main_form.SettPathCheckANG.setStyleSheet("background-color: rgb(255, 0, 0);" if
+        #                                               (self.main_form.SettPathCheckANG.isChecked() != bool(
+        #                                                   str2bool(
+        #                                                       self.main_form.current_config['Path'][
+        #                                                           'delete_existing'])))
+        #                                               else "")
 
         # self.mainForm.SettTLELoadBox.setStyleSheet("color: rgb(255, 0, 0);" if
         #                                            (self.mainForm.SettTLELoadBox.isChecked() != bool(
@@ -257,7 +260,7 @@ class ActionSettings:
 
         # confi = self.currentConfig
 
-        self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
+        # self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
 
         self.main_form.current_config['Coordinates']['lat'] = str(self.main_form.SettCoordSpinBoxLat.value())
         self.main_form.current_config['Coordinates']['lon'] = str(self.main_form.SettCoordSpinBoxLon.value())
@@ -267,8 +270,8 @@ class ActionSettings:
         self.main_form.current_config['Path']['tle_directory'] = str(self.main_form.SettPathEditTLE.text())
         self.main_form.current_config['Path']['cat_directory'] = str(self.main_form.SettPathEditCAT.text())
         self.main_form.current_config['Path']['ang_directory'] = str(self.main_form.SettPathEditANG.text())
-        self.main_form.current_config['Path']['delete_existing'] = \
-            "True" if (self.main_form.SettPathCheckANG.isChecked()) else "False"
+        # self.main_form.current_config['Path']['delete_existing'] = \
+        #     "True" if (self.main_form.SettPathCheckANG.isChecked()) else "False"
 
         # self.currentConfig['TLE']['download'] = \
         #     "True" if (self.mainForm.SettTLELoadBox.isChecked()) else "False"
@@ -276,7 +279,7 @@ class ActionSettings:
         self.main_form.current_config['TLE']['password'] = str(self.main_form.SettTLELoadPass.text())
 
         self.main_form.manager.set_config(self.main_form.current_config)
-        self.main_form.manager.save_config_to_file("currentConfigView.conf")
+        self.main_form.manager.save_config_to_file(self.name_current_config)
 
         self.main_form.current_config = self.main_form.manager.get_config()
 
@@ -317,6 +320,7 @@ class ActionCalculate:
         # print("__init__ actionCalic")
 
         self.path_filter_dir = "viewFilterTemplates"
+        self.name_current_config = "currentConfigView.conf"
 
         self.main_form = main_form
         self.main_form.calicFilterLaunchBox.setVisible(False)
@@ -332,22 +336,52 @@ class ActionCalculate:
         self.calic_view_update(self.main_form.current_config)
         self.filter_tle_list_update(self.main_form.current_config['Path']['tle_directory'])
 
-        # self.updateFilterMoldList()
-
         self.main_form.calicTLECastomRadio.toggled.connect(self.main_form.calicTLEList.setEnabled)
-        # self.main_form.calicTemplateList.itemSelectionChanged.connect(self.filter_list_select)
-        #
-        # self.main_form.calicTemplateButSeveAs.clicked.connect(self.calic_butt_filter_save_as)
-        # self.main_form.calicTemplateButSeve.clicked.connect(self.calic_butt_filter_save)
-        # self.main_form.calicTemplateButDel.clicked.connect(self.calic_butt_filter_del)
-        # self.main_form.calicTemplateButCancel.clicked.connect(self.calic_butt_filter_cansel)
-        # self.main_form.calicTLEUpdateListButt.clicked.connect(self.calic_butt_update_all_lists)
-        # self.main_form.calicStartButt.clicked.connect(self.calic_butt_start)
 
-        # self.main_form.calicFilterNameBox.clicked
+        self.main_form.calicFilterPeriodEditMin.setMaximum(self.main_form.
+                                                           calicFilterPeriodEditMax.value())
+        self.main_form.calicFilterPeriodEditMax.setMinimum(self.main_form.
+                                                           calicFilterPeriodEditMin.value())
+        self.main_form.calicFilterPeriodEditMin.valueChanged.connect(
+            lambda value: self.main_form.calicFilterPeriodEditMax.setMinimum(value))
+        self.main_form.calicFilterPeriodEditMax.valueChanged.connect(
+            lambda value: self.main_form.calicFilterPeriodEditMin.setMaximum(value))
 
-    # def updateTemplateList(self):
-    #     print("updateTemplateList")
+        self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
+                                                                 calicFilterTimeEditMax.dateTime())
+        self.main_form.calicFilterTimeEditMax.setMinimumDateTime(self.main_form.
+                                                                 calicFilterTimeEditMin.dateTime())
+        self.main_form.calicFilterTimeEditMin.dateTimeChanged.connect(
+            lambda value: self.main_form.calicFilterTimeEditMax.setMinimumDateTime(value))
+        self.main_form.calicFilterTimeEditMax.dateTimeChanged.connect(
+            lambda value: self.main_form.calicFilterTimeEditMin.setMaximumDateTime(value))
+
+        self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
+                                                                 calicFilterTimeEditMax.dateTime())
+        self.main_form.calicFilterTimeEditMax.setMinimumDateTime(self.main_form.
+                                                                 calicFilterTimeEditMin.dateTime())
+        self.main_form.calicFilterTimeEditMin.dateTimeChanged.connect(
+            lambda value: self.main_form.calicFilterTimeEditMax.setMinimumDateTime(value))
+        self.main_form.calicFilterTimeEditMax.dateTimeChanged.connect(
+            lambda value: self.main_form.calicFilterTimeEditMin.setMaximumDateTime(value))
+
+        self.main_form.calicFilterElevationEditMin.setMaximum(self.main_form.
+                                                              calicFilterElevationEditMax.value())
+        self.main_form.calicFilterElevationEditMax.setMinimum(self.main_form.
+                                                              calicFilterElevationEditMin.value())
+        self.main_form.calicFilterElevationEditMin.valueChanged.connect(
+            lambda value: self.main_form.calicFilterElevationEditMax.setMinimum(value))
+        self.main_form.calicFilterElevationEditMax.valueChanged.connect(
+            lambda value: self.main_form.calicFilterElevationEditMin.setMaximum(value))
+
+        self.main_form.calicFilterDistanceEditMin.setMaximum(self.main_form.
+                                                             calicFilterDistanceEditMax.value())
+        self.main_form.calicFilterDistanceEditMax.setMinimum(self.main_form.
+                                                             calicFilterDistanceEditMin.value())
+        self.main_form.calicFilterDistanceEditMin.valueChanged.connect(
+            lambda value: self.main_form.calicFilterDistanceEditMax.setMinimum(value))
+        self.main_form.calicFilterDistanceEditMax.valueChanged.connect(
+            lambda value: self.main_form.calicFilterDistanceEditMin.setMaximum(value))
 
     def calic_view_update(self, current_config):
 
@@ -398,10 +432,15 @@ class ActionCalculate:
 
         self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
         self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
+        self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
 
     def filter_list_update(self):
 
         self.main_form.calicTemplateList.clear()
+
+        if not os.path.exists(self.path_filter_dir):
+            os.mkdir(os.path.join(os.getcwd(), self.path_filter_dir))
+            return
 
         for file in os.listdir(self.path_filter_dir):
             if file.find(".conf") != -1:
@@ -435,6 +474,9 @@ class ActionCalculate:
         filter_mold["Basic"].update(
             {'t_end': self.main_form.calicFilterTimeEditMax.dateTime().toString(
                 "yyyy-MM-dd hh:mm:ss")})
+
+        filter_mold["Basic"].update(
+            {'calculate_phase': "True" if (self.main_form.calicCheckCalculatePhase.isChecked()) else "False"})
 
         if not ("Filter" in filter_mold.keys()):
             filter_mold.update({"Filter": dict()})
@@ -478,8 +520,9 @@ class ActionCalculate:
             save_mold_to_file(filter_mold, self.path_filter_dir, mold_name)
         else:
             self.main_form.manager.set_config(self.main_form.current_config)
-            self.main_form.manager.save_config_to_file("currentConfigView.conf")
+            self.main_form.manager.save_config_to_file(self.name_current_config)
             self.main_form.current_config = self.main_form.manager.get_config()
+            self.calic_view_update(self.main_form.current_config)
 
         # print("seveFilterMold")
 
@@ -501,15 +544,21 @@ class ActionCalculate:
 
     def filter_tle_list_update(self, path_tle_dir: str):
 
-        self.main_form.calicTLELableDate.setText(f"от {self.main_form.manager.get_full_tle_date()}")
+        self.main_form.calicTLELableDate.setText(
+            f"от {self.main_form.manager.get_full_tle_date().strftime('%d-%m-%Y %H:%M')}")
 
         self.main_form.calicTLEList.clear()
+
         for file in os.listdir(path_tle_dir):
             if file.split('.')[-1] == "tle" and file != "full.tle":
                 item_file_tle = QListWidgetItem()
                 item_file_tle.setText(file)
                 self.main_form.calicTLEList.addItem(item_file_tle)
         # print("updateTleList")
+
+    def calic_butt_tle_update(self):
+        self.main_form.manager.download_tle()
+        self.filter_tle_list_update(self.main_form.current_config['Path']['tle_directory'])
 
     def calic_butt_start(self):
         """
@@ -520,8 +569,8 @@ class ActionCalculate:
         self.filter_list_apply_or_save(current_config=self.main_form.current_config,
                                        flag_save_as_mold=False)
 
-        # if self.main_form.calicCheckClearCuDir.isChecked():
-        # self.main_form.manager.delete_all()
+        if self.main_form.calicCheckClearCuDir.isChecked():
+            self.main_form.manager.delete_all()
 
         tle_file = self.main_form.current_config["TLE"]["user_file"]
         if not tle_file:
@@ -538,6 +587,10 @@ class ActionCalculate:
 
     def calic_butt_stop(self):
         self.main_form.manager.terminate()
+
+    def calic_butt_clear_ang_dir(self):
+        self.main_form.manager.delete_all()
+        self.main_form.action_view.updateKAData()
 
     def calic_butt_filter_save(self):
         """
@@ -656,6 +709,8 @@ class ActionView:
         self.main_form.tableListKA.header().setSectionResizeMode(1, QHeaderView.Stretch)
         self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.main_form.buttInvertCheck.setVisible(False)
+        self.main_form.buttDelNoCheck.setVisible(False)
 
         self.all_angs = dict()
         self.ang_Line = dict()  # Time, TimeShadow, polar, polarShadow
@@ -758,13 +813,13 @@ class ActionView:
 
         self.main_form.tableListKA.clear()
         self.all_angs.clear()
+        self.main_form.manager.delete_all()
 
         # print("claer")
 
     def updateKAData(self):
 
         self.main_form.status_gui = "Построение графиков"
-
 
         if self.all_angs:
             self.clear_KA()
@@ -828,6 +883,7 @@ class ActionView:
             self.figGraphPolar.canvas.draw()
             self.figGraphTime.canvas.draw()
         else:
+            self.main_form.tabWidget.setCurrentIndex(1)
             print("amgs_isEmpty")
 
         self.main_form.status_gui = ""
@@ -931,7 +987,7 @@ class ActionView:
 
         return angName
 
-    def selectionReset(self):
+    def view_butt_selection_reset(self):
         """
         Отобразить всё
         """
@@ -949,7 +1005,7 @@ class ActionView:
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
 
-    def showOnlyMarked(self, check_state=True):
+    def view_butt_show_only_marked(self, check_state=True):
         """
         Отобразить только выделенные?
 
@@ -984,7 +1040,7 @@ class ActionView:
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
 
-    def move_cu(self):
+    def view_butt_move_cu(self):
         """
         Перенос целеуказаний в новую папку
         :return:
@@ -1002,3 +1058,9 @@ class ActionView:
         self.main_form.viewButtMoveCU.setEnabled(True)
 
         print("moveAng")
+
+    def view_butt_sieve(self):
+        self.main_form.viewButtSieve.setEnabled(False)
+        self.main_form.manager.thin_out(self.main_form.viewButtSieveEdit.value())
+        self.updateKAData()
+        self.main_form.viewButtSieve.setEnabled(True)
