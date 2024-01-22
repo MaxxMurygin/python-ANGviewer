@@ -27,7 +27,7 @@ class EffectiveManager:
         self.cat_dir = self.config["Path"]["cat_directory"]
         self.cat_file = self.config["Path"]["cat_file"]
         self.full_tle_file = self.config["TLE"]["default_file"]
-        self.catalog = self.__get_catalog(self.cat_file)
+        self.catalog = self.__get_catalog()
         self.status = ""
         self.mp_manager = multiprocessing.Manager()
         self.lock = self.mp_manager.Lock()
