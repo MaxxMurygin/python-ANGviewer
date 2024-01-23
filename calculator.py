@@ -54,12 +54,11 @@ class Calculator:
                     timedelta(hours=3))
         self.tle_dir = conf["Path"]["tle_directory"]
         self.ang_dir = conf["Path"]["ang_directory"]
-        # self.calculate_phase = bool(conf["Basic"]["calculate_phase"] == "True")
-        self.calculate_phase = True
+        self.calculate_phase = bool(conf["Basic"]["calculate_phase"] == "True")
+        # self.calculate_phase = True
         self.filter_by_elevate = bool(conf["Filter"]["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["Filter"]["filter_by_distance"] == "True")
         self.filter_by_sunlite = bool(conf["Filter"]["filter_by_sunlite"] == "True")
-        self.delete_existing = bool(conf["Path"]["delete_existing"] == "True")
         self.min_distance = int(conf["Filter"]["min_distance"])
         self.max_distance = int(conf["Filter"]["max_distance"])
         self.min_elevation = int(conf["Filter"]["min_elevation"])
@@ -153,7 +152,8 @@ class Calculator:
         if df["Time"].max() > 86400:
             df["Time"] = correct_midnight(df["Time"])
         if self.filter_by_sunlite:
-            if df["Ph"].mean() > self.sunlite:
+            percent_of_sunlit = len(df[df["Ph"] != 0.0]) / len(df)
+            if percent_of_sunlit > self.sunlite:
                 return [event, df, file_name]
             else:
                 return 0
@@ -168,9 +168,6 @@ class Calculator:
         events_qty = len(events)
         perf = datetime.now() - perf_start
         print(f"*{proc_name}* Время расчета зон: {perf.seconds + perf.microseconds / 1000000} sec")
-        if self.delete_existing:
-            for file in os.listdir(self.ang_dir):
-                os.remove(os.path.join(self.ang_dir, file))
         count = 0
         for _, event in events.iterrows():
             count += 1

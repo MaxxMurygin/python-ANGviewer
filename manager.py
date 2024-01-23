@@ -27,6 +27,7 @@ class EffectiveManager:
         self.cat_dir = self.config["Path"]["cat_directory"]
         self.cat_file = self.config["Path"]["cat_file"]
         self.full_tle_file = self.config["TLE"]["default_file"]
+        self.delete_existing = bool(self.config["Path"]["delete_existing"] == "True")
         self.check_files()
         self.catalog = self.__get_catalog()
         self.status = ""
@@ -214,6 +215,9 @@ class EffectiveManager:
         perf = datetime.now() - perf_start
         print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
         self.status = "Идет запись результатов расчета..."
+        if self.delete_existing:
+            for file in os.listdir(self.ang_dir):
+                os.remove(os.path.join(self.ang_dir, file))
         for items in self.global_ang_list:
             for item in items:
                 file_operations.write_ang(item[0], item[1], item[2])
