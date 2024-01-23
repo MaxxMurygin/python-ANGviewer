@@ -129,6 +129,8 @@ def loop_check_manager_state(manager: EffectiveManager,
 class ActionSettings:
     def __init__(self, main_form: GuiFormMain):
         # print("__init__ actionSettings")
+        self.name_current_config = "currentConfigView.conf"
+
         self.main_form = main_form
         # self.currentConfig = self.mainForm.manager.get_config()  # To Do Перенести в Main
         self.main_form.label.setVisible(False)
@@ -320,7 +322,6 @@ class ActionCalculate:
         # print("__init__ actionCalic")
 
         self.path_filter_dir = "viewFilterTemplates"
-        self.name_current_config = "currentConfigView.conf"
 
         self.main_form = main_form
         self.main_form.calicFilterLaunchBox.setVisible(False)
@@ -346,15 +347,6 @@ class ActionCalculate:
             lambda value: self.main_form.calicFilterPeriodEditMax.setMinimum(value))
         self.main_form.calicFilterPeriodEditMax.valueChanged.connect(
             lambda value: self.main_form.calicFilterPeriodEditMin.setMaximum(value))
-
-        self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMax.dateTime())
-        self.main_form.calicFilterTimeEditMax.setMinimumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMin.dateTime())
-        self.main_form.calicFilterTimeEditMin.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMax.setMinimumDateTime(value))
-        self.main_form.calicFilterTimeEditMax.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMin.setMaximumDateTime(value))
 
         self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
                                                                  calicFilterTimeEditMax.dateTime())
