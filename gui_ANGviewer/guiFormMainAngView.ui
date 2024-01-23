@@ -33,7 +33,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -925,9 +925,18 @@
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="calicFilterPeriodEditMin">
+               <widget class="QDoubleSpinBox" name="calicFilterPeriodEditMin">
+                <property name="keyboardTracking">
+                 <bool>false</bool>
+                </property>
+                <property name="decimals">
+                 <number>1</number>
+                </property>
                 <property name="maximum">
-                 <number>99999</number>
+                 <double>999999999.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.500000000000000</double>
                 </property>
                </widget>
               </item>
@@ -945,9 +954,18 @@
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="calicFilterPeriodEditMax">
+               <widget class="QDoubleSpinBox" name="calicFilterPeriodEditMax">
+                <property name="keyboardTracking">
+                 <bool>false</bool>
+                </property>
+                <property name="decimals">
+                 <number>1</number>
+                </property>
                 <property name="maximum">
-                 <number>99999</number>
+                 <double>999999999.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.500000000000000</double>
                 </property>
                </widget>
               </item>
