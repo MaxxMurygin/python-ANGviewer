@@ -348,15 +348,6 @@ class ActionCalculate:
         self.main_form.calicFilterPeriodEditMax.valueChanged.connect(
             lambda value: self.main_form.calicFilterPeriodEditMin.setMaximum(value))
 
-        self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMax.dateTime())
-        self.main_form.calicFilterTimeEditMax.setMinimumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMin.dateTime())
-        self.main_form.calicFilterTimeEditMin.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMax.setMinimumDateTime(value))
-        self.main_form.calicFilterTimeEditMax.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMin.setMaximumDateTime(value))
-
         self.main_form.calicFilterElevationEditMin.setMaximum(self.main_form.
                                                               calicFilterElevationEditMax.value())
         self.main_form.calicFilterElevationEditMax.setMinimum(self.main_form.
