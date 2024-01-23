@@ -53,6 +53,13 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.manager = manager
         self.current_config = self.manager.get_config()
+
+        # if self.current_config:
+        #     QMessageBox.critical(self,
+        #                          "Ошибка",
+        #                          "Отсутствует основной файл конфигурации \n config.conf")
+        #     return
+
         self.status_gui = ""
         # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
@@ -93,7 +100,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.buttResetSelection.released.connect(self.action_view.view_butt_selection_reset)
         self.buttOnlyCheck.clicked.connect(self.action_view.view_butt_show_only_marked)
 
-        self.viewButtCliarCU.clicked.connect(self.action_view.clear_KA)
+        self.viewButtCliarCU.released.connect(self.action_view.clear_KA)
         self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
         self.viewButtMoveCU.clicked.connect(self.action_view.view_butt_move_cu)
 
@@ -138,11 +145,9 @@ class ActionSettings:
         self.main_form.SettSystemStreamEdit.setVisible(False)
         self.main_form.SettPathCheckANG.setVisible(False)
 
-        if not self.main_form.current_config:
-            print("Упс конфига нифига")
-            return
-
         self.configViewUpdate(self.main_form.current_config)
+
+
 
     def configViewUpdate(self, current_config=dict(), firstReading=False):
         """
@@ -180,10 +185,12 @@ class ActionSettings:
         self.main_form.SettTLELoadLog.setText(current_config['TLE']['identity'])
         self.main_form.SettTLELoadPass.setText(current_config['TLE']['password'])
 
-
-
-        if not os.path.exists(os.path.join(os.getcwd(), self.main_form.name_current_config)):
+        if not os.path.exists(os.path.join(os.getcwd(),
+                                           self.main_form.name_current_config)):
             self.clickedSave()
+
+    # def check_enable_calic(self):
+    #     if self.main_form.current_config
 
     def __getPathDir__(self) -> str:
 
@@ -385,8 +392,8 @@ class ActionCalculate:
 
         check_filter_period = str2bool(current_config['Filter']['filter_by_period'])
         self.main_form.calicFilterPeriodBox.setChecked(bool(check_filter_period))
-        self.main_form.calicFilterPeriodEditMin.setValue(int(current_config['Filter']['min_period']))
-        self.main_form.calicFilterPeriodEditMax.setValue(int(current_config['Filter']['max_period']))
+        self.main_form.calicFilterPeriodEditMin.setValue(float(current_config['Filter']['min_period']))
+        self.main_form.calicFilterPeriodEditMax.setValue(float(current_config['Filter']['max_period']))
 
         self.main_form.calicFilterTimeEditMin.setDateTime(
             datetime.datetime.strptime(current_config['Basic']['t_begin'], "%Y-%m-%d %H:%M:%S"))
@@ -785,7 +792,7 @@ class ActionView:
         ax.grid(True)
         ax.grid(axis='x', which='minor', linewidth=1.5)
 
-    def clear_KA(self):
+    def clear_KA(self, flag_clear_dir=True):
 
         self.axGraphTime.cla()
         self.axGraphPolar.cla()
@@ -802,16 +809,17 @@ class ActionView:
 
         self.main_form.tableListKA.clear()
         self.all_angs.clear()
-        self.main_form.manager.delete_all()
+        if flag_clear_dir:
+            self.main_form.manager.delete_all()
 
         # print("claer")
 
     def updateKAData(self):
 
-        self.main_form.status_gui = "Построение графиков"
+        self.main_form.statusbar.showMessage("Построение графиков",10)
 
-        if self.all_angs:
-            self.clear_KA()
+        if len(self.all_angs) != 0:
+            self.clear_KA(False)
 
         self.main_form.viewButtUpdateCU.setEnabled(False)
         self.main_form.repaint()
@@ -878,6 +886,7 @@ class ActionView:
         self.main_form.status_gui = ""
 
         self.main_form.viewButtUpdateCU.setEnabled(True)
+        self.main_form.statusbar.showMessage("")
 
     def fillKaInfo(self, idKa: int):
         # print("fillKaInfo")
