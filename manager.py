@@ -216,6 +216,8 @@ class EffectiveManager:
         print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
         self.status = "Идет запись результатов расчета..."
         if self.delete_existing:
+            if len(self.ang_dict) != 0:
+                self.ang_dict.clear()
             for file in os.listdir(self.ang_dir):
                 os.remove(os.path.join(self.ang_dir, file))
         for items in self.global_ang_list:
