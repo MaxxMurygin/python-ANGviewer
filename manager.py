@@ -208,7 +208,7 @@ class EffectiveManager:
                 if proc.is_alive():
                     is_alive = True
             with self.lock:
-                self.status = f"{round(sum(self.global_counter.values()) / threads_qty * 100)}% выполнено"
+                self.status = f"{round((sum(self.global_counter.values()) / threads_qty * 100), 2)}% выполнено"
             print(self.status)
             sleep(2)
         perf = datetime.now() - perf_start
@@ -217,4 +217,4 @@ class EffectiveManager:
         for items in self.global_ang_list:
             for item in items:
                 file_operations.write_ang(item[0], item[1], item[2])
-        self.status = ""
+        self.status = "Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000)

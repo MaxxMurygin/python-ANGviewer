@@ -138,7 +138,7 @@ class Calculator:
                     topocentric_sat_obs = ssb_satellite.at(ts_current).observe(ssb_obs).apparent()
                     topocentric_sat_sun = ssb_satellite.at(ts_current).observe(sun).apparent()
                     phase_angle = topocentric_sat_obs.separation_from(topocentric_sat_sun).radians
-                    phase = cos(phase_angle)
+                    phase = cos(phase_angle / 2) ** 2
                 else:
                     phase = 1.0
             else:
