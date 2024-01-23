@@ -727,15 +727,15 @@ class ActionView:
     @staticmethod
     def graph_polar_tuner(ax):
 
-        ax.set_theta_zero_location("N")  # Начало север
-        ax.set_theta_direction(-1)  # Отразить
+        ax.set_theta_zero_location("S")  # Начало север
+        # ax.set_theta_direction(-1)  # Отразить
         ax.set_rlim(bottom=0, top=90, emit=1)  # Установите пределы обзора по радиальной оси
         ax.set_yticks(np.arange(0, 91, 15))  # Сетка
         ax.set_yticklabels([])
         # ax.set_yticklabels(ax.get_yticks()[::-1])
         # ax.set_rlabel_position(120)
         if True:
-            labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+            labels = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE',]
             compass = [n / float(len(labels)) * 2 * np.pi for n in range(len(labels))]
             compass += compass[:1]
             ax.set_xticks(compass[:-1], labels)
