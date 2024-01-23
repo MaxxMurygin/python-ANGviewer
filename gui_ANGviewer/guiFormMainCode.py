@@ -129,6 +129,8 @@ def loop_check_manager_state(manager: EffectiveManager,
 class ActionSettings:
     def __init__(self, main_form: GuiFormMain):
         # print("__init__ actionSettings")
+        self.name_current_config = "currentConfigView.conf"
+
         self.main_form = main_form
         # self.currentConfig = self.mainForm.manager.get_config()  # To Do Перенести в Main
         self.main_form.label.setVisible(False)
@@ -320,7 +322,6 @@ class ActionCalculate:
         # print("__init__ actionCalic")
 
         self.path_filter_dir = "viewFilterTemplates"
-        self.name_current_config = "currentConfigView.conf"
 
         self.main_form = main_form
         self.main_form.calicFilterLaunchBox.setVisible(False)
@@ -346,24 +347,6 @@ class ActionCalculate:
             lambda value: self.main_form.calicFilterPeriodEditMax.setMinimum(value))
         self.main_form.calicFilterPeriodEditMax.valueChanged.connect(
             lambda value: self.main_form.calicFilterPeriodEditMin.setMaximum(value))
-
-        self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMax.dateTime())
-        self.main_form.calicFilterTimeEditMax.setMinimumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMin.dateTime())
-        self.main_form.calicFilterTimeEditMin.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMax.setMinimumDateTime(value))
-        self.main_form.calicFilterTimeEditMax.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMin.setMaximumDateTime(value))
-
-        self.main_form.calicFilterTimeEditMin.setMaximumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMax.dateTime())
-        self.main_form.calicFilterTimeEditMax.setMinimumDateTime(self.main_form.
-                                                                 calicFilterTimeEditMin.dateTime())
-        self.main_form.calicFilterTimeEditMin.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMax.setMinimumDateTime(value))
-        self.main_form.calicFilterTimeEditMax.dateTimeChanged.connect(
-            lambda value: self.main_form.calicFilterTimeEditMin.setMaximumDateTime(value))
 
         self.main_form.calicFilterElevationEditMin.setMaximum(self.main_form.
                                                               calicFilterElevationEditMax.value())
@@ -744,15 +727,15 @@ class ActionView:
     @staticmethod
     def graph_polar_tuner(ax):
 
-        ax.set_theta_zero_location("N")  # Начало север
-        ax.set_theta_direction(-1)  # Отразить
+        ax.set_theta_zero_location("S")  # Начало север
+        # ax.set_theta_direction(-1)  # Отразить
         ax.set_rlim(bottom=0, top=90, emit=1)  # Установите пределы обзора по радиальной оси
         ax.set_yticks(np.arange(0, 91, 15))  # Сетка
         ax.set_yticklabels([])
         # ax.set_yticklabels(ax.get_yticks()[::-1])
         # ax.set_rlabel_position(120)
-        if False:
-            labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+        if True:
+            labels = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE',]
             compass = [n / float(len(labels)) * 2 * np.pi for n in range(len(labels))]
             compass += compass[:1]
             ax.set_xticks(compass[:-1], labels)
