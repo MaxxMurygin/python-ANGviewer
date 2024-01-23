@@ -818,8 +818,8 @@ class ActionView:
 
         self.main_form.statusbar.showMessage("Построение графиков",10)
 
-        if len(self.all_angs) != 0:
-            self.clear_KA(False)
+
+        self.clear_KA(False)
 
         self.main_form.viewButtUpdateCU.setEnabled(False)
         self.main_form.repaint()

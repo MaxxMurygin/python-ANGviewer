@@ -125,9 +125,7 @@ class Calculator:
         difference = satellite - self.aolc
         ssb_obs = earth + self.aolc
         ssb_satellite = earth + satellite
-
         ts_current = ts_begin
-
         while t_current_in_sec < t_end_in_sec:
             topocentric = difference.at(ts_current)
             alt, az, distance = topocentric.altaz()
