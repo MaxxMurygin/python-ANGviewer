@@ -49,6 +49,8 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
+        self.name_current_config = "currentConfigView.conf"
+
         self.manager = manager
         self.current_config = self.manager.get_config()
         self.status_gui = ""
@@ -129,10 +131,9 @@ def loop_check_manager_state(manager: EffectiveManager,
 class ActionSettings:
     def __init__(self, main_form: GuiFormMain):
         # print("__init__ actionSettings")
-        self.name_current_config = "currentConfigView.conf"
 
         self.main_form = main_form
-        # self.currentConfig = self.mainForm.manager.get_config()  # To Do Перенести в Main
+
         self.main_form.label.setVisible(False)
         self.main_form.SettSystemStreamEdit.setVisible(False)
         self.main_form.SettPathCheckANG.setVisible(False)
@@ -178,6 +179,11 @@ class ActionSettings:
         # self.mainForm.SettTLELoadBox.setChecked(str2bool(currentConfig['TLE']['download']))
         self.main_form.SettTLELoadLog.setText(current_config['TLE']['identity'])
         self.main_form.SettTLELoadPass.setText(current_config['TLE']['password'])
+
+
+
+        if not os.path.exists(os.path.join(os.getcwd(), self.main_form.name_current_config)):
+            self.clickedSave()
 
     def __getPathDir__(self) -> str:
 
@@ -281,7 +287,7 @@ class ActionSettings:
         self.main_form.current_config['TLE']['password'] = str(self.main_form.SettTLELoadPass.text())
 
         self.main_form.manager.set_config(self.main_form.current_config)
-        self.main_form.manager.save_config_to_file(self.name_current_config)
+        self.main_form.manager.save_config_to_file(self.main_form.name_current_config)
 
         self.main_form.current_config = self.main_form.manager.get_config()
 
@@ -503,7 +509,7 @@ class ActionCalculate:
             save_mold_to_file(filter_mold, self.path_filter_dir, mold_name)
         else:
             self.main_form.manager.set_config(self.main_form.current_config)
-            self.main_form.manager.save_config_to_file(self.name_current_config)
+            self.main_form.manager.save_config_to_file(self.main_form.name_current_config)
             self.main_form.current_config = self.main_form.manager.get_config()
             self.calic_view_update(self.main_form.current_config)
 
@@ -735,7 +741,7 @@ class ActionView:
         # ax.set_yticklabels(ax.get_yticks()[::-1])
         # ax.set_rlabel_position(120)
         if True:
-            labels = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE',]
+            labels = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE', ]
             compass = [n / float(len(labels)) * 2 * np.pi for n in range(len(labels))]
             compass += compass[:1]
             ax.set_xticks(compass[:-1], labels)
