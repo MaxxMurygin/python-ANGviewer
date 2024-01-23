@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import copy
 
 import threading
 
@@ -145,9 +146,34 @@ class ActionSettings:
         self.main_form.SettSystemStreamEdit.setVisible(False)
         self.main_form.SettPathCheckANG.setVisible(False)
 
+        self.check_enable_calic()
+
         self.configViewUpdate(self.main_form.current_config)
 
+        if not os.path.exists(os.path.join(os.getcwd(),
+                                           self.main_form.name_current_config)):
+            self.clickedSave()
 
+    def check_enable_calic(self):
+
+        coord_and_dir_ok = True
+        if ((not self.main_form.current_config['Coordinates']['lat']) or
+                (not self.main_form.current_config['Coordinates']['lon']) or
+                (not self.main_form.current_config['Coordinates']['height']) or
+                (not self.main_form.current_config['Basic']['horizon']) or
+                (not self.main_form.current_config['Path']['tle_directory']) or
+                (not self.main_form.current_config['Path']['cat_directory']) or
+                (not self.main_form.current_config['Path']['ang_directory'])):
+            self.main_form.tabWidget.setCurrentIndex(0)
+            coord_and_dir_ok = False
+        self.main_form.tabCalic.setEnabled(coord_and_dir_ok)
+        self.main_form.tabViewer.setEnabled(coord_and_dir_ok)
+
+        tle_ok = True
+        if ((not self.main_form.current_config['TLE']['identity']) or
+                (not self.main_form.current_config['TLE']['identity'])):
+            tle_ok = False
+        self.main_form.calicTLEUpdateButt.setEnabled(tle_ok)
 
     def configViewUpdate(self, current_config=dict(), firstReading=False):
         """
@@ -185,12 +211,7 @@ class ActionSettings:
         self.main_form.SettTLELoadLog.setText(current_config['TLE']['identity'])
         self.main_form.SettTLELoadPass.setText(current_config['TLE']['password'])
 
-        if not os.path.exists(os.path.join(os.getcwd(),
-                                           self.main_form.name_current_config)):
-            self.clickedSave()
-
-    # def check_enable_calic(self):
-    #     if self.main_form.current_config
+        self.check_enable_calic()
 
     def __getPathDir__(self) -> str:
 
@@ -339,6 +360,7 @@ class ActionCalculate:
         self.main_form = main_form
         self.main_form.calicFilterLaunchBox.setVisible(False)
         self.main_form.calicFilterInclinaBox.setVisible(False)
+        self.main_form.calicStopButt.setEnabled(False)
 
         # self.current_config = self.main_form.manager.get_config()  # To Do Перенести в Main
 
@@ -445,6 +467,13 @@ class ActionCalculate:
                 self.main_form.calicTemplateList.addItem(item_file)
 
     def filter_list_apply_or_save(self, mold_name='', current_config=None, flag_save_as_mold=True):
+        """
+        Применение параметров фильтрации или сохранение в шаблон
+        :param mold_name: имя шаблона фильтра если flag_save_as_mold = True
+        :param current_config: текущая конфигурация
+        :param flag_save_as_mold: флаг сохранения как шаблон
+        :return:
+        """
 
         if (not mold_name) and flag_save_as_mold:
             return
@@ -573,13 +602,31 @@ class ActionCalculate:
             tle_file = self.main_form.current_config["TLE"]["default_file"]
 
         # self.main_form.manager.calculate(tle_file)
-        threading.Thread(target=self.main_form.manager.calculate,
+        # threading.Thread(target=self.main_form.manager.calculate,
+        #                  args=(tle_file,)).start()
+        threading.Thread(target=self.calic_process_calculate,
                          args=(tle_file,)).start()
 
-        # self.main_form.action_view.updateKAData()
-        # self.main_form.manager.get_ang_dict()
-
         # print("calicStart")
+
+    def calic_process_calculate(self, tle_file: str):
+        """
+        Функфия для запуска расчёта в отдельном потоке
+        :param tle_file: Имя Tle-файла для расчёта
+        :return:
+        """
+        self.main_form.calicStartButt.setEnabled(False)
+        self.main_form.calicStopButt.setEnabled(True)
+        self.main_form.tabViewer.setEnabled(False)
+
+        self.main_form.manager.calculate(tle_file)
+        self.main_form.action_view.updateKAData()
+
+        self.main_form.calicStartButt.setEnabled(True)
+        self.main_form.calicStopButt.setEnabled(False)
+
+        self.main_form.tabViewer.setEnabled(True)
+
 
     def calic_butt_stop(self):
         self.main_form.manager.terminate()
@@ -794,6 +841,9 @@ class ActionView:
 
     def clear_KA(self, flag_clear_dir=True):
 
+        if len(self.all_angs) == 0:
+            return
+
         self.axGraphTime.cla()
         self.axGraphPolar.cla()
 
@@ -812,19 +862,19 @@ class ActionView:
         if flag_clear_dir:
             self.main_form.manager.delete_all()
 
+        self.set_enable_button(len(self.all_angs) != 0)
         # print("claer")
 
     def updateKAData(self):
 
-        self.main_form.statusbar.showMessage("Построение графиков",10)
-
+        # self.main_form.statusbar.showMessage("Построение графиков", 10)
 
         self.clear_KA(False)
 
         self.main_form.viewButtUpdateCU.setEnabled(False)
         self.main_form.repaint()
 
-        self.all_angs = self.main_form.manager.get_ang_dict_with_data()
+        self.all_angs = copy.deepcopy(self.main_form.manager.get_ang_dict_with_data())
 
         if bool(self.all_angs):
 
@@ -886,7 +936,18 @@ class ActionView:
         self.main_form.status_gui = ""
 
         self.main_form.viewButtUpdateCU.setEnabled(True)
-        self.main_form.statusbar.showMessage("")
+
+        self.set_enable_button(len(self.all_angs) != 0)
+
+        # self.main_form.statusbar.showMessage("")
+
+    def set_enable_button(self, state_enable=False):
+        self.main_form.calicClearAngDirButt.setEnabled(state_enable)
+        self.main_form.buttResetSelection.setEnabled(state_enable)
+        self.main_form.buttOnlyCheck.setEnabled(state_enable)
+        self.main_form.viewButtCliarCU.setEnabled(state_enable)
+        self.main_form.viewButtMoveCU.setEnabled(state_enable)
+        self.main_form.viewButtSieve.setEnabled(state_enable)
 
     def fillKaInfo(self, idKa: int):
         # print("fillKaInfo")
@@ -1051,7 +1112,7 @@ class ActionView:
                                                 QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
                                                 )
         if path:
-            self.main_form.manager.copy_to_dst(path)
+            self.main_form.manager.copy_ang_to_dst(path)
 
         self.main_form.viewButtMoveCU.setEnabled(True)
 
