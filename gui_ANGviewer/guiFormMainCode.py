@@ -10,7 +10,8 @@ import asyncio
 from builtins import type, print
 # from time import sleep
 
-import datetime
+# import datetime
+from datetime import datetime, date
 
 import collections
 
@@ -83,6 +84,8 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.calicTLEUpdateListButt.clicked.connect(self.action_calculate.calic_butt_update_all_lists)
         self.calicTLEUpdateButt.clicked.connect(self.action_calculate.calic_butt_tle_update)
+
+        self.calicFilterTimeButt.clicked.connect(self.action_calculate.calc_butt_data_time_now)
 
         self.calicButtApply.clicked.connect(
             lambda: self.action_calculate.filter_list_apply_or_save(current_config=self.current_config,
@@ -418,9 +421,9 @@ class ActionCalculate:
         self.main_form.calicFilterPeriodEditMax.setValue(float(current_config['Filter']['max_period']))
 
         self.main_form.calicFilterTimeEditMin.setDateTime(
-            datetime.datetime.strptime(current_config['Basic']['t_begin'], "%Y-%m-%d %H:%M:%S"))
+            datetime.strptime(current_config['Basic']['t_begin'], "%Y-%m-%d %H:%M:%S"))
         self.main_form.calicFilterTimeEditMax.setDateTime(
-            datetime.datetime.strptime(current_config['Basic']['t_end'], "%Y-%m-%d %H:%M:%S"))
+            datetime.strptime(current_config['Basic']['t_end'], "%Y-%m-%d %H:%M:%S"))
 
         self.main_form.calicFilterElevationBox.setChecked(
             bool(str2bool(current_config['Filter']['filter_by_elevation'])))
@@ -590,6 +593,7 @@ class ActionCalculate:
         Начать расчёт целеуказаний
         :return:
         """
+        self.main_form.action_view.view_butt_selection_reset()
 
         self.filter_list_apply_or_save(current_config=self.main_form.current_config,
                                        flag_save_as_mold=False)
@@ -626,7 +630,6 @@ class ActionCalculate:
         self.main_form.calicStopButt.setEnabled(False)
 
         self.main_form.tabViewer.setEnabled(True)
-
 
     def calic_butt_stop(self):
         self.main_form.manager.terminate()
@@ -712,6 +715,16 @@ class ActionCalculate:
         self.main_form.calicTemplateList.setCurrentRow(-1)
         self.calic_view_update(self.main_form.current_config)
 
+    def calc_butt_data_time_now(self):
+
+        d_date_time = (self.main_form.calicFilterTimeEditMin.dateTime().
+                       secsTo(self.main_form.calicFilterTimeEditMax.dateTime()))
+
+        self.main_form.calicFilterTimeEditMin.setDate(QDate.currentDate())
+
+        self.main_form.calicFilterTimeEditMax.setDateTime(
+            self.main_form.calicFilterTimeEditMin.dateTime().addSecs(d_date_time)
+        )
 
 def save_mold_to_file(filter_mold, path_filtr_dir, mold_name):
     parser = ConfigParser(inline_comment_prefixes="#")
@@ -750,7 +763,7 @@ class ActionView:
 
         self.main_form.tableListKA.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.main_form.tableListKA.header().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.main_form.buttInvertCheck.setVisible(False)
         self.main_form.buttDelNoCheck.setVisible(False)
@@ -766,10 +779,12 @@ class ActionView:
         self.selectEffectsSel = [pe.Stroke(linewidth=5, foreground='magenta'), pe.Normal()]
         self.selectEffectsUnsel = [pe.Stroke(), pe.Normal()]
 
-        InfLable = list(zip(["NUMBER", "NAME", "ID", "COUNTRY", "LAUNCH", "PERIOD"],
-                            ["OBJECT_NUMBER", "OBJECT_NAME", "OBJECT_ID", "COUNTRY", "LAUNCH", "PERIOD"]))
+        inf_label = list(zip(["Номер", "Имя", "Идентификатор", "Страна", "Запущен", "Период",
+                              "Время начала", "Время конца", "Макс. Дальность", "Макс. Угол"],
+                             ["OBJECT_NUMBER", "OBJECT_NAME", "OBJECT_ID", "COUNTRY", "LAUNCH", "PERIOD",
+                              "TIME_START", "TIME_STOP", "MAX_DISTANS", "MAX_EVAL"]))
 
-        self.importantInf = dict(zip(range(7), InfLable))
+        self.important_inf = dict(zip(range(10), inf_label))
 
         self.updateKAData()
 
@@ -949,21 +964,49 @@ class ActionView:
         self.main_form.viewButtMoveCU.setEnabled(state_enable)
         self.main_form.viewButtSieve.setEnabled(state_enable)
 
-    def fillKaInfo(self, idKa: int):
+    def fillKaInfo(self, id_ka: int, ang_name: str):
         # print("fillKaInfo")
 
-        dataKA = self.main_form.manager.get_sat_info(idKa)
+        dataKA = self.main_form.manager.get_sat_info(id_ka)
 
-        for idInf, titleInf in self.importantInf.items():
+        data_ang = dict()
+        if ang_name.endswith('.ang'):
+            data_ang = self.get_ang_info(id_ka, ang_name)
+
+        for idInf, titleInf in self.important_inf.items():
+
+            if (idInf > 5 and
+                    not ang_name.endswith('.ang')):
+                break
+
             self.main_form.tableKAInfo.insertRow(idInf)
 
-            itemLable = QTableWidgetItem()
-            itemLable.setData(Qt.EditRole, titleInf[0])
-            self.main_form.tableKAInfo.setItem(idInf, 0, itemLable)
+            item_label = QTableWidgetItem()
+            item_label.setData(Qt.EditRole, titleInf[0])
+            self.main_form.tableKAInfo.setItem(idInf, 0, item_label)
 
-            itemInf = QTableWidgetItem()
-            itemInf.setData(Qt.EditRole, str(dataKA[titleInf[1]].values[0]))
-            self.main_form.tableKAInfo.setItem(idInf, 1, itemInf)
+            item_inf = QTableWidgetItem()
+
+            if idInf <= 5:
+                item_inf.setData(Qt.EditRole, str(dataKA[titleInf[1]].values[0]))
+            else:
+                item_inf.setData(Qt.EditRole, str(data_ang[titleInf[1]]))
+
+            self.main_form.tableKAInfo.setItem(idInf, 1, item_inf)
+
+    def get_ang_info(self, id_ka: int, ang_name: str) -> dict:
+        """
+        Получит информацию по ANG файлу
+        :param id_ka:
+        :param ang_name:
+        :return: dict("TIME_START":str, "TIME_STOP":str, "MAX_DISTANS":str, "MAX_EVAL:str")
+        """
+        data_ang = dict()
+        data_ang.update({"TIME_START": self.all_angs[id_ka][ang_name]["Time"].min().strftime('%d-%m-%Y %H:%M')})
+        data_ang.update({"TIME_STOP": self.all_angs[id_ka][ang_name]["Time"].max().strftime('%d-%m-%Y %H:%M')})
+        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max():.2f}"})
+        data_ang.update({"MAX_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.max():.4f}"})
+        return data_ang
 
     def slotSelectKaList(self):
         # start_time = time.time()
@@ -986,7 +1029,9 @@ class ActionView:
                         if (selectedColumns[0].parent() is None)
                         else selectedColumns[0].parent().data(0, Qt.EditRole)))
 
-            self.fillKaInfo(idKA)
+            ang_name = selectedColumns[0].data(1, Qt.EditRole)
+
+            self.fillKaInfo(idKA, ang_name)
 
         # ===========================
         # Selected New
@@ -1050,6 +1095,8 @@ class ActionView:
         """
         Отобразить всё
         """
+
+        self.main_form.tableListKA.clearSelection()
 
         for item in self.selectAngGraph:
             self.selectGraph(item, True)
