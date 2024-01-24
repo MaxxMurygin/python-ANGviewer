@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import requests
 
 
-def dl_http(url, file, norad_cred):
+def dl_spacetrack(url, file, norad_cred):
     login_norad_url = "https://www.space-track.org/ajaxauth/login"
     with requests.Session() as session:
         session.post(login_norad_url, data=norad_cred)
@@ -38,7 +38,7 @@ def download_tle(tle_dir, norad_cred):
     url_heo = ("https://www.space-track.org/basicspacedata/query/class/gp/"
                "EPOCH/%3Enow-30/ECCENTRICITY/%3E0.25/OBJECT_TYPE/payload/orderby/NORAD_CAT_ID,EPOCH/format/3le")
     tle_heo = os.path.join(os.getcwd(), tle_dir, "heo.tle")
-    dl_http(url_full_catalog, tle_full, norad_cred)
+    dl_spacetrack(url_full_catalog, tle_full, norad_cred)
 
 
 def download_cat(norad_cred, cat_dir="CAT"):
@@ -48,7 +48,7 @@ def download_cat(norad_cred, cat_dir="CAT"):
         if datetime.now() - cat_file_time < timedelta(days=30):
             return
     url = "https://www.space-track.org/basicspacedata/query/class/satcat/orderby/NORAD_CAT_ID%20asc/format/csv"
-    dl_http(url, catalog_file, norad_cred)
+    dl_spacetrack(url, catalog_file, norad_cred)
 
 
 def download_ephemeris(eph_file):
