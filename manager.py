@@ -112,8 +112,8 @@ class EffectiveManager:
             return self.catalog.loc[[norad_id]]
         else:
             self.catalog.loc[norad_id] = ["1957-001A", "PAYLOAD", "FAKE", "AOLC", "1957-10-04", "TTMTR", "", "100.00",
-                                            "66.66", "999", "999", "", "4", "0", "LARGE", "1", "1957",
-                                            "1", "A", "Y", "FAKE SATELLITE", "1957-001A", f"{norad_id}"]
+                                          "66.66", "999", "999", "", "4", "0", "LARGE", "1", "1957",
+                                          "1", "A", "Y", "FAKE SATELLITE", "1957-001A", f"{norad_id}"]
             return self.catalog.loc[[norad_id]]
 
     def get_full_tle_date(self):
@@ -213,8 +213,8 @@ class EffectiveManager:
             else:
                 i += 1
         perf_start = datetime.now()
-        for sats in splited_satellites:
-            calculator_list.append(Calculator(self.config, sats))
+        for satellite in splited_satellites:
+            calculator_list.append(Calculator(self.config, satellite))
         for ac in calculator_list:
             process = multiprocessing.Process(target=ac.calculate, args=(self.global_ang_list,
                                                                          self.global_counter, self.lock))
