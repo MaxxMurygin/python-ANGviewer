@@ -38,6 +38,8 @@ def read_tle(tle_dir, tle_file, needed_sat):
                     continue
                 if sat_number not in needed_sat:
                     continue
+
+                print(sat_number)
                 satrec = Satrec.twoline2rv(s, t)
                 sat = EarthSatellite.from_satrec(satrec, ts)
                 sat.name = needed_sat.get(satrec.satnum)

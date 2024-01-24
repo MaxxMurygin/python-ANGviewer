@@ -102,7 +102,13 @@ class EffectiveManager:
         self.status = ""
 
     def get_sat_info(self, norad_id):
-        return self.catalog.loc[[norad_id]]
+        if norad_id in self.catalog.index:
+            return self.catalog.loc[[norad_id]]
+        else:
+            self.catalog.loc[norad_id] = ["1957-001A", "PAYLOAD", "FAKE", "AOLC", "1957-10-04", "TTMTR", "", "100.00",
+                                            "66.66", "999", "999", "", "4", "0", "LARGE", "1", "1957",
+                                            "1", "A", "Y", "FAKE SATELLITE", "1957-001A", f"{norad_id}"]
+            return self.catalog.loc[[norad_id]]
 
     def get_full_tle_date(self):
         path = os.path.join(os.getcwd(), self.tle_dir, self.full_tle_file)

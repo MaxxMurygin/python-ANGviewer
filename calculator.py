@@ -55,7 +55,6 @@ class Calculator:
         self.tle_dir = conf["Path"]["tle_directory"]
         self.ang_dir = conf["Path"]["ang_directory"]
         self.calculate_phase = bool(conf["Basic"]["calculate_phase"] == "True")
-        # self.calculate_phase = True
         self.filter_by_elevate = bool(conf["Filter"]["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["Filter"]["filter_by_distance"] == "True")
         self.filter_by_sunlite = bool(conf["Filter"]["filter_by_sunlite"] == "True")
@@ -123,8 +122,10 @@ class Calculator:
         file_name = event.iloc[0] + "_" + (dt_begin + timedelta(hours=3)).strftime("%d%H") + ".ang"
         file_name = os.path.join(self.ang_dir, file_name)
         difference = satellite - self.aolc
-        ssb_obs = earth + self.aolc
+
+        # ssb_obs = earth + self.aolc
         ssb_satellite = earth + satellite
+
         ts_current = ts_begin
         while t_current_in_sec < t_end_in_sec:
             topocentric = difference.at(ts_current)
@@ -132,9 +133,14 @@ class Calculator:
             ra, dec, _ = topocentric.radec()
             if satellite.at(ts_current).is_sunlit(eph):
                 if self.calculate_phase:
-                    topocentric_sat_obs = ssb_satellite.at(ts_current).observe(ssb_obs).apparent()
-                    topocentric_sat_sun = ssb_satellite.at(ts_current).observe(sun).apparent()
-                    phase_angle = topocentric_sat_obs.separation_from(topocentric_sat_sun).radians
+
+                    sun_position = ssb_satellite.at(ts_current).observe(sun)
+                    earth_position = ssb_satellite.at(ts_current).observe(earth + self.aolc)
+                    phase_angle = sun_position.separation_from(earth_position).radians
+
+                    # topocentric_sat_obs = ssb_satellite.at(ts_current).observe(ssb_obs).apparent()
+                    # topocentric_sat_sun = ssb_satellite.at(ts_current).observe(sun).apparent()
+                    # phase_angle = topocentric_sat_obs.separation_from(topocentric_sat_sun).radians
                     phase = cos(phase_angle / 2) ** 2
                 else:
                     phase = 1.0
