@@ -49,3 +49,14 @@ def download_cat(norad_cred, cat_dir="CAT"):
             return
     url = "https://www.space-track.org/basicspacedata/query/class/satcat/orderby/NORAD_CAT_ID%20asc/format/csv"
     dl_http(url, catalog_file, norad_cred)
+
+
+def download_ephemeris(eph_file):
+    url = "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/" + eph_file
+    with requests.Session() as session:
+        r = session.get(url)
+    if r.ok:
+        with open(eph_file, "wb") as outfile:
+            outfile.write(r.content)
+    else:
+        logging.error("HTTP status : {0} ({1}) in {2}".format(r.status_code, r.reason, r.url))

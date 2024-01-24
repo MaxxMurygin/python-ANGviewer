@@ -54,6 +54,7 @@ class Calculator:
                     timedelta(hours=3))
         self.tle_dir = conf["Path"]["tle_directory"]
         self.ang_dir = conf["Path"]["ang_directory"]
+        self.eph_file = conf["Path"]["eph_file"]
         self.calculate_phase = bool(conf["Basic"]["calculate_phase"] == "True")
         self.filter_by_elevate = bool(conf["Filter"]["filter_by_elevation"] == "True")
         self.filter_by_distance = bool(conf["Filter"]["filter_by_distance"] == "True")
@@ -105,7 +106,7 @@ class Calculator:
 
     def calculate_ang_from_event(self, event):
         arr = []
-        eph = load("de440s.bsp")
+        eph = load(self.eph_file)
         earth = eph['earth']
         sun = eph['sun']
         step = event.iloc[5]

@@ -27,6 +27,7 @@ class EffectiveManager:
         self.cat_dir = self.config["Path"]["cat_directory"]
         self.cat_file = self.config["Path"]["cat_file"]
         self.full_tle_file = self.config["TLE"]["default_file"]
+        self.eph_file = self.config["Path"]["eph_file"]
         self.delete_existing = bool(self.config["Path"]["delete_existing"] == "True")
         self.check_files()
         self.catalog = self.__get_catalog()
@@ -96,6 +97,11 @@ class EffectiveManager:
         downloader.download_cat(norad_cred, cat_dir)
         self.status = ""
 
+    def download_eph(self):
+        self.status = "Скачиваются эфемериды..."
+        downloader.download_ephemeris(self.eph_file)
+        self.status = ""
+
     def thin_out(self, sieve):
         self.status = "Идет прореживание..."
         utils.thin_out(self.ang_dir, sieve)
@@ -160,12 +166,21 @@ class EffectiveManager:
             logging.error(e)
 
     def check_files(self):
+        if not os.path.isdir(self.ang_dir):
+            os.mkdir(os.path.join(os.getcwd(), self.ang_dir))
+        if not os.path.isdir(self.cat_dir):
+            os.mkdir(os.path.join(os.getcwd(), self.cat_dir))
+        if not os.path.isdir(self.tle_dir):
+            os.mkdir(os.path.join(os.getcwd(), self.tle_dir))
         path_tle = os.path.join(os.getcwd(), self.tle_dir, self.full_tle_file)
         path_cat = os.path.join(os.getcwd(), self.cat_dir, self.cat_file)
+        path_eph = os.path.join(os.getcwd(), self.eph_file)
         if not os.path.isfile(path_tle):
             self.download_tle()
         if not os.path.isfile(path_cat):
             self.download_cat()
+        if not os.path.isfile(path_eph):
+            self.download_eph()
 
     def __get_catalog(self):
         self.status = "Чтение каталога"
