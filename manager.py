@@ -58,11 +58,12 @@ class EffectiveManager:
             full_path = os.path.join(os.getcwd(), self.ang_dir, file)
             sat_num = get_sat_number_from_ang(full_path)
             df_ang = read_ang(full_path)
-            single_ang = {file: df_ang}
-            if sat_num in self.ang_dict:
-                self.ang_dict[sat_num].update(single_ang)
-            else:
-                self.ang_dict[sat_num] = single_ang
+            if not df_ang.empty:
+                single_ang = {file: df_ang}
+                if sat_num in self.ang_dict:
+                    self.ang_dict[sat_num].update(single_ang)
+                else:
+                    self.ang_dict[sat_num] = single_ang
         self.status = ""
         return self.ang_dict
 

@@ -19,10 +19,10 @@ class Viewer:
         df_shadow = df[df["Ph"] == 0.0]
         df_shine = df[df["Ph"] != 0.0]
         if df_shine.size != 0:
-            df_shine.plot(x="Time", y="Ph", grid=True, ax=self.ax, legend=False, xlabel="Time", marker="1",
+            df_shine.plot(x="Time", y="Elev", grid=True, ax=self.ax, legend=False, xlabel="Time", marker="1",
                           linestyle="None")
         if df_shadow.size != 0:
-            df_shadow.plot(x="Time", y="Ph", grid=True, ax=self.ax, legend=False, xlabel="Time", color="grey")
+            df_shadow.plot(x="Time", y="Elev", grid=True, ax=self.ax, legend=False, xlabel="Time", color="grey")
         middle_time = df.iloc[df["Elev"].idxmax()]["Time"]
         min_distance = str(df["Distance"].min() / 1000).split(".")[0]
         ann = sat_number + "(" + min_distance + ")"
