@@ -34,6 +34,5 @@ class Viewer:
         file_list = os.listdir(path)
         for file in file_list:
             sat_number = file.split(sep="_")[0]
-            # print(sat_number)
             self.draw_ang(read_ang(os.path.join(path, file)), sat_number)
         plt.show()

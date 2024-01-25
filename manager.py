@@ -158,13 +158,20 @@ class EffectiveManager:
 
     def terminate(self):
         self.global_commander = "STOP"
-        pass
 
     def copy_ang_to_dst(self, dst):
         try:
             shutil.copytree(os.path.join(os.getcwd(), self.ang_dir), dst, dirs_exist_ok=True)
         except IOError as e:
             logging.error(e)
+
+    def get_sunrise_sunset(self):
+        """
+        Функция возвращает время заката солнца на текущие сутки (по системному времени) и время восхода на следующие сутки
+        :return:
+        [datetime.datetime, datetime.datetime]
+        """
+        return Calculator(self.config, None).get_sun_events()
 
     def check_files(self):
         if not os.path.isdir(self.ang_dir):
@@ -237,11 +244,11 @@ class EffectiveManager:
         perf = datetime.now() - perf_start
         print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
         self.status = "Идет запись результатов расчета..."
-        if self.delete_existing:
-            if len(self.ang_dict) != 0:
-                self.ang_dict.clear()
-            for file in os.listdir(self.ang_dir):
-                os.remove(os.path.join(self.ang_dir, file))
+        # if self.delete_existing:
+        #     if len(self.ang_dict) != 0:
+        #         self.ang_dict.clear()
+        #     for file in os.listdir(self.ang_dir):
+        #         os.remove(os.path.join(self.ang_dir, file))
         for items in self.global_ang_list:
             for item in items:
                 file_operations.write_ang(item[0], item[1], item[2])

@@ -6,6 +6,7 @@ from math import cos
 
 import pandas
 import pandas as pd
+from skyfield import almanac
 from skyfield.api import load
 from skyfield.api import utc
 from skyfield.toposlib import wgs84
@@ -186,3 +187,14 @@ class Calculator:
             print(f"*{proc_name}* Расчет прохода {event.iloc[0]}: {perf.seconds + perf.microseconds / 1000000} sec")
         with lock:
             global_list.append(local_list)
+
+    def get_sun_events(self):
+        ts = load.timescale()
+        eph = load(self.eph_file)
+        today = datetime.now()
+        tomorrow = today + timedelta(days=1)
+        t0 = ts.utc(today.year, today.month, today.day, 5)
+        t1 = ts.utc(tomorrow.year, tomorrow.month, tomorrow.day, 5)
+        t, y = almanac.find_discrete(t0, t1, almanac.sunrise_sunset(eph, self.aolc))
+        return (datetime.strptime(t[0].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3),
+                datetime.strptime(t[1].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3))
