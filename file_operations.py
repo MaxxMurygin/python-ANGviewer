@@ -44,7 +44,7 @@ def read_tle(tle_dir, tle_file, needed_sat):
                 sat = EarthSatellite.from_satrec(satrec, ts)
                 sat.name = needed_sat.get(satrec.satnum)
                 satellites[sat_number] = sat
-    print("КА в выборке: {}".format(len(satellites)))
+    print(f"КА в выборке: {len(satellites)}")
     return satellites
 
 
@@ -115,6 +115,8 @@ def read_ang(file):
 
 
 def write_ang(event, df, file):
+    if df.empty:
+        return
     sat_number = event.iloc[0]
     dt_begin = datetime.strptime(event.iloc[2].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)
     dt_end = datetime.strptime(event.iloc[4].utc_iso(), "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=3)

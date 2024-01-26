@@ -134,7 +134,7 @@ class EffectiveManager:
                 for ang in angs:
                     os.remove(os.path.join(os.getcwd(), self.ang_dir, ang))
         except KeyError:
-            logging.error("<delete_sat> Не могу удалить КА № " + norad_id)
+            logging.error(f"<delete_sat> Не могу удалить КА № {norad_id}")
             pass
 
     def delete_all(self):
@@ -242,14 +242,9 @@ class EffectiveManager:
             print(self.status)
             sleep(2)
         perf = datetime.now() - perf_start
-        print("Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000))
+        print(f"Время расчета : {perf.seconds + perf.microseconds / 1000000} sec")
         self.status = "Идет запись результатов расчета..."
-        # if self.delete_existing:
-        #     if len(self.ang_dict) != 0:
-        #         self.ang_dict.clear()
-        #     for file in os.listdir(self.ang_dir):
-        #         os.remove(os.path.join(self.ang_dir, file))
         for items in self.global_ang_list:
             for item in items:
                 file_operations.write_ang(item[0], item[1], item[2])
-        self.status = "Время расчета : {} sec".format(perf.seconds + perf.microseconds / 1000000)
+        self.status = f"Время расчета : {perf.seconds + perf.microseconds / 1000000} sec"

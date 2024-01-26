@@ -13,7 +13,7 @@ def dl_spacetrack(url, file, norad_cred):
         with open(file, "wb") as outfile:
             outfile.write(r.content)
     else:
-        logging.error("HTTP status : {0} ({1}) in {2}".format(r.status_code, r.reason, r.url))
+        logging.error(f"HTTP status : {r.status_code} ({r.reason}) in {r.url}")
 
 
 def download_tle(tle_dir, norad_cred):
@@ -59,4 +59,4 @@ def download_ephemeris(eph_file):
         with open(eph_file, "wb") as outfile:
             outfile.write(r.content)
     else:
-        logging.error("HTTP status : {0} ({1}) in {2}".format(r.status_code, r.reason, r.url))
+        logging.error(f"HTTP status : {r.status_code} ({r.reason}) in {r.url}")

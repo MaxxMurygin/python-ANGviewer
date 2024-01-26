@@ -101,7 +101,7 @@ class Calculator:
                     else:
                         event_df.loc[len(event_df.index)] = times_list
             except Exception as e:
-                logging.error(str(e) + "(find_events)" + f"ID: {sat.model.satnum}")
+                logging.error(str(e) + f"(find_events) ID: {sat.model.satnum}")
                 continue
         return event_df
 
