@@ -438,18 +438,10 @@
              </widget>
             </item>
             <item row="1" column="2">
-             <widget class="QLineEdit" name="SettPathEditCAT">
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-             </widget>
+             <widget class="QLineEdit" name="SettPathEditCAT"/>
             </item>
             <item row="3" column="2">
-             <widget class="QLineEdit" name="SettPathEditANG">
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-             </widget>
+             <widget class="QLineEdit" name="SettPathEditANG"/>
             </item>
             <item row="3" column="1">
              <widget class="QLabel" name="SettPathLableANG">
@@ -465,9 +457,6 @@
                 <width>400</width>
                 <height>0</height>
                </size>
-              </property>
-              <property name="readOnly">
-               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -806,7 +795,7 @@
         <item row="0" column="4">
          <widget class="QGroupBox" name="calicFilterBox">
           <property name="title">
-           <string>Фильтрация при расчёте</string>
+           <string>Настройки расчёта</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
