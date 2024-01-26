@@ -146,6 +146,7 @@ class EffectiveManager:
 
     def set_config(self, conf):
         self.config = conf
+        self.__init_vars()
 
     def save_config_to_file(self, config_file):
         write_config(self.config, config_file)
@@ -189,6 +190,15 @@ class EffectiveManager:
             self.download_cat()
         if not os.path.isfile(path_eph):
             self.download_eph()
+
+    def __init_vars(self):
+        self.tle_dir = self.config["Path"]["tle_directory"]
+        self.ang_dir = self.config["Path"]["ang_directory"]
+        self.cat_dir = self.config["Path"]["cat_directory"]
+        self.cat_file = self.config["Path"]["cat_file"]
+        self.full_tle_file = self.config["TLE"]["default_file"]
+        self.eph_file = self.config["Path"]["eph_file"]
+        self.delete_existing = bool(self.config["Path"]["delete_existing"] == "True")
 
     def __get_catalog(self):
         self.status = "Чтение каталога"
