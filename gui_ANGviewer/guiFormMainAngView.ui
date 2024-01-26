@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1162</width>
-    <height>764</height>
+    <height>797</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +33,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -90,7 +90,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="SettSystemStreamLabel">
             <property name="text">
              <string>Количество параллельных потоков для расчета</string>
             </property>
@@ -101,6 +101,53 @@
           </item>
           <item>
            <spacer name="horizontalSpacer_13">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="settLayoutSystem_2">
+          <item>
+           <spacer name="horizontalSpacer_15">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="SettCatUpdateButt">
+            <property name="text">
+             <string>Обновить</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="SettCatUpdateLabel">
+            <property name="text">
+             <string>Дата формирования каталога КА - 00.00.00</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_16">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -765,7 +812,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="calicSystemStreamLabel">
                <property name="text">
                 <string>Количество потоков для расчета:</string>
                </property>
@@ -837,7 +884,7 @@
         <item row="0" column="1">
          <widget class="QGroupBox" name="calicTleBox">
           <property name="title">
-           <string>Выбор каталога</string>
+           <string>Выбор каталога НУ</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
            <property name="sizeConstraint">

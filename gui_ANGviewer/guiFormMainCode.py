@@ -26,11 +26,12 @@ from PyQt5.QtWidgets import *
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
-from matplotlib.dates import DateFormatter, DayLocator, HourLocator, num2date
-from matplotlib.ticker import MaxNLocator
+# from matplotlib.dates import DateFormatter, DayLocator, HourLocator, num2date
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.ticker import *
+from matplotlib.dates import *
 
 import manager
 from manager import EffectiveManager
@@ -66,11 +67,12 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
 
+        self.SettCatUpdateButt.clicked.connect(self.actionSettings.clicked_cat_update)
         self.SettPathButtTLE.clicked.connect(self.actionSettings.setPathTLE)
         self.SettPathButtCAT.clicked.connect(self.actionSettings.setPathCAT)
         self.SettPathButtANG.clicked.connect(self.actionSettings.setPathANG)
-        self.SettButtCancel.clicked.connect(self.actionSettings.clickedCancel)
         self.SettButtSeve.clicked.connect(self.actionSettings.clickedSave)
+        self.SettButtCancel.clicked.connect(self.actionSettings.clickedCancel)
         # ----------------------------Calic---------------------------------
 
         self.action_calculate = ActionCalculate(self)
@@ -136,7 +138,7 @@ def loop_check_manager_state(manager: EffectiveManager,
         # gui_form.repaint()
         time.sleep(2)
 
-    print("loopCheckManagerState")
+    # print("loopCheckManagerState")
 
 
 class ActionSettings:
@@ -145,8 +147,8 @@ class ActionSettings:
 
         self.main_form = main_form
 
-        self.main_form.label.setVisible(False)
-        self.main_form.SettSystemStreamEdit.setVisible(False)
+        # self.main_form.SettSystemStreamLabel.setVisible(False)
+        # self.main_form.SettSystemStreamEdit.setVisible(False)
         self.main_form.SettPathCheckANG.setVisible(False)
 
         self.check_enable_calic()
@@ -188,7 +190,10 @@ class ActionSettings:
         if not current_config:
             return
 
-            # if firstReading:
+        self.main_form.SettCatUpdateLabel.setText(
+            f"Дата формирования каталога КА  {self.main_form.manager.get_catalog_date().strftime('%d-%m-%Y %H:%M')}")
+
+        # if firstReading:
         #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
         # elif (self.mainForm.SettSystemStreamEdit.value()
         #       != int(self.currentConfig["System"]['threads'])):
@@ -197,7 +202,7 @@ class ActionSettings:
         #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
         #     self.mainForm.SettSystemStreamEdit.setStyleSheet("")
 
-        # self.main_form.SettSystemStreamEdit.setValue(int(current_config["System"]['threads']))
+        self.main_form.SettSystemStreamEdit.setValue(int(current_config["System"]['threads']))
 
         self.main_form.SettCoordSpinBoxLat.setValue(float(current_config['Coordinates']['lat']))
         self.main_form.SettCoordSpinBoxLon.setValue(float(current_config['Coordinates']['lon']))
@@ -231,10 +236,10 @@ class ActionSettings:
 
     def checkApplyConfig(self):
 
-        # self.main_form.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
-        #                                                   (self.main_form.SettSystemStreamEdit.value() != int(
-        #                                                       self.main_form.current_config["System"]['threads']))
-        #                                                   else "")
+        self.main_form.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
+                                                          (self.main_form.SettSystemStreamEdit.value() != int(
+                                                              self.main_form.current_config["System"]['threads']))
+                                                          else "")
 
         self.main_form.SettCoordSpinBoxLat.setStyleSheet("background-color: rgb(255, 0, 0);" if
                                                          (self.main_form.SettCoordSpinBoxLat.value() != float(
@@ -295,11 +300,15 @@ class ActionSettings:
                                                          self.main_form.current_config['TLE']['password']))
                                                      else "")
 
+    def clicked_cat_update(self):
+        self.main_form.manager.download_cat()
+        self.configViewUpdate(self.main_form.current_config)
+
     def clickedSave(self):
 
         # confi = self.currentConfig
 
-        # self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
+        self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
 
         self.main_form.current_config['Coordinates']['lat'] = str(self.main_form.SettCoordSpinBoxLat.value())
         self.main_form.current_config['Coordinates']['lon'] = str(self.main_form.SettCoordSpinBoxLon.value())
@@ -331,7 +340,6 @@ class ActionSettings:
 
     def clickedCancel(self):
         self.configViewUpdate(self.main_form.current_config)
-        self.checkApplyConfig()
 
     def setPathTLE(self):
         path = self.__getPathDir__()
@@ -364,6 +372,11 @@ class ActionCalculate:
         self.main_form.calicFilterLaunchBox.setVisible(False)
         self.main_form.calicFilterInclinaBox.setVisible(False)
         self.main_form.calicStopButt.setEnabled(False)
+        self.main_form.calicTemplateButDel.setEnabled(False)
+        self.main_form.calicTemplateButSeve.setEnabled(False)
+
+        self.main_form.calicSystemStreamEdit.setVisible(False)
+        self.main_form.calicSystemStreamLabel.setVisible(False)
 
         # self.current_config = self.main_form.manager.get_config()  # To Do Перенести в Main
 
@@ -451,7 +464,7 @@ class ActionCalculate:
         else:
             self.main_form.calicTLEAllRadio.setChecked(True)
 
-        self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
+        # self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
         self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
         self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
 
@@ -535,9 +548,9 @@ class ActionCalculate:
         filter_mold["Filter"].update({'min_distance': str(self.main_form.calicFilterDistanceEditMin.value())})
         filter_mold["Filter"].update({'max_distance': str(self.main_form.calicFilterDistanceEditMax.value())})
 
-        if not ("System" in filter_mold.keys()):
-            filter_mold.update({"System": dict()})
-        filter_mold["System"].update({"threads": str(self.main_form.calicSystemStreamEdit.value())})
+        # if not ("System" in filter_mold.keys()):
+        #     filter_mold.update({"System": dict()})
+        # filter_mold["System"].update({"threads": str(self.main_form.calicSystemStreamEdit.value())})
 
         if not ("Path" in filter_mold.keys()):
             filter_mold.update({"Path": dict()})
@@ -563,6 +576,9 @@ class ActionCalculate:
         if text_select_row:
             filter_mold = read_mold_file(self.path_filter_dir, text_select_row)
             self.calic_view_update(filter_mold)
+
+        self.main_form.calicTemplateButDel.setEnabled(bool(text_select_row))
+        self.main_form.calicTemplateButSeve.setEnabled(bool(text_select_row))
 
         # selected_items = self.main_form.calicTemplateList.selectedItems()
         # if len(selected_items) == 1:
@@ -623,8 +639,10 @@ class ActionCalculate:
         self.main_form.calicStopButt.setEnabled(True)
         self.main_form.tabViewer.setEnabled(False)
 
+        # print("Start Calic")
         self.main_form.manager.calculate(tle_file)
         self.main_form.action_view.updateKAData()
+        # print("finish Calic")
 
         self.main_form.calicStartButt.setEnabled(True)
         self.main_form.calicStopButt.setEnabled(False)
@@ -726,6 +744,7 @@ class ActionCalculate:
             self.main_form.calicFilterTimeEditMin.dateTime().addSecs(d_date_time)
         )
 
+
 def save_mold_to_file(filter_mold, path_filtr_dir, mold_name):
     parser = ConfigParser(inline_comment_prefixes="#")
     parser.read_dict(filter_mold)
@@ -759,7 +778,7 @@ class ActionView:
         self.main_form = main_form
 
         self.figGraphPolar, self.axGraphPolar = self.createGraphPolar()
-        self.figGraphTime, self.axGraphTime = self.createGraphTime()
+        self.figGraphTime, self.axGraphTime, self.ToolGraphTime = self.createGraphTime()
 
         self.main_form.tableListKA.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.main_form.tableListKA.header().setSectionResizeMode(1, QHeaderView.Stretch)
@@ -787,6 +806,9 @@ class ActionView:
         self.important_inf = dict(zip(range(10), inf_label))
 
         self.updateKAData()
+
+        if len(self.all_angs):
+            self.main_form.tabWidget.setCurrentIndex(2)
 
     def createGraphPolar(self):
 
@@ -819,6 +841,7 @@ class ActionView:
 
         fig, ax = plt.subplots(facecolor="#e5e5e5")
         ax.set_facecolor("#e5e5e5")
+        fig.set_tight_layout(True)
 
         self.graph_time_tuner(ax)
 
@@ -832,30 +855,63 @@ class ActionView:
         toolbar = NavigationToolbar(fig.canvas, self.main_form)
         self.main_form.layoutBottGrph.addWidget(toolbar)
 
-        return fig, ax
+        return fig, ax, toolbar
 
     @staticmethod
     def graph_time_tuner(ax):
+        ax.grid(True)
+
         ax.set_ylabel("Elevation")
+
         ax.set_yticks(np.arange(0, 91, 10))
         ax.set_ylim(bottom=0, top=90, emit=1)
-        ax.xaxis.set_major_locator(DayLocator())
-        ax.xaxis.set_major_formatter(DateFormatter('%d/%m/%y'))
+
+        # ax.set_xlabel("Time")
+        # ------------------major-------------------
+        major_locator = AutoDateLocator(minticks=4,
+                                        # maxticks={YEARLY: 11, MONTHLY: 12, DAILY: 7,
+                                        #           HOURLY: 7, MINUTELY: 10, SECONDLY: 9, MICROSECONDLY: 5}
+                                        )
+        ax.xaxis.set_major_locator(major_locator)
+
+        major_formatter = ConciseDateFormatter(major_locator)
+        major_formatter.formats[5] = '%Ss. '
+        ax.xaxis.set_major_formatter(major_formatter)
+
         ax.tick_params(axis='x', which='major',
-                       labelsize=16, pad=12,
+                       labelsize=14, pad=12,
                        colors='r',
                        grid_color='r')
-        # hLocator = HourLocator()
-        # hLocator.MAXTICKS=10000
-        ax.xaxis.set_minor_locator(HourLocator())
-        ax.xaxis.set_minor_formatter(DateFormatter("%H:%M:%S"))
-        ax.tick_params(axis='x', which='minor',
-                       labelsize=8)
-        ax.grid(True)
-        ax.grid(axis='x', which='minor', linewidth=1.5)
+        # ------------------minor-------------------
+        minor_locator = AutoMinorLocator(2)
+        ax.xaxis.set_minor_locator(minor_locator)
+
+        minor_formatter = ConciseDateFormatter(minor_locator, show_offset=False)
+        minor_formatter.formats[3] = '%H:%M '  # hrs
+        minor_formatter.formats[4] = '%H:%M '  # min
+        minor_formatter.formats[5] = '%Ss. '
+        ax.xaxis.set_minor_formatter(minor_formatter)
+
+        ax.grid(axis='x', which='minor',
+                linewidth=1, linestyle='--',
+                color='g', alpha=0.2)
+
+        # ax.xaxis.set_major_locator(DayLocator())
+        # ax.xaxis.set_major_formatter(DateFormatter('%d/%m/%y'))
+        # ax.tick_params(axis='x', which='major',
+        #                labelsize=16, pad=12,
+        #                colors='r',
+        #                grid_color='r')
+        #
+        # ax.xaxis.set_minor_locator(HourLocator())
+        # ax.xaxis.set_minor_formatter(DateFormatter("%H:%M:%S"))
+        # ax.tick_params(axis='x', which='minor',
+        #                labelsize=8)
+        # ax.grid(True)
+        # ax.grid(axis='x', which='minor', linewidth=1.5,  color='g')
 
     def clear_KA(self, flag_clear_dir=True):
-
+        # print("clear_KA")
         if len(self.all_angs) == 0:
             return
 
@@ -875,19 +931,20 @@ class ActionView:
         self.main_form.tableListKA.clear()
         self.all_angs.clear()
         if flag_clear_dir:
+            # print("start clear")
             self.main_form.manager.delete_all()
 
         self.set_enable_button(len(self.all_angs) != 0)
-        # print("claer")
+        # print("finish_claer")
 
     def updateKAData(self):
-
+        # print("updateKAData")
         # self.main_form.statusbar.showMessage("Построение графиков", 10)
 
         self.clear_KA(False)
 
         self.main_form.viewButtUpdateCU.setEnabled(False)
-        self.main_form.repaint()
+        # self.main_form.repaint()
 
         self.all_angs = copy.deepcopy(self.main_form.manager.get_ang_dict_with_data())
 
@@ -924,8 +981,8 @@ class ActionView:
                     d = current_sat.get(ang)
                     # --------Отрисовка на графиках---------
 
-                    df_shadow = d[d["Ph"] == 0.0]
                     df_shine = d[d["Ph"] != 0.0]
+                    df_shadow = d[d["Ph"] == 0.0]
 
                     self.ang_Line[ang] = [
                         self.axGraphTime.plot(df_shine.Time.values, df_shine.Elev.values, linewidth=2, )[0],
@@ -936,14 +993,23 @@ class ActionView:
                         self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - df_shine.Elev.values,
                                                visible=False, linewidth=2)[0],
                         self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - df_shadow.Elev.values,
-                                               visible=False, linewidth=1, color="grey")[0]
+                                               visible=False, linewidth=1, color="grey")[0],
                         # visible = False, linewidth = 1, color = "grey", marker = '.', markersize = 1)[0]
+
+                        self.axGraphPolar.plot(np.deg2rad(d.Az.values[0]), 90 - d.Elev.values[0],
+                                               'o', visible=False, markersize=4)[0]
                     ]
+
+                    self.ang_Line[ang][2].set_color(self.ang_Line[ang][0].get_color())
+                    self.ang_Line[ang][4].set_color(self.ang_Line[ang][0].get_color())
+
                     # ========================================
                 # self.tableListKA.addTopLevelItem(itemKa);
 
             self.figGraphPolar.canvas.draw()
+
             self.figGraphTime.canvas.draw()
+            self.ToolGraphTime.update()
         else:
             self.main_form.tabWidget.setCurrentIndex(1)
             print("amgs_isEmpty")
@@ -1014,7 +1080,6 @@ class ActionView:
         newSelectAng = set()
 
         if not self.selectAngGraph:  # нет выбранных
-            print()
             for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
                 self.ang_Line[keyLines][1].set(lw=1, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
@@ -1088,6 +1153,7 @@ class ActionView:
                                       self.selectEffectsSel)
         self.ang_Line[angName][2].set_visible(not unselection)
         self.ang_Line[angName][3].set_visible(not unselection)
+        self.ang_Line[angName][4].set_visible(not unselection)
 
         return angName
 
@@ -1163,7 +1229,7 @@ class ActionView:
 
         self.main_form.viewButtMoveCU.setEnabled(True)
 
-        print("moveAng")
+        # print("moveAng")
 
     def view_butt_sieve(self):
         self.main_form.viewButtSieve.setEnabled(False)
