@@ -22,13 +22,14 @@ class EffectiveManager:
         self.ang_list = list()
         self.ang_dict = dict()
         self.config = get_config_from_file(config_file)
-        self.tle_dir = self.config["Path"]["tle_directory"]
-        self.ang_dir = self.config["Path"]["ang_directory"]
-        self.cat_dir = self.config["Path"]["cat_directory"]
-        self.cat_file = self.config["Path"]["cat_file"]
-        self.full_tle_file = self.config["TLE"]["default_file"]
-        self.eph_file = self.config["Path"]["eph_file"]
-        self.delete_existing = bool(self.config["Path"]["delete_existing"] == "True")
+        # self.tle_dir = self.config["Path"]["tle_directory"]
+        # self.ang_dir = self.config["Path"]["ang_directory"]
+        # self.cat_dir = self.config["Path"]["cat_directory"]
+        # self.cat_file = self.config["Path"]["cat_file"]
+        # self.full_tle_file = self.config["TLE"]["default_file"]
+        # self.eph_file = self.config["Path"]["eph_file"]
+        # self.delete_existing = bool(self.config["Path"]["delete_existing"] == "True")
+        self.__init_vars()
         self.check_files()
         self.catalog = self.__get_catalog()
         self.status = ""
@@ -147,6 +148,7 @@ class EffectiveManager:
     def set_config(self, conf):
         self.config = conf
         self.__init_vars()
+        self.check_files()
 
     def save_config_to_file(self, config_file):
         write_config(self.config, config_file)

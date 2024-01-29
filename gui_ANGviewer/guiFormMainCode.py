@@ -224,11 +224,11 @@ class ActionSettings:
     def __getPathDir__(self) -> str:
 
         cwd = os.getcwd()
-        Path = QFileDialog.getExistingDirectory(self.main_form,
+        Path =os.path.normpath(QFileDialog.getExistingDirectory(self.main_form,
                                                 "Open Directory",
                                                 os.getcwd(),
                                                 QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
-                                                )
+                                                ))
         if Path.find(cwd) < 0:
             return "Err"
 

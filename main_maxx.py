@@ -18,14 +18,14 @@ if __name__ == "__main__":
     # manager.open_config_from_file("config.conf")
     # manager.save_config_to_file("test.conf")
 
-    manager.download_cat() # Test downloader
+    # manager.download_cat() # Test downloader
     # manager.download_tle()
 
     # manager.copy_to_dst("c:\!nu\EOP")
 
     # manager.calculate(conf["TLE"]["default_file"])
-    # t0, t1 = manager.get_sunrise_sunset()
-    # print(t0, t1)
+    t0, t1 = manager.get_sunrise_sunset()
+    print(t0, t1)
     # dt = manager.get_full_tle_date()
     # manager.thin_out(1)
     # app = Viewer()  # Отображение
