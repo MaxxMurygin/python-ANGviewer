@@ -880,21 +880,21 @@ class ActionView:
 
         ax.tick_params(axis='x', which='major',
                        labelsize=14, pad=12,
-                       colors='r',
-                       grid_color='r')
+                       colors='k',
+                       grid_color='k')
         # ------------------minor-------------------
-        minor_locator = AutoMinorLocator(2)
-        ax.xaxis.set_minor_locator(minor_locator)
-
-        minor_formatter = ConciseDateFormatter(minor_locator, show_offset=False)
-        minor_formatter.formats[3] = '%H:%M '  # hrs
-        minor_formatter.formats[4] = '%H:%M '  # min
-        minor_formatter.formats[5] = '%Ss. '
-        ax.xaxis.set_minor_formatter(minor_formatter)
-
-        ax.grid(axis='x', which='minor',
-                linewidth=1, linestyle='--',
-                color='g', alpha=0.2)
+        # minor_locator = AutoMinorLocator(2)
+        # ax.xaxis.set_minor_locator(minor_locator)
+        #
+        # minor_formatter = ConciseDateFormatter(minor_locator, show_offset=False)
+        # minor_formatter.formats[3] = '%H:%M '  # hrs
+        # minor_formatter.formats[4] = '%H:%M '  # min
+        # minor_formatter.formats[5] = '%Ss. '
+        # ax.xaxis.set_minor_formatter(minor_formatter)
+        #
+        # ax.grid(axis='x', which='minor',
+        #         linewidth=1, linestyle='--',
+        #         color='g', alpha=0.2)
 
         # ax.xaxis.set_major_locator(DayLocator())
         # ax.xaxis.set_major_formatter(DateFormatter('%d/%m/%y'))
@@ -1070,8 +1070,8 @@ class ActionView:
         data_ang = dict()
         data_ang.update({"TIME_START": self.all_angs[id_ka][ang_name]["Time"].min().strftime('%d-%m-%Y %H:%M')})
         data_ang.update({"TIME_STOP": self.all_angs[id_ka][ang_name]["Time"].max().strftime('%d-%m-%Y %H:%M')})
-        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max():.2f}"})
-        data_ang.update({"MAX_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.max():.4f}"})
+        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max()/1000:.2f} Км."})
+        data_ang.update({"MAX_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.max():.2f}°"})
         return data_ang
 
     def slotSelectKaList(self):
