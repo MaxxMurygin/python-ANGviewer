@@ -223,12 +223,14 @@ class ActionSettings:
 
     def __getPathDir__(self) -> str:
 
+        print(os.sep)
         cwd = os.getcwd()
-        Path = QFileDialog.getExistingDirectory(self.main_form,
-                                                "Open Directory",
-                                                os.getcwd(),
-                                                QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
-                                                )
+        Path = os.path.normpath(QFileDialog.getExistingDirectory(self.main_form,
+                                                                 "Open Directory",
+                                                                 os.getcwd(),
+                                                                 QFileDialog.ShowDirsOnly |
+                                                                 QFileDialog.DontResolveSymlinks | QFileDialog.DontUseNativeDialog
+                                                                 ))
         if Path.find(cwd) < 0:
             return "Err"
 
@@ -1070,7 +1072,7 @@ class ActionView:
         data_ang = dict()
         data_ang.update({"TIME_START": self.all_angs[id_ka][ang_name]["Time"].min().strftime('%d-%m-%Y %H:%M')})
         data_ang.update({"TIME_STOP": self.all_angs[id_ka][ang_name]["Time"].max().strftime('%d-%m-%Y %H:%M')})
-        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max()/1000:.2f} Км."})
+        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max() / 1000:.2f} Км."})
         data_ang.update({"MAX_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.max():.2f}°"})
         return data_ang
 
