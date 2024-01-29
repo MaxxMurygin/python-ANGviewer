@@ -224,15 +224,17 @@ class ActionSettings:
     def __getPathDir__(self) -> str:
 
         cwd = os.getcwd()
-        Path =os.path.normpath(QFileDialog.getExistingDirectory(self.main_form,
-                                                "Open Directory",
-                                                os.getcwd(),
-                                                QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
-                                                ))
-        if Path.find(cwd) < 0:
+        path = os.path.normpath(QFileDialog.getExistingDirectory(self.main_form,
+                                                                 "Open Directory",
+                                                                 os.getcwd(),
+                                                                 QFileDialog.ShowDirsOnly |
+                                                                 QFileDialog.DontResolveSymlinks |
+                                                                 QFileDialog.DontUseNativeDialog
+                                                                 ))
+        if path.find(cwd) < 0:
             return "Err"
 
-        return Path.replace(cwd, '')[1:]
+        return path.replace(cwd, '')[1:]
 
     def checkApplyConfig(self):
 
@@ -306,6 +308,7 @@ class ActionSettings:
 
     def clickedSave(self):
 
+        self.main_form.SettButtSeve.setEnabled(False)
         # confi = self.currentConfig
 
         self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
@@ -333,10 +336,13 @@ class ActionSettings:
 
         if not self.main_form.current_config:
             print("Упс конфига нифига")
+            self.main_form.SettButtSeve.setEnabled(True)
             return
 
         self.checkApplyConfig()
         self.configViewUpdate(self.main_form.current_config)
+
+        self.main_form.SettButtSeve.setEnabled(True)
 
     def clickedCancel(self):
         self.configViewUpdate(self.main_form.current_config)
@@ -735,14 +741,18 @@ class ActionCalculate:
 
     def calc_butt_data_time_now(self):
 
-        d_date_time = (self.main_form.calicFilterTimeEditMin.dateTime().
-                       secsTo(self.main_form.calicFilterTimeEditMax.dateTime()))
+        # d_date_time = (self.main_form.calicFilterTimeEditMin.dateTime().
+        #                secsTo(self.main_form.calicFilterTimeEditMax.dateTime()))
+        #
+        # self.main_form.calicFilterTimeEditMin.setDate(QDate.currentDate())
+        #
+        # self.main_form.calicFilterTimeEditMax.setDateTime(
+        #     self.main_form.calicFilterTimeEditMin.dateTime().addSecs(d_date_time)
+        # )
+        current_date = self.main_form.manager.get_sunrise_sunset()
 
-        self.main_form.calicFilterTimeEditMin.setDate(QDate.currentDate())
-
-        self.main_form.calicFilterTimeEditMax.setDateTime(
-            self.main_form.calicFilterTimeEditMin.dateTime().addSecs(d_date_time)
-        )
+        self.main_form.calicFilterTimeEditMin.setDateTime(current_date[0])
+        self.main_form.calicFilterTimeEditMax.setDateTime(current_date[1])
 
 
 def save_mold_to_file(filter_mold, path_filtr_dir, mold_name):
@@ -780,8 +790,11 @@ class ActionView:
         self.figGraphPolar, self.axGraphPolar = self.createGraphPolar()
         self.figGraphTime, self.axGraphTime, self.ToolGraphTime = self.createGraphTime()
 
+        self.main_form.tableListKA.header().setStretchLastSection(False)
         self.main_form.tableListKA.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.main_form.tableListKA.header().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.main_form.tableListKA.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
         self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.main_form.tableKAInfo.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.main_form.buttInvertCheck.setVisible(False)
@@ -961,6 +974,8 @@ class ActionView:
 
                 for ang in current_sat.keys():
 
+                    added_element = None
+
                     if len(current_sat) > 1:
 
                         itemKa.setData(1, Qt.EditRole, "...")
@@ -972,11 +987,15 @@ class ActionView:
 
                         itemKa.addChild(itemAng)
 
+                        added_element = itemAng
+
                     else:
                         # print()
                         itemKa.setData(1, Qt.EditRole, ang)
                         # itemKa.setCheckState(1, Qt.Unchecked)
                         itemKa.setTextAlignment(1, Qt.AlignHCenter | Qt.AlignVCenter)
+
+                        added_element = itemKa
 
                     d = current_sat.get(ang)
                     # --------Отрисовка на графиках---------
@@ -987,13 +1006,13 @@ class ActionView:
                     self.ang_Line[ang] = [
                         self.axGraphTime.plot(df_shine.Time.values, df_shine.Elev.values, linewidth=2, )[0],
                         self.axGraphTime.plot(df_shadow.Time.values, df_shadow.Elev.values,
-                                              linewidth=1, color="grey")[0],
+                                              linewidth=1, color="white")[0],
                         # linewidth= 1, color="grey", marker='.' , markersize = 1)[0],
 
                         self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - df_shine.Elev.values,
                                                visible=False, linewidth=2)[0],
                         self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - df_shadow.Elev.values,
-                                               visible=False, linewidth=1, color="grey")[0],
+                                               visible=False, linewidth=1, color="white")[0],
                         # visible = False, linewidth = 1, color = "grey", marker = '.', markersize = 1)[0]
 
                         self.axGraphPolar.plot(np.deg2rad(d.Az.values[0]), 90 - d.Elev.values[0],
@@ -1002,6 +1021,13 @@ class ActionView:
 
                     self.ang_Line[ang][2].set_color(self.ang_Line[ang][0].get_color())
                     self.ang_Line[ang][4].set_color(self.ang_Line[ang][0].get_color())
+
+                    if added_element != None:
+                        added_element.setBackground(2,
+                                                    QColor(self.ang_Line[ang][0].get_color() if
+                                                           len(df_shine) != 0
+                                                           else Qt.white))
+                        # added_element.setText(2, " ")
 
                     # ========================================
                 # self.tableListKA.addTopLevelItem(itemKa);
@@ -1019,6 +1045,8 @@ class ActionView:
         self.main_form.viewButtUpdateCU.setEnabled(True)
 
         self.set_enable_button(len(self.all_angs) != 0)
+
+        self.main_form.tableListKA.resizeColumnToContents(2)
 
         # self.main_form.statusbar.showMessage("")
 
@@ -1070,7 +1098,7 @@ class ActionView:
         data_ang = dict()
         data_ang.update({"TIME_START": self.all_angs[id_ka][ang_name]["Time"].min().strftime('%d-%m-%Y %H:%M')})
         data_ang.update({"TIME_STOP": self.all_angs[id_ka][ang_name]["Time"].max().strftime('%d-%m-%Y %H:%M')})
-        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max()/1000:.2f} Км."})
+        data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max() / 1000:.2f} Км."})
         data_ang.update({"MAX_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.max():.2f}°"})
         return data_ang
 
