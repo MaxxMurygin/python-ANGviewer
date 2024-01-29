@@ -741,14 +741,18 @@ class ActionCalculate:
 
     def calc_butt_data_time_now(self):
 
-        d_date_time = (self.main_form.calicFilterTimeEditMin.dateTime().
-                       secsTo(self.main_form.calicFilterTimeEditMax.dateTime()))
+        # d_date_time = (self.main_form.calicFilterTimeEditMin.dateTime().
+        #                secsTo(self.main_form.calicFilterTimeEditMax.dateTime()))
+        #
+        # self.main_form.calicFilterTimeEditMin.setDate(QDate.currentDate())
+        #
+        # self.main_form.calicFilterTimeEditMax.setDateTime(
+        #     self.main_form.calicFilterTimeEditMin.dateTime().addSecs(d_date_time)
+        # )
+        current_date = self.main_form.manager.get_sunrise_sunset()
 
-        self.main_form.calicFilterTimeEditMin.setDate(QDate.currentDate())
-
-        self.main_form.calicFilterTimeEditMax.setDateTime(
-            self.main_form.calicFilterTimeEditMin.dateTime().addSecs(d_date_time)
-        )
+        self.main_form.calicFilterTimeEditMin.setDateTime(current_date[0])
+        self.main_form.calicFilterTimeEditMax.setDateTime(current_date[1])
 
 
 def save_mold_to_file(filter_mold, path_filtr_dir, mold_name):
