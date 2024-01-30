@@ -21,7 +21,6 @@ def events_to_list(t_events, events):
     for i in range(0, len(events), 1):
         t.append(t_events[i])
         e.append(events[i])
-
     return t, e
 
 
@@ -49,10 +48,10 @@ class Calculator:
 
         self.aolc = wgs84.latlon(float(conf["Coordinates"]["lat"]), float(conf["Coordinates"]["lon"]),
                                  float(conf["Coordinates"]["height"]))
-        self.begin = (datetime.strptime(conf["Basic"]["t_begin"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
-                      timedelta(hours=3))
-        self.end = (datetime.strptime(conf["Basic"]["t_end"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc) -
-                    timedelta(hours=3))
+        self.begin = (datetime.strptime(conf["Basic"]["t_begin"], "%Y-%m-%d %H:%M:%S")
+                      .replace(tzinfo=utc) - timedelta(hours=3))
+        self.end = (datetime.strptime(conf["Basic"]["t_end"], "%Y-%m-%d %H:%M:%S")
+                    .replace(tzinfo=utc) - timedelta(hours=3))
         self.tle_dir = conf["Path"]["tle_directory"]
         self.ang_dir = conf["Path"]["ang_directory"]
         self.eph_file = conf["Path"]["eph_file"]
@@ -127,7 +126,7 @@ class Calculator:
         file_name = os.path.join(self.ang_dir, file_name)
         difference = satellite - self.aolc
 
-        # ssb_obs = earth + self.aolc
+        ssb_aolc = earth + self.aolc
         ssb_satellite = earth + satellite
 
         ts_current = ts_begin
@@ -139,8 +138,8 @@ class Calculator:
                 if self.calculate_phase:
 
                     sun_position = ssb_satellite.at(ts_current).observe(sun)
-                    earth_position = ssb_satellite.at(ts_current).observe(earth + self.aolc)
-                    phase_angle = sun_position.separation_from(earth_position).radians
+                    aolc_position = ssb_satellite.at(ts_current).observe(ssb_aolc)
+                    phase_angle = sun_position.separation_from(aolc_position).radians
 
                     # topocentric_sat_obs = ssb_satellite.at(ts_current).observe(ssb_obs).apparent()
                     # topocentric_sat_sun = ssb_satellite.at(ts_current).observe(sun).apparent()

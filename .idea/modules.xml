@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/AngViewer.iml" filepath="$PROJECT_DIR$/.idea/AngViewer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/PvNP.iml" filepath="$PROJECT_DIR$/.idea/PvNP.iml" />
     </modules>
   </component>
 </project>
