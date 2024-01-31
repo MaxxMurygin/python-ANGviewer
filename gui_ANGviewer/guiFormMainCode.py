@@ -33,6 +33,8 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as Navigation
 from matplotlib.ticker import *
 from matplotlib.dates import *
 
+from pandas import date_range
+
 import manager
 from manager import EffectiveManager
 from gui_ANGviewer.guiFormMainAngView import *
@@ -57,14 +59,8 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.manager = manager
         self.current_config = self.manager.get_config()
 
-        # if self.current_config:
-        #     QMessageBox.critical(self,
-        #                          "Ошибка",
-        #                          "Отсутствует основной файл конфигурации \n config.conf")
-        #     return
-
         self.status_gui = ""
-        # ----------------------------Setting--------------------------------
+        # # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
 
         self.SettCatUpdateButt.clicked.connect(self.actionSettings.clicked_cat_update)
@@ -101,6 +97,8 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         # ----------------------------View---------------------------------
         self.action_view = ActionView(self)
+        self.thread_update_KA = threading.Thread(target=self.action_view.updateKAData,
+                                                 args=())
 
         self.tableListKA.itemSelectionChanged.connect(self.action_view.slotSelectKaList)
         self.buttResetSelection.released.connect(self.action_view.view_butt_selection_reset)
@@ -108,6 +106,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.viewButtCliarCU.released.connect(self.action_view.clear_KA)
         self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
+        # self.viewButtUpdateCU.clicked.connect(self.thread_update_KA.start)
         self.viewButtMoveCU.clicked.connect(self.action_view.view_butt_move_cu)
 
         self.viewButtSieve.clicked.connect(self.action_view.view_butt_sieve)
@@ -116,9 +115,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.flag_checked_state = True
         self.loop_check = threading.Thread(target=loop_check_manager_state,
-                                           args=(self.manager, self)).start()
-
-        # loop_check_manager_state(self.manager, self)
+                                           args=(self.manager, self), name="loop_check").start()
 
     def closeEvent(self, event):
         self.flag_checked_state = False
@@ -127,6 +124,8 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         return self.status_gui
 
     def test(self, flag=False):
+        print(threading.enumerate())
+        x= threading.enumerate()[0]
         print("test")
 
 
@@ -134,9 +133,9 @@ def loop_check_manager_state(manager: EffectiveManager,
                              gui_form: GuiFormMain):
     while gui_form.flag_checked_state:
         gui_form.statusbar.showMessage(
-            f"{manager.get_status()}{gui_form.get_status()}")
+            f"{manager.get_status()}  {gui_form.get_status()}")
         # gui_form.repaint()
-        time.sleep(2)
+        time.sleep(0.2)
 
     # print("loopCheckManagerState")
 
@@ -786,6 +785,7 @@ class ActionView:
     def __init__(self, main_form: GuiFormMain):
 
         self.main_form = main_form
+        self.main_form.tabViewer.setEnabled(False)
 
         self.figGraphPolar, self.axGraphPolar = self.createGraphPolar()
         self.figGraphTime, self.axGraphTime, self.ToolGraphTime = self.createGraphTime()
@@ -818,7 +818,9 @@ class ActionView:
 
         self.important_inf = dict(zip(range(10), inf_label))
 
-        self.updateKAData()
+        # self.updateKAData()
+        threading.Thread(target=self.updateKAData,
+                         args=()).start()
 
         if len(self.all_angs):
             self.main_form.tabWidget.setCurrentIndex(2)
@@ -832,6 +834,7 @@ class ActionView:
 
         self.main_form.layoutGraphPolar.addWidget(FigureCanvas(fig))
         self.main_form.layoutGraphPolar.itemAt(0).widget().setMinimumSize(QtCore.QSize(300, 300))
+        fig.canvas.draw()
         return fig, ax
 
     @staticmethod
@@ -867,6 +870,7 @@ class ActionView:
         self.main_form.layoutBottGrph.itemAt(0).widget().setMinimumSize(QtCore.QSize(0, 300))
         toolbar = NavigationToolbar(fig.canvas, self.main_form)
         self.main_form.layoutBottGrph.addWidget(toolbar)
+        fig.canvas.draw()
 
         return fig, ax, toolbar
 
@@ -881,6 +885,8 @@ class ActionView:
 
         # ax.set_xlabel("Time")
         # ------------------major-------------------
+        ax.set_xticks(date_range(datetime.now().date(), periods=12, freq='MS'))
+
         major_locator = AutoDateLocator(minticks=4,
                                         # maxticks={YEARLY: 11, MONTHLY: 12, DAILY: 7,
                                         #           HOURLY: 7, MINUTELY: 10, SECONDLY: 9, MICROSECONDLY: 5}
@@ -909,6 +915,7 @@ class ActionView:
         #         linewidth=1, linestyle='--',
         #         color='g', alpha=0.2)
 
+        # ------------------old-------------------
         # ax.xaxis.set_major_locator(DayLocator())
         # ax.xaxis.set_major_formatter(DateFormatter('%d/%m/%y'))
         # ax.tick_params(axis='x', which='major',
@@ -954,16 +961,27 @@ class ActionView:
         # print("updateKAData")
         # self.main_form.statusbar.showMessage("Построение графиков", 10)
 
+        self.main_form.status_gui = "Получение списка аппаратов "
+
         self.clear_KA(False)
 
         self.main_form.viewButtUpdateCU.setEnabled(False)
-        # self.main_form.repaint()
+
+        if threading.current_thread().name == "MainThread":
+            self.main_form.repaint()
+
 
         self.all_angs = copy.deepcopy(self.main_form.manager.get_ang_dict_with_data())
 
         if bool(self.all_angs):
 
             for norad_id in self.all_angs.keys():
+
+                self.main_form.status_gui = (f"Построение графиков "
+                           f"{self.main_form.tableListKA.topLevelItemCount()/len(self.all_angs)*100:.2f}% ")
+
+                if threading.current_thread().name == "MainThread":
+                    self.main_form.repaint()
 
                 itemKa = QTreeWidgetItem(self.main_form.tableListKA)
                 itemKa.setFlags(itemKa.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
@@ -1024,20 +1042,28 @@ class ActionView:
 
                     if added_element != None:
                         added_element.setBackground(2,
-                                                    QColor(self.ang_Line[ang][0].get_color() if
-                                                           len(df_shine) != 0
-                                                           else Qt.white))
-                        # added_element.setText(2, " ")
+                                                    # QColor(self.ang_Line[ang][0].get_color() if
+                                                    #        len(df_shine) != 0
+                                                    #        else Qt.white))
+                                                    QBrush(QColor(self.ang_Line[ang][0].get_color()),
+                                                           Qt.SolidPattern if len(df_shine) != 0 else Qt.Dense2Pattern))
 
                     # ========================================
                 # self.tableListKA.addTopLevelItem(itemKa);
 
-            self.figGraphPolar.canvas.draw()
+            self.main_form.status_gui = "Отрисовка графиков"
+            if threading.current_thread().name == "MainThread":
+                self.main_form.repaint()
 
+            self.figGraphPolar.tight_layout()
+            self.figGraphPolar.canvas.draw()
+            self.figGraphTime.tight_layout()
             self.figGraphTime.canvas.draw()
             self.ToolGraphTime.update()
         else:
+            time.sleep(0.1)
             self.main_form.tabWidget.setCurrentIndex(1)
+            self.main_form.tabViewer.setEnabled(True)
             print("amgs_isEmpty")
 
         self.main_form.status_gui = ""
@@ -1048,7 +1074,11 @@ class ActionView:
 
         self.main_form.tableListKA.resizeColumnToContents(2)
 
-        # self.main_form.statusbar.showMessage("")
+        self.main_form.tabViewer.setEnabled(True)
+
+        self.main_form.status_gui = ""
+
+
 
     def set_enable_button(self, state_enable=False):
         self.main_form.calicClearAngDirButt.setEnabled(state_enable)

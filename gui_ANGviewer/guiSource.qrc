@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="Images">
+    <file>Source/Images/orbit_Load.gif</file>
     <file>Source/Images/calcul.png</file>
     <file>Source/Images/setting.png</file>
   </qresource>
