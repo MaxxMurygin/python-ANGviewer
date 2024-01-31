@@ -41,10 +41,10 @@ class EffectiveManager:
 
     def calculate(self, tle_file):
         filter_enabled = bool(self.config["Filter"]["filter_enabled"] == "True")
-        cat = file_operations.read_catalog()
+        work_cat = self.catalog
         if filter_enabled:
-            cat = filter_catalog(self.config, cat)
-        needed_sat = catalog_df_to_dict(cat)
+            work_cat = filter_catalog(self.config, self.catalog)
+        needed_sat = catalog_df_to_dict(work_cat)
         satellites = file_operations.read_tle(self.tle_dir, tle_file, needed_sat)
         self.status = "Идет расчет"
         self.__run_calc(satellites)

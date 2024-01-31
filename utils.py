@@ -47,7 +47,8 @@ def catalog_df_to_dict(cat_df):
     return sat_dict
 
 
-def filter_catalog(config, cat_df):
+def filter_catalog(config, full_cat):
+    cat_df = full_cat
     names_string = config["Filter"]["names_string"]
     period_filter = bool(config["Filter"]["filter_by_period"] == "True")
     name_filter = bool(config["Filter"]["filter_by_name"] == "True")
