@@ -119,8 +119,6 @@ class Calculator:
 
         t_current_in_sec = (dt_begin.hour * 3600 + dt_begin.minute * 60 + dt_begin.second +
                             dt_begin.microsecond / 1000000 + 10800)
-        # t_end_in_sec = (dt_end.hour * 3600 + dt_end.minute * 60 + dt_end.second +
-        #                 dt_end.microsecond / 1000000 + 10800)
         t_end_in_sec = t_current_in_sec + (dt_end - dt_begin).seconds
         file_name = event.iloc[0] + "_" + (dt_begin + timedelta(hours=3)).strftime("%d%H") + ".ang"
         file_name = os.path.join(self.ang_dir, file_name)

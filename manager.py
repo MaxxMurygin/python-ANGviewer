@@ -21,6 +21,7 @@ class EffectiveManager:
         self.ang_df = pandas.DataFrame()
         self.ang_list = list()
         self.ang_dict = dict()
+        self.status = ""
         self.config = get_config_from_file(config_file)
         # self.tle_dir = self.config["Path"]["tle_directory"]
         # self.ang_dir = self.config["Path"]["ang_directory"]
@@ -32,7 +33,6 @@ class EffectiveManager:
         self.__init_vars()
         self.check_files()
         self.catalog = self.__get_catalog()
-        self.status = ""
         self.mp_manager = multiprocessing.Manager()
         self.lock = self.mp_manager.Lock()
         self.global_ang_list = self.mp_manager.list()
@@ -40,9 +40,8 @@ class EffectiveManager:
         self.global_commander = ""
 
     def calculate(self, tle_file):
-        filter_enabled = bool(self.config["Filter"]["filter_enabled"] == "True")
         work_cat = self.catalog
-        if filter_enabled:
+        if bool(self.config["Filter"]["filter_enabled"] == "True"):
             work_cat = filter_catalog(self.config, self.catalog)
         needed_sat = catalog_df_to_dict(work_cat)
         satellites = file_operations.read_tle(self.tle_dir, tle_file, needed_sat)
@@ -254,9 +253,10 @@ class EffectiveManager:
             print(self.status)
             sleep(2)
         perf = datetime.now() - perf_start
-        print(f"Время расчета : {perf.seconds + perf.microseconds / 1000000} sec")
-        self.status = "Идет запись результатов расчета..."
+        calc_time_str = f"Время расчета : {perf.seconds + perf.microseconds / 1000000} сек"
+        print(calc_time_str)
+        self.status = calc_time_str + ". Идет запись результатов расчета..."
         for items in self.global_ang_list:
             for item in items:
                 file_operations.write_ang(item[0], item[1], item[2])
-        self.status = f"Время расчета : {perf.seconds + perf.microseconds / 1000000} sec"
+        # self.status = f"Время расчета : {perf.seconds + perf.microseconds / 1000000} sec"
