@@ -48,10 +48,21 @@ def catalog_df_to_dict(cat_df):
 
 
 def filter_catalog(config, cat_df):
+    names_string = config["Filter"]["names_string"]
     period_filter = bool(config["Filter"]["filter_by_period"] == "True")
     name_filter = bool(config["Filter"]["filter_by_name"] == "True")
     inclination_filter = bool(config["Filter"]["filter_by_inclination"] == "True")
-    names_string = config["Filter"]["names_string"]
+    type_filter = bool(config["Filter"]["filter_by_type"] == "True")
+    type_str = ""
+    if bool(config["Filter"]["type_body"] == "True"):
+        type_str += "ROCKET BODY|"
+    if bool(config["Filter"]["type_debris"] == "True"):
+        type_str += "DEBRIS|"
+    if bool(config["Filter"]["type_payload"] == "True"):
+        type_str += "PAYLOAD|"
+    type_str = f"{type_str[0: -1]}"
+    if type_filter:
+        cat_df = cat_df.loc[cat_df["OBJECT_TYPE"].str.contains(type_str)]
     if period_filter:
         cat_df = cat_df[cat_df["PERIOD"] > float(config["Filter"]["min_period"])]
         cat_df = cat_df[cat_df["PERIOD"] < float(config["Filter"]["max_period"])]

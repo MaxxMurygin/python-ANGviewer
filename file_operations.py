@@ -17,7 +17,6 @@ def read_catalog(satcat_file="catalog.csv"):
     cat_df = cat_df.loc[cat_df["DECAY"].isna()]
     cat_df = cat_df.loc[cat_df["PERIOD"].notna()]
     cat_df["OBJECT_TYPE"] = cat_df["OBJECT_TYPE"].astype("string")
-    cat_df = cat_df.loc[cat_df["OBJECT_TYPE"].str.contains("PAYLOAD")]
     return cat_df
 
 
