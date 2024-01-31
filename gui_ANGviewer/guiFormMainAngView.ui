@@ -33,7 +33,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -1067,7 +1067,7 @@
              <item>
               <widget class="QPushButton" name="calicFilterTimeButt">
                <property name="text">
-                <string>На текущую дату</string>
+                <string>От заката до рассвета</string>
                </property>
               </widget>
              </item>
@@ -1089,96 +1089,6 @@
              <bool>true</bool>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_5">
-             <item>
-              <widget class="QGroupBox" name="calicFilterLaunchBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="title">
-                <string>Фильтровать по году запуска</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="checked">
-                <bool>false</bool>
-               </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_4">
-                <property name="leftMargin">
-                 <number>9</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="calicFilterLaunchLableMin">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>с</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QDateEdit" name="calicFilterLaunchEditMin">
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="dateTime">
-                   <datetime>
-                    <hour>0</hour>
-                    <minute>0</minute>
-                    <second>0</second>
-                    <year>1957</year>
-                    <month>1</month>
-                    <day>1</day>
-                   </datetime>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="calicFilterLaunchLabelMax">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>до</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QDateEdit" name="calicFilterLaunchEditMax">
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="date">
-                   <date>
-                    <year>2024</year>
-                    <month>1</month>
-                    <day>1</day>
-                   </date>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
              <item>
               <widget class="QGroupBox" name="calicFilterNameBox">
                <property name="title">
@@ -1213,7 +1123,7 @@
                    </size>
                   </property>
                   <property name="placeholderText">
-                   <string>фрагмент1|фрагмент2|...</string>
+                   <string>фрагмент1, фрагмент2, ...</string>
                   </property>
                  </widget>
                 </item>
@@ -1284,67 +1194,6 @@
                   </property>
                   <property name="singleStep">
                    <double>0.500000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="calicFilterInclinaBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="title">
-                <string>Фильтровать по наклонению</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="checked">
-                <bool>false</bool>
-               </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_6">
-                <item>
-                 <widget class="QLabel" name="calicFilterInclinaLabelMin">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Min.</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="calicFilterInclinaEditMin">
-                  <property name="maximum">
-                   <number>90</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="calicFilterInclinaLabelMax">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Max.</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="calicFilterInclinaEditMax">
-                  <property name="maximum">
-                   <number>90</number>
-                  </property>
-                  <property name="value">
-                   <number>90</number>
                   </property>
                  </widget>
                 </item>
@@ -1496,6 +1345,57 @@
                  <widget class="QSpinBox" name="calicFilterDistanceEditMax">
                   <property name="maximum">
                    <number>999999999</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="calicFilterByTypeBox">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="title">
+                <string>Фильтровать по типу</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_10">
+                <property name="leftMargin">
+                 <number>40</number>
+                </property>
+                <property name="topMargin">
+                 <number>5</number>
+                </property>
+                <property name="rightMargin">
+                 <number>5</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>5</number>
+                </property>
+                <item>
+                 <widget class="QCheckBox" name="calicFilterByTypeCheckPayload">
+                  <property name="text">
+                   <string>Полезная нагрузка</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="calicFilterByTypeCheckBody">
+                  <property name="text">
+                   <string>Корпус ракеты</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="calicFilterByTypeCheckDebris">
+                  <property name="text">
+                   <string>Прочий мусор</string>
                   </property>
                  </widget>
                 </item>
@@ -1752,11 +1652,14 @@
                 <property name="headerHidden">
                  <bool>false</bool>
                 </property>
+                <property name="columnCount">
+                 <number>3</number>
+                </property>
                 <attribute name="headerDefaultSectionSize">
                  <number>100</number>
                 </attribute>
                 <attribute name="headerMinimumSectionSize">
-                 <number>2</number>
+                 <number>12</number>
                 </attribute>
                 <column>
                  <property name="text">
@@ -1770,7 +1673,7 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string/>
+                  <string> </string>
                  </property>
                 </column>
                </widget>

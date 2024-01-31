@@ -18,6 +18,7 @@ import collections
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import numpy as np
+from PyQt5 import QtWidgets
 from numpy.distutils.fcompiler import str2bool
 
 from PyQt5.Qt import *
@@ -50,7 +51,7 @@ matplotlib.use('Qt5Agg')
 
 
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
-    def __init__(self, manager: EffectiveManager):
+    def __init__(self, manager: EffectiveManager, show_massege_metod=None):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
@@ -59,7 +60,13 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.manager = manager
         self.current_config = self.manager.get_config()
 
-        self.status_gui = ""
+        self.status_gui = "Инициализация интерфейса"
+        self.show_massege_metod = show_massege_metod
+
+        self.flag_checked_state = True
+        self.loop_check = threading.Thread(target=loop_check_manager_state,
+                                           args=(self, self.manager), name="loop_check").start()
+
         # # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
 
@@ -84,6 +91,18 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.calicTLEUpdateButt.clicked.connect(self.action_calculate.calic_butt_tle_update)
 
         self.calicFilterTimeButt.clicked.connect(self.action_calculate.calc_butt_data_time_now)
+
+        self.calicFilterByTypeCheckPayload.toggled.connect(
+            lambda check_new_state:
+            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckPayload, check_new_state))
+        self.calicFilterByTypeCheckBody.toggled.connect(
+            lambda check_new_state:
+            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckBody, check_new_state))
+        self.calicFilterByTypeCheckDebris.toggled.connect(
+            lambda check_new_state:
+            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckDebris, check_new_state))
+
+
 
         self.calicButtApply.clicked.connect(
             lambda: self.action_calculate.filter_list_apply_or_save(current_config=self.current_config,
@@ -113,9 +132,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.buttSetting.triggered.connect(self.test)
 
-        self.flag_checked_state = True
-        self.loop_check = threading.Thread(target=loop_check_manager_state,
-                                           args=(self.manager, self), name="loop_check").start()
+        self.show_massege_metod = self.statusbar.showMessage
 
     def closeEvent(self, event):
         self.flag_checked_state = False
@@ -125,14 +142,15 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
     def test(self, flag=False):
         print(threading.enumerate())
-        x= threading.enumerate()[0]
+        x = threading.enumerate()[0]
         print("test")
 
 
-def loop_check_manager_state(manager: EffectiveManager,
-                             gui_form: GuiFormMain):
+def loop_check_manager_state(gui_form: GuiFormMain,
+                             manager: EffectiveManager,
+                             ):
     while gui_form.flag_checked_state:
-        gui_form.statusbar.showMessage(
+        gui_form.show_massege_metod(
             f"{manager.get_status()}  {gui_form.get_status()}")
         # gui_form.repaint()
         time.sleep(0.2)
@@ -374,8 +392,8 @@ class ActionCalculate:
         self.path_filter_dir = "viewFilterTemplates"
 
         self.main_form = main_form
-        self.main_form.calicFilterLaunchBox.setVisible(False)
-        self.main_form.calicFilterInclinaBox.setVisible(False)
+        # self.main_form.calicFilterLaunchBox.setVisible(False)
+        # self.main_form.calicFilterInclinaBox.setVisible(False)
         self.main_form.calicStopButt.setEnabled(False)
         self.main_form.calicTemplateButDel.setEnabled(False)
         self.main_form.calicTemplateButSeve.setEnabled(False)
@@ -438,6 +456,18 @@ class ActionCalculate:
         self.main_form.calicFilterPeriodEditMin.setValue(float(current_config['Filter']['min_period']))
         self.main_form.calicFilterPeriodEditMax.setValue(float(current_config['Filter']['max_period']))
 
+        if current_config['TLE']['user_file']:
+            if self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
+                                                     Qt.MatchRegExp | Qt.MatchWildcard):
+
+                self.main_form.calicTLECastomRadio.setChecked(True)
+                self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
+                                                      Qt.MatchRegExp | Qt.MatchWildcard)[0].setSelected(True)
+            else:
+                self.main_form.calicTLEList.setCurrentRow(-1)
+        else:
+            self.main_form.calicTLEAllRadio.setChecked(True)
+
         self.main_form.calicFilterTimeEditMin.setDateTime(
             datetime.strptime(current_config['Basic']['t_begin'], "%Y-%m-%d %H:%M:%S"))
         self.main_form.calicFilterTimeEditMax.setDateTime(
@@ -457,21 +487,25 @@ class ActionCalculate:
         self.main_form.calicFilterDistanceEditMin.setValue(int(current_config['Filter']['min_distance']))
         self.main_form.calicFilterDistanceEditMax.setValue(int(current_config['Filter']['max_distance']))
 
-        if current_config['TLE']['user_file']:
-            if self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
-                                                     Qt.MatchRegExp | Qt.MatchWildcard):
-
-                self.main_form.calicTLECastomRadio.setChecked(True)
-                self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
-                                                      Qt.MatchRegExp | Qt.MatchWildcard)[0].setSelected(True)
-            else:
-                self.main_form.calicTLEList.setCurrentRow(-1)
-        else:
-            self.main_form.calicTLEAllRadio.setChecked(True)
+        self.main_form.calicFilterByTypeBox.setChecked(
+            bool(str2bool(current_config['Filter']['filter_by_type'])))
+        self.main_form.calicFilterByTypeCheckBody.setChecked(
+            bool(str2bool(current_config['Filter']['type_body'])))
+        self.main_form.calicFilterByTypeCheckPayload.setChecked(
+            bool(str2bool(current_config['Filter']['type_payload'])))
+        self.main_form.calicFilterByTypeCheckDebris.setChecked(
+            bool(str2bool(current_config['Filter']['type_debris'])))
 
         # self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
         self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
         self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
+
+    def least_one_mark(self, currrentCheckBoxType: QtWidgets.QCheckBox, check_new_state):
+
+        if not ((self.main_form.calicFilterByTypeCheckPayload.isChecked()) or
+                (self.main_form.calicFilterByTypeCheckBody.isChecked()) or
+                (self.main_form.calicFilterByTypeCheckDebris.isChecked())):
+            currrentCheckBoxType.setChecked(Qt.Checked)
 
     def filter_list_update(self):
 
@@ -552,6 +586,16 @@ class ActionCalculate:
             {'filter_by_distance': "True" if (self.main_form.calicFilterDistanceBox.isChecked()) else "False"})
         filter_mold["Filter"].update({'min_distance': str(self.main_form.calicFilterDistanceEditMin.value())})
         filter_mold["Filter"].update({'max_distance': str(self.main_form.calicFilterDistanceEditMax.value())})
+
+        filter_mold["Filter"].update(
+            {'filter_by_type': "True" if (self.main_form.calicFilterByTypeBox .isChecked()) else "False"})
+        filter_mold["Filter"].update(
+            {'type_body': "True" if (self.main_form.calicFilterByTypeCheckBody.isChecked()) else "False"})
+        filter_mold["Filter"].update(
+            {'type_payload': "True" if (self.main_form.calicFilterByTypeCheckPayload.isChecked()) else "False"})
+        filter_mold["Filter"].update(
+            {'type_debris': "True" if (self.main_form.calicFilterByTypeCheckDebris.isChecked()) else "False"})
+
 
         # if not ("System" in filter_mold.keys()):
         #     filter_mold.update({"System": dict()})
@@ -818,9 +862,9 @@ class ActionView:
 
         self.important_inf = dict(zip(range(10), inf_label))
 
-        # self.updateKAData()
-        threading.Thread(target=self.updateKAData,
-                         args=()).start()
+        self.updateKAData()
+        # threading.Thread(target=self.updateKAData,
+        #                  args=()).start()
 
         if len(self.all_angs):
             self.main_form.tabWidget.setCurrentIndex(2)
@@ -932,6 +976,12 @@ class ActionView:
 
     def clear_KA(self, flag_clear_dir=True):
         # print("clear_KA")
+
+        self.main_form.status_gui = "Очистка списка аппаратов"
+
+        if threading.current_thread().name == "MainThread":
+            self.main_form.repaint()
+
         if len(self.all_angs) == 0:
             return
 
@@ -959,17 +1009,15 @@ class ActionView:
 
     def updateKAData(self):
         # print("updateKAData")
-        # self.main_form.statusbar.showMessage("Построение графиков", 10)
-
-        self.main_form.status_gui = "Получение списка аппаратов "
 
         self.clear_KA(False)
+
+        self.main_form.status_gui = "Получение списка аппаратов "
 
         self.main_form.viewButtUpdateCU.setEnabled(False)
 
         if threading.current_thread().name == "MainThread":
             self.main_form.repaint()
-
 
         self.all_angs = copy.deepcopy(self.main_form.manager.get_ang_dict_with_data())
 
@@ -978,7 +1026,7 @@ class ActionView:
             for norad_id in self.all_angs.keys():
 
                 self.main_form.status_gui = (f"Построение графиков "
-                           f"{self.main_form.tableListKA.topLevelItemCount()/len(self.all_angs)*100:.2f}% ")
+                                             f"{self.main_form.tableListKA.topLevelItemCount() / len(self.all_angs) * 100:.2f}% ")
 
                 if threading.current_thread().name == "MainThread":
                     self.main_form.repaint()
@@ -1077,8 +1125,6 @@ class ActionView:
         self.main_form.tabViewer.setEnabled(True)
 
         self.main_form.status_gui = ""
-
-
 
     def set_enable_button(self, state_enable=False):
         self.main_form.calicClearAngDirButt.setEnabled(state_enable)
