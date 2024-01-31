@@ -449,7 +449,8 @@ class ActionCalculate:
 
         check_filter_name = str2bool(current_config['Filter']['filter_by_name'])
         self.main_form.calicFilterNameBox.setChecked(bool(check_filter_name))
-        self.main_form.calicFilterNameEdit.setText(current_config['Filter']['names_string'])
+        self.main_form.calicFilterNameEdit.setText(str(current_config['Filter']['names_string']).
+                                                   replace("|",", "))
 
         check_filter_period = str2bool(current_config['Filter']['filter_by_period'])
         self.main_form.calicFilterPeriodBox.setChecked(bool(check_filter_period))
@@ -566,7 +567,9 @@ class ActionCalculate:
 
         filter_mold["Filter"].update(
             {'filter_by_name': "True" if (self.main_form.calicFilterNameBox.isChecked()) else "False"})
-        filter_mold["Filter"].update({'names_string': self.main_form.calicFilterNameEdit.text()})
+        filter_mold["Filter"].update({'names_string':
+                                          str(self.main_form.calicFilterNameEdit.text()).
+                                      replace(", ","|").replace(",","|")})
 
         filter_mold["Filter"].update(
             {'filter_by_period': "True" if (self.main_form.calicFilterPeriodBox.isChecked()) else "False"})
