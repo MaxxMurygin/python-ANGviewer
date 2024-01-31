@@ -30,11 +30,18 @@ class GifSplashScreen(QSplashScreen):
 
     def onFrameChanged(self, _):
         self.setPixmap(self.movie.currentPixmap())
+        app.processEvents()
 
     def finish(self, widget):
         self.movie.stop()
         super(GifSplashScreen, self).finish(widget)
 
+    def showMessage(self, message):
+        super(GifSplashScreen, self).showMessage(
+            message,
+            Qt.AlignHCenter | Qt.AlignBottom, Qt.white
+        )
+        self.repaint()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
@@ -56,43 +63,34 @@ if __name__ == "__main__":
     def create_main_window():
         global manager
 
-        splash.showMessage(
-            'Инициализация модулей',
-            Qt.AlignHCenter | Qt.AlignBottom, Qt.white
-        )
+        splash.showMessage('Инициализация модулей')
         app.processEvents()
 
         manager = EffectiveManager(config_file)
 
-        splash.showMessage(
-            'Инициализация интерфейса',
-            Qt.AlignHCenter | Qt.AlignBottom, Qt.white
-        )
+        splash.showMessage('Инициализация интерфейса')
         app.processEvents()
 
         try:
-            app.window = GuiFormMain(manager)
+            app.window = GuiFormMain(manager, splash.showMessage)
         except:
             splash.close()
             exit()
-
-        # app.window.action_view.figGraphTime.tight_layout()
-        # app.window.action_view.figGraphTime.canvas.draw()
-        # app.window.action_view.figGraphPolar.tight_layout()
-        # app.window.action_view.figGraphPolar.canvas.draw()
 
         # rect = app.window.frameGeometry()
         # rect.moveCenter(app.desktop().availableGeometry().center())
         # app.window.move(rect.topLeft())
 
-        splash.showMessage(
-            'Загрузка завершена',
-            Qt.AlignHCenter | Qt.AlignBottom, Qt.white
-        )
+        splash.showMessage('Загрузка завершена')
         app.processEvents()
 
         splash.finish(app.window)
         app.window.show()
+
+        app.window.action_view.figGraphTime.tight_layout()
+        app.window.action_view.figGraphTime.canvas.draw()
+        app.window.action_view.figGraphPolar.tight_layout()
+        app.window.action_view.figGraphPolar.canvas.draw()
 
     QTimer.singleShot(500, create_main_window)
 
