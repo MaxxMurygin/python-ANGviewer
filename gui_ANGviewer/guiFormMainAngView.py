@@ -734,11 +734,12 @@ class Ui_guiFormMain(object):
         self.toolBar.addAction(self.buttViewer)
 
         self.retranslateUi(guiFormMain)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(guiFormMain)
 
     def retranslateUi(self, guiFormMain):
         _translate = QtCore.QCoreApplication.translate
-        guiFormMain.setWindowTitle(_translate("guiFormMain", "ANGViewer"))
+        guiFormMain.setWindowTitle(_translate("guiFormMain", "ПвНП"))
         self.SettLabelSpltSystem.setText(_translate("guiFormMain", "Система"))
         self.SettSystemStreamLabel.setText(_translate("guiFormMain", "Количество параллельных потоков для расчета"))
         self.SettCatUpdateButt.setText(_translate("guiFormMain", "Обновить"))
@@ -819,7 +820,7 @@ class Ui_guiFormMain(object):
         self.calicFilterDistanceLabelMax.setText(_translate("guiFormMain", "Max."))
         self.calicFilterByTypeBox.setTitle(_translate("guiFormMain", "Фильтровать по типу"))
         self.calicFilterByTypeCheckPayload.setText(_translate("guiFormMain", "Полезная нагрузка"))
-        self.calicFilterByTypeCheckBody.setText(_translate("guiFormMain", "Корпус ракеты"))
+        self.calicFilterByTypeCheckBody.setText(_translate("guiFormMain", "Р/Б"))
         self.calicFilterByTypeCheckDebris.setText(_translate("guiFormMain", "Прочий мусор"))
         self.calicButtCancel.setText(_translate("guiFormMain", "Отмена"))
         self.calicButtApply.setText(_translate("guiFormMain", "Применить"))
@@ -829,7 +830,7 @@ class Ui_guiFormMain(object):
         self.buttDelNoCheck.setText(_translate("guiFormMain", "Удалить неотмеченные"))
         self.viewButtUpdateCU.setText(_translate("guiFormMain", "Обновить ЦУ"))
         self.viewButtCliarCU.setText(_translate("guiFormMain", "Очистить ЦУ"))
-        self.viewButtMoveCU.setText(_translate("guiFormMain", "Переместить ЦУ"))
+        self.viewButtMoveCU.setText(_translate("guiFormMain", "Копировать ЦУ"))
         self.viewButtSieveLabel.setText(_translate("guiFormMain", "Убрать каждый:"))
         self.viewButtSieve.setText(_translate("guiFormMain", "Проредить"))
         self.tableListKA.headerItem().setText(0, _translate("guiFormMain", "NORAD"))

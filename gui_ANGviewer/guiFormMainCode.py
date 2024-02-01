@@ -131,7 +131,6 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.viewButtCliarCU.released.connect(self.action_view.clear_KA)
         self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
-        # self.viewButtUpdateCU.clicked.connect(self.thread_update_KA.start)
         self.viewButtMoveCU.clicked.connect(self.action_view.view_butt_move_cu)
 
         self.viewButtSieve.clicked.connect(self.action_view.view_butt_sieve)
@@ -155,13 +154,20 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 def loop_check_manager_state(gui_form: GuiFormMain,
                              manager: EffectiveManager,
                              ):
+    old_status = ""
+    new_status = ""
+
     while gui_form.flag_checked_state:
-        gui_form.show_massege_metod(
-            f"{manager.get_status()}  {gui_form.get_status()}")
+
+        new_status = f"{manager.get_status()}  {gui_form.get_status()}"
+
+        if old_status != new_status:
+            gui_form.show_massege_metod(new_status)
+            old_status = new_status
         # gui_form.repaint()
         sleep(0.2)
 
-    # print("loopCheckManagerState")
+    print("loopCheckManagerStateFinish")
 
 
 class ActionSettings:
@@ -328,8 +334,16 @@ class ActionSettings:
                                                      else "")
 
     def clicked_cat_update(self):
+        self.main_form.SettCatUpdateButt.setEnabled(False)
+        self.main_form.show_massege_metod("Обновление каталога")
+        self.main_form.repaint()
+
         self.main_form.manager.download_cat()
         self.configViewUpdate(self.main_form.current_config)
+
+        self.main_form.SettCatUpdateButt.setEnabled(True)
+        self.main_form.show_massege_metod("")
+        self.main_form.repaint()
 
     def clickedSave(self):
 
@@ -669,13 +683,15 @@ class ActionCalculate:
         # print("updateTleList")
 
     def calic_butt_tle_update(self):
-        self.main_form.status_gui = "Скачивание TLE Файла"
+        self.main_form.show_massege_metod("Обновление TLE Файла")
+        self.main_form.calicTLEUpdateButt.setEnabled(False)
         self.main_form.repaint()
 
         self.main_form.manager.download_tle()
         self.filter_tle_list_update(self.main_form.current_config['Path']['tle_directory'])
 
-        self.main_form.status_gui = ""
+        self.main_form.show_massege_metod("")
+        self.main_form.calicTLEUpdateButt.setEnabled(True)
         self.main_form.repaint()
 
     def calic_butt_start(self):
@@ -881,7 +897,7 @@ class ActionView:
         self.selectEffectsUnsel = [pe.Stroke(), pe.Normal()]
 
         inf_label = list(zip(["Номер", "Имя", "Идентификатор", "Страна", "Запущен", "Период",
-                              "Время начала", "Время конца", "Макс. Дальность", "Макс. Угол"],
+                              "Время начала", "Время конца", "Дальность", "Угол"],
                              ["OBJECT_NUMBER", "OBJECT_NAME", "OBJECT_ID", "COUNTRY", "LAUNCH", "PERIOD",
                               "TIME_START", "TIME_STOP", "MAX_DISTANS", "MAX_EVAL"]))
 
@@ -1166,11 +1182,12 @@ class ActionView:
         dataKA = self.main_form.manager.get_sat_info(id_ka)
 
         data_ang = dict()
+
         if ang_name.endswith('.ang'):
             data_ang = self.get_ang_info(id_ka, ang_name)
 
         for idInf, titleInf in self.important_inf.items():
-
+            #Информация об КА
             if (idInf > 5 and
                     not ang_name.endswith('.ang')):
                 break
@@ -1181,8 +1198,8 @@ class ActionView:
             item_label.setData(Qt.EditRole, titleInf[0])
             self.main_form.tableKAInfo.setItem(idInf, 0, item_label)
 
+            # Информация об орбите
             item_inf = QTableWidgetItem()
-
             if idInf <= 5:
                 item_inf.setData(Qt.EditRole, str(dataKA[titleInf[1]].values[0]))
             else:
@@ -1348,6 +1365,7 @@ class ActionView:
         Перенос целеуказаний в новую папку
         :return:
         """
+        self.main_form.show_massege_metod("Копирование данных")
         self.main_form.viewButtMoveCU.setEnabled(False)
         self.main_form.repaint()
         path = QFileDialog.getExistingDirectory(self.main_form,
@@ -1359,6 +1377,7 @@ class ActionView:
             self.main_form.manager.copy_ang_to_dst(path)
 
         self.main_form.viewButtMoveCU.setEnabled(True)
+        self.main_form.show_massege_metod("")
 
         # print("moveAng")
 

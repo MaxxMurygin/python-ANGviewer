@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ANGViewer</string>
+   <string>ПвНП</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -19,6 +19,9 @@
      <widget class="QStackedWidget" name="tabWidget">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="currentIndex">
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tabSettings">
        <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -1356,7 +1359,7 @@
                 <item>
                  <widget class="QCheckBox" name="calicFilterByTypeCheckBody">
                   <property name="text">
-                   <string>Корпус ракеты</string>
+                   <string>Р/Б</string>
                   </property>
                  </widget>
                 </item>
@@ -1519,7 +1522,7 @@
                  <item>
                   <widget class="QPushButton" name="viewButtMoveCU">
                    <property name="text">
-                    <string>Переместить ЦУ</string>
+                    <string>Копировать ЦУ</string>
                    </property>
                   </widget>
                  </item>
