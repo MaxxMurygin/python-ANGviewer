@@ -15,7 +15,6 @@ from PyQt5.QtCore import Qt, QTimer, QRect
 
 from gui_ANGviewer.guiFormMainCode import GuiFormMain, QtWidgets
 
-
 # import PyQt5
 #
 # from PyQt5 import QtCore, QtGui, QtWidgets
@@ -43,12 +42,14 @@ class GifSplashScreen(QSplashScreen):
         self.movie.stop()
         super(GifSplashScreen, self).finish(widget)
 
-    def showMessage(self, message):
+    def showMessage(self, message: str):
         super(GifSplashScreen, self).showMessage(
             message,
             Qt.AlignHCenter | Qt.AlignBottom, Qt.white
         )
         self.repaint()
+        app.processEvents()
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
@@ -59,30 +60,25 @@ if __name__ == "__main__":
     # ==================================================================
     logging.basicConfig(level=logging.DEBUG,
                         format='(%(threadName)-10s) %(message)s', )
-
     logging.getLogger('matplotlib.font_manager').disabled = True
 
     config_file: str = "currentConfigView.conf" if (os.path.exists("currentConfigView.conf")) else "config.conf"
-
-
     # ==================================================================
 
     def create_main_window():
-        global manager
 
         splash.showMessage('Инициализация модулей')
         app.processEvents()
 
-        manager = EffectiveManager(config_file)
+        current_manager = EffectiveManager(config_file)
 
         splash.showMessage('Инициализация интерфейса')
         app.processEvents()
 
         try:
-            app.window = GuiFormMain(manager, splash.showMessage)
-        except:
+            app.window = GuiFormMain(current_manager, splash.showMessage)
+        except SystemExit:
             splash.close()
-            exit()
 
         # rect = app.window.frameGeometry()
         # rect.moveCenter(app.desktop().availableGeometry().center())
@@ -98,6 +94,7 @@ if __name__ == "__main__":
         app.window.action_view.figGraphTime.canvas.draw()
         app.window.action_view.figGraphPolar.tight_layout()
         app.window.action_view.figGraphPolar.canvas.draw()
+
 
     QTimer.singleShot(500, create_main_window)
 

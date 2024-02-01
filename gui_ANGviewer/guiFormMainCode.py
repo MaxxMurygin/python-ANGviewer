@@ -1,3 +1,7 @@
+import manager
+from manager import EffectiveManager
+from gui_ANGviewer.guiFormMainAngView import *
+
 from builtins import type, print
 import os
 from copy import deepcopy
@@ -33,32 +37,22 @@ from matplotlib.dates import AutoDateLocator, ConciseDateFormatter, num2date
 
 use('Qt5Agg')
 
-import manager
-from manager import EffectiveManager
-from gui_ANGviewer.guiFormMainAngView import *
-
 
 # plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
 # date_form = DateFormatter("%H:%M:%S")
 
-
-def test(flag=False):
-    # self.buttCalicANG.setChecked(flag)
-    print("test")
-
-
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
-    def __init__(self, manager: EffectiveManager, show_massege_metod=None):
+    def __init__(self, current_manager: EffectiveManager, show_masseuse_method=None):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
         self.name_current_config = "currentConfigView.conf"
 
-        self.manager = manager
+        self.manager = current_manager
         self.current_config = self.manager.get_config()
 
         self.status_gui = "Инициализация интерфейса"
-        self.show_massege_metod = show_massege_metod
+        self.show_massage_method = show_masseuse_method
 
         self.flag_checked_state = True
         self.loop_check = threading.Thread(target=loop_check_manager_state,
@@ -102,13 +96,13 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.calicFilterByTypeCheckPayload.toggled.connect(
             lambda check_new_state:
-            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckPayload, check_new_state))
+            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckPayload))
         self.calicFilterByTypeCheckBody.toggled.connect(
             lambda check_new_state:
-            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckBody, check_new_state))
+            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckBody))
         self.calicFilterByTypeCheckDebris.toggled.connect(
             lambda check_new_state:
-            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckDebris, check_new_state))
+            self.action_calculate.least_one_mark(self.calicFilterByTypeCheckDebris))
 
         self.calicButtApply.clicked.connect(
             lambda: self.action_calculate.filter_list_apply_or_save(current_config=self.current_config,
@@ -137,7 +131,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         # self.buttSetting.triggered.connect(test)
 
-        self.show_massege_metod = self.statusbar.showMessage
+        self.show_massage_method = self.statusbar.showMessage
 
     def closeEvent(self, event):
         self.flag_checked_state = False
@@ -152,17 +146,16 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
 
 def loop_check_manager_state(gui_form: GuiFormMain,
-                             manager: EffectiveManager,
+                             current_manager: EffectiveManager,
                              ):
     old_status = ""
-    new_status = ""
 
     while gui_form.flag_checked_state:
 
-        new_status = f"{manager.get_status()}  {gui_form.get_status()}"
+        new_status = f"{current_manager.get_status()}  {gui_form.get_status()}"
 
         if old_status != new_status:
-            gui_form.show_massege_metod(new_status)
+            gui_form.show_massage_method(new_status)
             old_status = new_status
         # gui_form.repaint()
         sleep(0.2)
@@ -211,27 +204,20 @@ class ActionSettings:
             tle_ok = False
         self.main_form.calicTLEUpdateButt.setEnabled(tle_ok)
 
-    def configViewUpdate(self, current_config=dict(), firstReading=False):
+    def configViewUpdate(self, current_config=None):
         """
         Обновить поля в соответствии с currentConfig
         :param current_config:
-        :param firstReading: не используется в данной версии
         :return:
         """
+        if current_config is None:
+            current_config = dict()
+
         if not current_config:
             return
 
         self.main_form.SettCatUpdateLabel.setText(
             f"Дата формирования каталога КА  {self.main_form.manager.get_catalog_date().strftime('%d-%m-%Y %H:%M')}")
-
-        # if firstReading:
-        #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
-        # elif (self.mainForm.SettSystemStreamEdit.value()
-        #       != int(self.currentConfig["System"]['threads'])):
-        #     self.mainForm.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);")
-        # else:
-        #     self.mainForm.SettSystemStreamEdit.setValue(int(currentConfig["System"]['threads']))
-        #     self.mainForm.SettSystemStreamEdit.setStyleSheet("")
 
         self.main_form.SettSystemStreamEdit.setValue(int(current_config["System"]['threads']))
 
@@ -242,11 +228,8 @@ class ActionSettings:
 
         self.main_form.SettPathEditTLE.setText(current_config['Path']['tle_directory'])
         self.main_form.SettPathEditCAT.setText(current_config['Path']['cat_directory'])
-        # self.mainForm.SettPathEditFilterConf.setText(currentConfig['Path'][])
         self.main_form.SettPathEditANG.setText(current_config['Path']['ang_directory'])
-        # self.main_form.SettPathCheckANG.setChecked(str2bool(current_config['Path']['delete_existing']))
 
-        # self.mainForm.SettTLELoadBox.setChecked(str2bool(currentConfig['TLE']['download']))
         self.main_form.SettTLELoadLog.setText(current_config['TLE']['identity'])
         self.main_form.SettTLELoadPass.setText(current_config['TLE']['password'])
 
@@ -335,14 +318,14 @@ class ActionSettings:
 
     def clicked_cat_update(self):
         self.main_form.SettCatUpdateButt.setEnabled(False)
-        self.main_form.show_massege_metod("Обновление каталога")
+        self.main_form.show_massage_method("Обновление каталога")
         self.main_form.repaint()
 
         self.main_form.manager.download_cat()
         self.configViewUpdate(self.main_form.current_config)
 
         self.main_form.SettCatUpdateButt.setEnabled(True)
-        self.main_form.show_massege_metod("")
+        self.main_form.show_massage_method("")
         self.main_form.repaint()
 
     def clickedSave(self):
@@ -520,18 +503,18 @@ class ActionCalculate:
             self.main_form.calicFilterByTypeCheckDebris.setChecked(
                 bool(str2bool(current_config['Filter']['type_debris'])))
 
-            # self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
+            # self.main_form.calcSystemStreamEdit.setValue(int(current_config['System']['threads']))
             self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
             self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
-        except:
+        except KeyError:
             print("Ошибка чтения конфигурации")
 
-    def least_one_mark(self, currrentCheckBoxType: QtWidgets.QCheckBox, check_new_state):
+    def least_one_mark(self, currentCheckBoxType: QtWidgets.QCheckBox):
 
         if not ((self.main_form.calicFilterByTypeCheckPayload.isChecked()) or
                 (self.main_form.calicFilterByTypeCheckBody.isChecked()) or
                 (self.main_form.calicFilterByTypeCheckDebris.isChecked())):
-            currrentCheckBoxType.setChecked(Qt.Checked)
+            currentCheckBoxType.setChecked(Qt.Checked)
 
     def filter_list_update(self):
 
@@ -595,8 +578,7 @@ class ActionCalculate:
 
         filter_mold["Filter"].update(
             {'filter_by_name': "True" if (self.main_form.calicFilterNameBox.isChecked()) else "False"})
-        filter_mold["Filter"].update({'names_string':
-                                          str(self.main_form.calicFilterNameEdit.text()).
+        filter_mold["Filter"].update({'names_string': str(self.main_form.calicFilterNameEdit.text()).
                                      replace(", ", "|").replace(",", "|")})
 
         filter_mold["Filter"].update(
@@ -652,8 +634,6 @@ class ActionCalculate:
 
         :param text_select_row: Текст выбранной ячейки
         """
-        x = self.main_form.calicTemplateList.currentRow()
-        # x2 = self.main_form.tabCalic.Focus
 
         if text_select_row:
             filter_mold = read_mold_file(self.path_filter_dir, text_select_row)
@@ -683,14 +663,14 @@ class ActionCalculate:
         # print("updateTleList")
 
     def calic_butt_tle_update(self):
-        self.main_form.show_massege_metod("Обновление TLE Файла")
+        self.main_form.show_massage_method("Обновление TLE Файла")
         self.main_form.calicTLEUpdateButt.setEnabled(False)
         self.main_form.repaint()
 
         self.main_form.manager.download_tle()
         self.filter_tle_list_update(self.main_form.current_config['Path']['tle_directory'])
 
-        self.main_form.show_massege_metod("")
+        self.main_form.show_massage_method("")
         self.main_form.calicTLEUpdateButt.setEnabled(True)
         self.main_form.repaint()
 
@@ -1068,7 +1048,7 @@ class ActionView:
             for norad_id in self.all_angs.keys():
 
                 self.main_form.status_gui = (f"Построение графиков "
-                                             f"{self.main_form.tableListKA.topLevelItemCount() / len(self.all_angs) * 100:.2f}% ")
+                                             f"{self.main_form.tableListKA.topLevelItemCount() / len(self.all_angs) * 100: .2f}%")
 
                 if threading.current_thread().name == "MainThread":
                     self.main_form.repaint()
@@ -1081,8 +1061,6 @@ class ActionView:
                 current_sat = self.all_angs.get(norad_id)  # Получить анги
 
                 for ang in current_sat.keys():
-
-                    added_element = None
 
                     if len(current_sat) > 1:
 
@@ -1187,7 +1165,7 @@ class ActionView:
             data_ang = self.get_ang_info(id_ka, ang_name)
 
         for idInf, titleInf in self.important_inf.items():
-            #Информация об КА
+            # Информация об КА
             if (idInf > 5 and
                     not ang_name.endswith('.ang')):
                 break
@@ -1235,12 +1213,14 @@ class ActionView:
 
         selectedColumns = self.main_form.tableListKA.selectedItems()
 
+        if len(selectedColumns) == 0:
+            self.view_butt_selection_reset()
+
         # Заполнение информации
         if len(selectedColumns) == 1:
-
-            idKA = (int(selectedColumns[0].data(0, Qt.EditRole) #если родителя нет
+            idKA = (int(selectedColumns[0].data(0, Qt.EditRole)  # если родителя нет
                         if (selectedColumns[0].parent() is None)
-                        else selectedColumns[0].parent().data(0, Qt.EditRole)))#если родитель есть
+                        else selectedColumns[0].parent().data(0, Qt.EditRole)))  # если родитель есть
 
             ang_name = selectedColumns[0].data(1, Qt.EditRole)
 
@@ -1365,7 +1345,7 @@ class ActionView:
         Перенос целеуказаний в новую папку
         :return:
         """
-        self.main_form.show_massege_metod("Копирование данных")
+        self.main_form.show_massage_method("Копирование данных")
         self.main_form.viewButtMoveCU.setEnabled(False)
         self.main_form.repaint()
         path = QFileDialog.getExistingDirectory(self.main_form,
@@ -1377,7 +1357,7 @@ class ActionView:
             self.main_form.manager.copy_ang_to_dst(path)
 
         self.main_form.viewButtMoveCU.setEnabled(True)
-        self.main_form.show_massege_metod("")
+        self.main_form.show_massage_method("")
 
         # print("moveAng")
 
