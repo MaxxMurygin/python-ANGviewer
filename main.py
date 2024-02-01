@@ -9,14 +9,21 @@ import threading
 
 # ----------gui-----------------
 import sys
-import PyQt5
-from gui_ANGviewer.guiFormMainCode import GuiFormMain, QtWidgets
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-from PyQt5.QtWidgets import QApplication, QSplashScreen, QWidget, \
-    QMainWindow, QLabel, QGridLayout, QStyle, QDesktopWidget
+from PyQt5.QtWidgets import QSplashScreen
 from PyQt5.QtGui import QMovie
 from PyQt5.QtCore import Qt, QTimer, QRect
+
+from gui_ANGviewer.guiFormMainCode import GuiFormMain, QtWidgets
+
+
+# import PyQt5
+#
+# from PyQt5 import QtCore, QtGui, QtWidgets
+#
+# from PyQt5.QtWidgets import QApplication, QSplashScreen, QWidget, \
+#     QMainWindow, QLabel, QGridLayout, QStyle, QDesktopWidget
+# from PyQt5.QtGui import QMovie
+# from PyQt5.QtCore import Qt, QTimer, QRect
 
 
 # ==============================

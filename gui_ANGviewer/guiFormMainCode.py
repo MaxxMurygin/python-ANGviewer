@@ -1,16 +1,10 @@
-import logging
+from builtins import type, print
 import os
-import time
-import copy
+from copy import deepcopy
 
 import threading
+from time import sleep
 
-import asyncio
-
-from builtins import type, print
-# from time import sleep
-
-# import datetime
 from datetime import datetime, date
 
 import collections
@@ -18,36 +12,39 @@ import collections
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import numpy as np
-from PyQt5 import QtWidgets
 from numpy.distutils.fcompiler import str2bool
+from pandas import date_range
 
 from PyQt5.Qt import *
 from PyQt5.QtWidgets import *
 
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
-# from matplotlib.dates import DateFormatter, DayLocator, HourLocator, num2date
+# import matplotlib
+# import matplotlib.pyplot as plt
+# import matplotlib.patheffects as pe
+
+from matplotlib import (use,
+                        pyplot as plt,
+                        patheffects as pe)
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.ticker import *
-from matplotlib.dates import *
+# from matplotlib.ticker import *
+from matplotlib.dates import AutoDateLocator, ConciseDateFormatter, num2date
 
-from pandas import date_range
+use('Qt5Agg')
 
 import manager
 from manager import EffectiveManager
 from gui_ANGviewer.guiFormMainAngView import *
 
-# import time
-
-
-matplotlib.use('Qt5Agg')
-
 
 # plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
 # date_form = DateFormatter("%H:%M:%S")
+
+
+def test(flag=False):
+    # self.buttCalicANG.setChecked(flag)
+    print("test")
 
 
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
@@ -65,7 +62,18 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.flag_checked_state = True
         self.loop_check = threading.Thread(target=loop_check_manager_state,
-                                           args=(self, self.manager), name="loop_check").start()
+                                           args=(self, self.manager), name="loop_check")
+        self.loop_check.start()
+
+        self.menu_action_group = QActionGroup(self)
+
+        self.menu_action_group.addAction(self.buttSetting)
+        self.menu_action_group.addAction(self.buttCalicANG)
+        self.menu_action_group.addAction(self.buttViewer)
+
+        self.buttSetting.changed.connect(lambda: self.tabWidget.setCurrentIndex(0))
+        self.buttCalicANG.changed.connect(lambda: self.tabWidget.setCurrentIndex(1))
+        self.buttViewer.changed.connect(lambda: self.tabWidget.setCurrentIndex(2))
 
         # # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
@@ -102,8 +110,6 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
             lambda check_new_state:
             self.action_calculate.least_one_mark(self.calicFilterByTypeCheckDebris, check_new_state))
 
-
-
         self.calicButtApply.clicked.connect(
             lambda: self.action_calculate.filter_list_apply_or_save(current_config=self.current_config,
                                                                     flag_save_as_mold=False)
@@ -130,20 +136,20 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.viewButtSieve.clicked.connect(self.action_view.view_butt_sieve)
 
-        self.buttSetting.triggered.connect(self.test)
+        # self.buttSetting.triggered.connect(test)
 
         self.show_massege_metod = self.statusbar.showMessage
 
     def closeEvent(self, event):
         self.flag_checked_state = False
+        self.loop_check.join()
 
     def get_status(self):
         return self.status_gui
 
-    def test(self, flag=False):
-        print(threading.enumerate())
-        x = threading.enumerate()[0]
-        print("test")
+    def set_tab_view_current_index(self, currentIndex):
+        self.tabWidget.setCurrentIndex(currentIndex)
+        self.menu_action_group.actions()[currentIndex].setChecked(True)
 
 
 def loop_check_manager_state(gui_form: GuiFormMain,
@@ -153,7 +159,7 @@ def loop_check_manager_state(gui_form: GuiFormMain,
         gui_form.show_massege_metod(
             f"{manager.get_status()}  {gui_form.get_status()}")
         # gui_form.repaint()
-        time.sleep(0.2)
+        sleep(0.2)
 
     # print("loopCheckManagerState")
 
@@ -186,7 +192,9 @@ class ActionSettings:
                 (not self.main_form.current_config['Path']['tle_directory']) or
                 (not self.main_form.current_config['Path']['cat_directory']) or
                 (not self.main_form.current_config['Path']['ang_directory'])):
-            self.main_form.tabWidget.setCurrentIndex(0)
+            # self.main_form.tabWidget.setCurrentIndex(0)
+            self.main_form.set_tab_view_current_index(0)
+            self.main_form.buttSetting.toggled.emit(True)
             coord_and_dir_ok = False
         self.main_form.tabCalic.setEnabled(coord_and_dir_ok)
         self.main_form.tabViewer.setEnabled(coord_and_dir_ok)
@@ -445,61 +453,64 @@ class ActionCalculate:
         if not bool(current_config):
             return
 
-        self.main_form.calicPreFilterBox.setChecked(str2bool(current_config['Filter']['filter_enabled']))
+        try:
+            self.main_form.calicPreFilterBox.setChecked(str2bool(current_config['Filter']['filter_enabled']))
 
-        check_filter_name = str2bool(current_config['Filter']['filter_by_name'])
-        self.main_form.calicFilterNameBox.setChecked(bool(check_filter_name))
-        self.main_form.calicFilterNameEdit.setText(str(current_config['Filter']['names_string']).
-                                                   replace("|",", "))
+            check_filter_name = str2bool(current_config['Filter']['filter_by_name'])
+            self.main_form.calicFilterNameBox.setChecked(bool(check_filter_name))
+            self.main_form.calicFilterNameEdit.setText(str(current_config['Filter']['names_string']).
+                                                       replace("|", ", "))
 
-        check_filter_period = str2bool(current_config['Filter']['filter_by_period'])
-        self.main_form.calicFilterPeriodBox.setChecked(bool(check_filter_period))
-        self.main_form.calicFilterPeriodEditMin.setValue(float(current_config['Filter']['min_period']))
-        self.main_form.calicFilterPeriodEditMax.setValue(float(current_config['Filter']['max_period']))
+            check_filter_period = str2bool(current_config['Filter']['filter_by_period'])
+            self.main_form.calicFilterPeriodBox.setChecked(bool(check_filter_period))
+            self.main_form.calicFilterPeriodEditMin.setValue(float(current_config['Filter']['min_period']))
+            self.main_form.calicFilterPeriodEditMax.setValue(float(current_config['Filter']['max_period']))
 
-        if current_config['TLE']['user_file']:
-            if self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
-                                                     Qt.MatchRegExp | Qt.MatchWildcard):
+            if current_config['TLE']['user_file']:
+                if self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
+                                                         Qt.MatchRegExp | Qt.MatchWildcard):
 
-                self.main_form.calicTLECastomRadio.setChecked(True)
-                self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
-                                                      Qt.MatchRegExp | Qt.MatchWildcard)[0].setSelected(True)
+                    self.main_form.calicTLECastomRadio.setChecked(True)
+                    self.main_form.calicTLEList.findItems(current_config['TLE']['user_file'],
+                                                          Qt.MatchRegExp | Qt.MatchWildcard)[0].setSelected(True)
+                else:
+                    self.main_form.calicTLEList.setCurrentRow(-1)
             else:
-                self.main_form.calicTLEList.setCurrentRow(-1)
-        else:
-            self.main_form.calicTLEAllRadio.setChecked(True)
+                self.main_form.calicTLEAllRadio.setChecked(True)
 
-        self.main_form.calicFilterTimeEditMin.setDateTime(
-            datetime.strptime(current_config['Basic']['t_begin'], "%Y-%m-%d %H:%M:%S"))
-        self.main_form.calicFilterTimeEditMax.setDateTime(
-            datetime.strptime(current_config['Basic']['t_end'], "%Y-%m-%d %H:%M:%S"))
+            self.main_form.calicFilterTimeEditMin.setDateTime(
+                datetime.strptime(current_config['Basic']['t_begin'], "%Y-%m-%d %H:%M:%S"))
+            self.main_form.calicFilterTimeEditMax.setDateTime(
+                datetime.strptime(current_config['Basic']['t_end'], "%Y-%m-%d %H:%M:%S"))
 
-        self.main_form.calicFilterElevationBox.setChecked(
-            bool(str2bool(current_config['Filter']['filter_by_elevation'])))
-        self.main_form.calicFilterElevationEditMin.setValue(int(current_config['Filter']['min_elevation']))
-        self.main_form.calicFilterElevationEditMax.setValue(int(current_config['Filter']['max_elevation']))
+            self.main_form.calicFilterElevationBox.setChecked(
+                bool(str2bool(current_config['Filter']['filter_by_elevation'])))
+            self.main_form.calicFilterElevationEditMin.setValue(int(current_config['Filter']['min_elevation']))
+            self.main_form.calicFilterElevationEditMax.setValue(int(current_config['Filter']['max_elevation']))
 
-        self.main_form.calicFilterSunliteBox.setChecked(
-            bool(str2bool(current_config['Filter']['filter_by_sunlite'])))
-        self.main_form.calicFilterSunliteEdit.setValue(float(current_config['Filter']['sunlite']))
+            self.main_form.calicFilterSunliteBox.setChecked(
+                bool(str2bool(current_config['Filter']['filter_by_sunlite'])))
+            self.main_form.calicFilterSunliteEdit.setValue(float(current_config['Filter']['sunlite']))
 
-        self.main_form.calicFilterDistanceBox.setChecked(
-            bool(str2bool(current_config['Filter']['filter_by_distance'])))
-        self.main_form.calicFilterDistanceEditMin.setValue(int(current_config['Filter']['min_distance']))
-        self.main_form.calicFilterDistanceEditMax.setValue(int(current_config['Filter']['max_distance']))
+            self.main_form.calicFilterDistanceBox.setChecked(
+                bool(str2bool(current_config['Filter']['filter_by_distance'])))
+            self.main_form.calicFilterDistanceEditMin.setValue(int(current_config['Filter']['min_distance']))
+            self.main_form.calicFilterDistanceEditMax.setValue(int(current_config['Filter']['max_distance']))
 
-        self.main_form.calicFilterByTypeBox.setChecked(
-            bool(str2bool(current_config['Filter']['filter_by_type'])))
-        self.main_form.calicFilterByTypeCheckBody.setChecked(
-            bool(str2bool(current_config['Filter']['type_body'])))
-        self.main_form.calicFilterByTypeCheckPayload.setChecked(
-            bool(str2bool(current_config['Filter']['type_payload'])))
-        self.main_form.calicFilterByTypeCheckDebris.setChecked(
-            bool(str2bool(current_config['Filter']['type_debris'])))
+            self.main_form.calicFilterByTypeBox.setChecked(
+                bool(str2bool(current_config['Filter']['filter_by_type'])))
+            self.main_form.calicFilterByTypeCheckBody.setChecked(
+                bool(str2bool(current_config['Filter']['type_body'])))
+            self.main_form.calicFilterByTypeCheckPayload.setChecked(
+                bool(str2bool(current_config['Filter']['type_payload'])))
+            self.main_form.calicFilterByTypeCheckDebris.setChecked(
+                bool(str2bool(current_config['Filter']['type_debris'])))
 
-        # self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
-        self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
-        self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
+            # self.main_form.calicSystemStreamEdit.setValue(int(current_config['System']['threads']))
+            self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
+            self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
+        except:
+            print("Ошибка чтения конфигурации")
 
     def least_one_mark(self, currrentCheckBoxType: QtWidgets.QCheckBox, check_new_state):
 
@@ -521,6 +532,9 @@ class ActionCalculate:
                 item_file = QListWidgetItem()
                 item_file.setText(file)
                 self.main_form.calicTemplateList.addItem(item_file)
+
+        self.main_form.calicTemplateList.setCurrentRow(-1)
+        # self.main_form.tabCalic.setFocus(self.main_form.calicButtCancel)
 
     def filter_list_apply_or_save(self, mold_name='', current_config=None, flag_save_as_mold=True):
         """
@@ -569,7 +583,7 @@ class ActionCalculate:
             {'filter_by_name': "True" if (self.main_form.calicFilterNameBox.isChecked()) else "False"})
         filter_mold["Filter"].update({'names_string':
                                           str(self.main_form.calicFilterNameEdit.text()).
-                                      replace(", ","|").replace(",","|")})
+                                     replace(", ", "|").replace(",", "|")})
 
         filter_mold["Filter"].update(
             {'filter_by_period': "True" if (self.main_form.calicFilterPeriodBox.isChecked()) else "False"})
@@ -591,14 +605,13 @@ class ActionCalculate:
         filter_mold["Filter"].update({'max_distance': str(self.main_form.calicFilterDistanceEditMax.value())})
 
         filter_mold["Filter"].update(
-            {'filter_by_type': "True" if (self.main_form.calicFilterByTypeBox .isChecked()) else "False"})
+            {'filter_by_type': "True" if (self.main_form.calicFilterByTypeBox.isChecked()) else "False"})
         filter_mold["Filter"].update(
             {'type_body': "True" if (self.main_form.calicFilterByTypeCheckBody.isChecked()) else "False"})
         filter_mold["Filter"].update(
             {'type_payload': "True" if (self.main_form.calicFilterByTypeCheckPayload.isChecked()) else "False"})
         filter_mold["Filter"].update(
             {'type_debris': "True" if (self.main_form.calicFilterByTypeCheckDebris.isChecked()) else "False"})
-
 
         # if not ("System" in filter_mold.keys()):
         #     filter_mold.update({"System": dict()})
@@ -625,6 +638,9 @@ class ActionCalculate:
 
         :param text_select_row: Текст выбранной ячейки
         """
+        x = self.main_form.calicTemplateList.currentRow()
+        # x2 = self.main_form.tabCalic.Focus
+
         if text_select_row:
             filter_mold = read_mold_file(self.path_filter_dir, text_select_row)
             self.calic_view_update(filter_mold)
@@ -653,8 +669,14 @@ class ActionCalculate:
         # print("updateTleList")
 
     def calic_butt_tle_update(self):
+        self.main_form.status_gui = "Скачивание TLE Файла"
+        self.main_form.repaint()
+
         self.main_form.manager.download_tle()
         self.filter_tle_list_update(self.main_form.current_config['Path']['tle_directory'])
+
+        self.main_form.status_gui = ""
+        self.main_form.repaint()
 
     def calic_butt_start(self):
         """
@@ -870,7 +892,8 @@ class ActionView:
         #                  args=()).start()
 
         if len(self.all_angs):
-            self.main_form.tabWidget.setCurrentIndex(2)
+            # self.main_form.tabWidget.setCurrentIndex(2)
+            self.main_form.set_tab_view_current_index(2)
 
     def createGraphPolar(self):
 
@@ -1022,7 +1045,7 @@ class ActionView:
         if threading.current_thread().name == "MainThread":
             self.main_form.repaint()
 
-        self.all_angs = copy.deepcopy(self.main_form.manager.get_ang_dict_with_data())
+        self.all_angs = deepcopy(self.main_form.manager.get_ang_dict_with_data())
 
         if bool(self.all_angs):
 
@@ -1091,7 +1114,7 @@ class ActionView:
                     self.ang_Line[ang][2].set_color(self.ang_Line[ang][0].get_color())
                     self.ang_Line[ang][4].set_color(self.ang_Line[ang][0].get_color())
 
-                    if added_element != None:
+                    if added_element is not None:
                         added_element.setBackground(2,
                                                     # QColor(self.ang_Line[ang][0].get_color() if
                                                     #        len(df_shine) != 0
@@ -1112,8 +1135,8 @@ class ActionView:
             self.figGraphTime.canvas.draw()
             self.ToolGraphTime.update()
         else:
-            time.sleep(0.1)
-            self.main_form.tabWidget.setCurrentIndex(1)
+            sleep(0.1)
+            self.main_form.set_tab_view_current_index(1)
             self.main_form.tabViewer.setEnabled(True)
             print("amgs_isEmpty")
 
@@ -1197,9 +1220,10 @@ class ActionView:
 
         # Заполнение информации
         if len(selectedColumns) == 1:
-            idKA = (int(selectedColumns[0].data(0, Qt.EditRole)
+
+            idKA = (int(selectedColumns[0].data(0, Qt.EditRole) #если родителя нет
                         if (selectedColumns[0].parent() is None)
-                        else selectedColumns[0].parent().data(0, Qt.EditRole)))
+                        else selectedColumns[0].parent().data(0, Qt.EditRole)))#если родитель есть
 
             ang_name = selectedColumns[0].data(1, Qt.EditRole)
 
