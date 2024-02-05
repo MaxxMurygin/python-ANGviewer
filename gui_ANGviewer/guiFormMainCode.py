@@ -1,3 +1,5 @@
+import pandas as pd
+
 import manager
 from manager import EffectiveManager
 from gui_ANGviewer.guiFormMainAngView import *
@@ -17,14 +19,10 @@ from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import numpy as np
 from numpy.distutils.fcompiler import str2bool
-from pandas import date_range
+from pandas import date_range, NaT
 
 from PyQt5.Qt import *
 from PyQt5.QtWidgets import *
-
-# import matplotlib
-# import matplotlib.pyplot as plt
-# import matplotlib.patheffects as pe
 
 from matplotlib import (use,
                         pyplot as plt,
@@ -32,7 +30,6 @@ from matplotlib import (use,
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-# from matplotlib.ticker import *
 from matplotlib.dates import AutoDateLocator, ConciseDateFormatter, num2date
 
 use('Qt5Agg')
@@ -42,7 +39,19 @@ use('Qt5Agg')
 # date_form = DateFormatter("%H:%M:%S")
 
 class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
-    def __init__(self, current_manager: EffectiveManager, show_masseuse_method=None):
+    """
+    Окно графического интерфейса
+    """
+
+    def __init__(self, current_manager: EffectiveManager = None, show_masseuse_method=None):
+        """
+
+        :param current_manager: Математический модуль
+        :param show_masseuse_method: Метод вывода состояния при загрузке
+        """
+        if current_manager is None or show_masseuse_method is None:
+            raise ValueError("Ошибка создания GuiFormMain")
+
         QMainWindow.__init__(self)
         self.setupUi(self)
 
@@ -50,6 +59,10 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         self.manager = current_manager
         self.current_config = self.manager.get_config()
+
+        # если ошибка в чтении конфигурации
+        if self.current_config is None:
+            raise ValueError("Ошибка создания ошибка в чтении конфигурации")
 
         self.status_gui = "Инициализация интерфейса"
         self.show_massage_method = show_masseuse_method
@@ -59,6 +72,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
                                            args=(self, self.manager), name="loop_check")
         self.loop_check.start()
 
+        # ------------------------------------------------------------------
         self.menu_action_group = QActionGroup(self)
 
         self.menu_action_group.addAction(self.buttSetting)
@@ -69,7 +83,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.buttCalicANG.changed.connect(lambda: self.tabWidget.setCurrentIndex(1))
         self.buttViewer.changed.connect(lambda: self.tabWidget.setCurrentIndex(2))
 
-        # # ----------------------------Setting--------------------------------
+        # ----------------------------Setting--------------------------------
         self.actionSettings = ActionSettings(self)
 
         self.SettCatUpdateButt.clicked.connect(self.actionSettings.clicked_cat_update)
@@ -116,7 +130,7 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
 
         # ----------------------------View---------------------------------
         self.action_view = ActionView(self)
-        self.thread_update_KA = threading.Thread(target=self.action_view.updateKAData,
+        self.thread_update_KA = threading.Thread(target=self.action_view.update_ka_data,
                                                  args=())
 
         self.tableListKA.itemSelectionChanged.connect(self.action_view.slotSelectKaList)
@@ -124,30 +138,54 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         self.buttOnlyCheck.clicked.connect(self.action_view.view_butt_show_only_marked)
 
         self.viewButtCliarCU.released.connect(self.action_view.clear_KA)
-        self.viewButtUpdateCU.clicked.connect(self.action_view.updateKAData)
+        self.viewButtUpdateCU.clicked.connect(self.action_view.update_ka_data)
         self.viewButtMoveCU.clicked.connect(self.action_view.view_butt_move_cu)
 
         self.viewButtSieve.clicked.connect(self.action_view.view_butt_sieve)
 
-        # self.buttSetting.triggered.connect(test)
-
+        # после загрузки переключаем метод вывода сообщений
         self.show_massage_method = self.statusbar.showMessage
 
     def closeEvent(self, event):
         self.flag_checked_state = False
         self.loop_check.join()
 
-    def get_status(self):
+    def get_status(self) -> str:
+        """
+        Выдача статуса граф интерфейса
+        :return: Статус
+        """
         return self.status_gui
 
-    def set_tab_view_current_index(self, currentIndex):
+    def set_tab_view_current_index(self, currentIndex: int = 0):
+        """
+        Переключение панелей на индекс
+        :param currentIndex:
+        :return:
+        """
+
+        if currentIndex < 0 or currentIndex > 2:
+            return
+
         self.tabWidget.setCurrentIndex(currentIndex)
         self.menu_action_group.actions()[currentIndex].setChecked(True)
 
 
-def loop_check_manager_state(gui_form: GuiFormMain,
-                             current_manager: EffectiveManager,
+def loop_check_manager_state(gui_form: GuiFormMain = None,
+                             current_manager: EffectiveManager = None,
                              ):
+    """
+    Функция опроса и вывода состояния
+
+    Статус выбродится только если он изменился
+    :param gui_form: Графический интерфейс
+    :param current_manager: ядро расчётов
+    :return:
+    """
+
+    if gui_form is None or current_manager is None:
+        return None
+
     old_status = ""
 
     while gui_form.flag_checked_state:
@@ -164,8 +202,18 @@ def loop_check_manager_state(gui_form: GuiFormMain,
 
 
 class ActionSettings:
-    def __init__(self, main_form: GuiFormMain):
+    """
+    Клас взаимодействия с окном настроек
+    """
+
+    def __init__(self, main_form: GuiFormMain = None):
+        """
+        Конструктор класса обработки взаимодействий с окном настроек
+        :param main_form: Экземпляр главной формы
+        """
         # print("__init__ actionSettings")
+        if main_form is None:
+            raise ValueError("Ошибка создания ActionSettings")
 
         self.main_form = main_form
 
@@ -182,29 +230,34 @@ class ActionSettings:
             self.clickedSave()
 
     def check_enable_calic(self):
-
+        """
+        Установить доступность элементов
+        управления в соответствии с конфигом
+        :return:
+        """
+        # Проверка заполнения координат
         coord_and_dir_ok = True
         if ((not self.main_form.current_config['Coordinates']['lat']) or
                 (not self.main_form.current_config['Coordinates']['lon']) or
                 (not self.main_form.current_config['Coordinates']['height']) or
                 (not self.main_form.current_config['Basic']['horizon']) or
-                (not self.main_form.current_config['Path']['tle_directory']) or
-                (not self.main_form.current_config['Path']['cat_directory']) or
+                # (not self.main_form.current_config['Path']['tle_directory']) or
+                # (not self.main_form.current_config['Path']['cat_directory']) or
                 (not self.main_form.current_config['Path']['ang_directory'])):
             # self.main_form.tabWidget.setCurrentIndex(0)
             self.main_form.set_tab_view_current_index(0)
-            self.main_form.buttSetting.toggled.emit(True)
             coord_and_dir_ok = False
         self.main_form.tabCalic.setEnabled(coord_and_dir_ok)
         self.main_form.tabViewer.setEnabled(coord_and_dir_ok)
 
+        # Проверка заполнения TLE Директории
         tle_ok = True
         if ((not self.main_form.current_config['TLE']['identity']) or
                 (not self.main_form.current_config['TLE']['identity'])):
             tle_ok = False
         self.main_form.calicTLEUpdateButt.setEnabled(tle_ok)
 
-    def configViewUpdate(self, current_config=None):
+    def configViewUpdate(self, current_config: dict[str, dict] = None):
         """
         Обновить поля в соответствии с currentConfig
         :param current_config:
@@ -235,12 +288,17 @@ class ActionSettings:
 
         self.check_enable_calic()
 
-    def __getPathDir__(self) -> str:
+    def __get_path_dir__(self) -> str:
+        """
+        Вызов Диалогового окна для указания имени директорий\n
+        директория папка находится в директории программы
+        :return:
+        """
 
         cwd = os.getcwd()
         path = os.path.normpath(QFileDialog.getExistingDirectory(self.main_form,
                                                                  "Open Directory",
-                                                                 os.getcwd(),
+                                                                 cwd,
                                                                  QFileDialog.ShowDirsOnly |
                                                                  QFileDialog.DontResolveSymlinks |
                                                                  QFileDialog.DontUseNativeDialog
@@ -251,6 +309,11 @@ class ActionSettings:
         return path.replace(cwd, '')[1:]
 
     def checkApplyConfig(self):
+        """
+        Проверка изменения конфига
+
+        :return:
+        """
 
         self.main_form.SettSystemStreamEdit.setStyleSheet("background-color: rgb(255, 0, 0);" if
                                                           (self.main_form.SettSystemStreamEdit.value() != int(
@@ -317,6 +380,12 @@ class ActionSettings:
                                                      else "")
 
     def clicked_cat_update(self):
+        """
+        Обработка нажатия кнопки:\n
+        Обновление каталога аппаратов
+        :return:
+        """
+
         self.main_form.SettCatUpdateButt.setEnabled(False)
         self.main_form.show_massage_method("Обновление каталога")
         self.main_form.repaint()
@@ -329,10 +398,18 @@ class ActionSettings:
         self.main_form.repaint()
 
     def clickedSave(self):
+        """
+        Обработка нажатия кнопки:\n
+        Сохранение и применение настроек
+        :return:
+        """
+        if not self.main_form.current_config:
+            print("Отсутствует файл конфигурации")
+            return
 
         self.main_form.SettButtSeve.setEnabled(False)
-        # confi = self.currentConfig
 
+        # Коректирование конфига
         self.main_form.current_config["System"]['threads'] = str(self.main_form.SettSystemStreamEdit.value())
 
         self.main_form.current_config['Coordinates']['lat'] = str(self.main_form.SettCoordSpinBoxLat.value())
@@ -351,48 +428,69 @@ class ActionSettings:
         self.main_form.current_config['TLE']['identity'] = str(self.main_form.SettTLELoadLog.text())
         self.main_form.current_config['TLE']['password'] = str(self.main_form.SettTLELoadPass.text())
 
+        # применение конфига
         self.main_form.manager.set_config(self.main_form.current_config)
+        # Сохраниие конфига
         self.main_form.manager.save_config_to_file(self.main_form.name_current_config)
 
+        # Загрузка конфига
         self.main_form.current_config = self.main_form.manager.get_config()
 
-        if not self.main_form.current_config:
-            print("Упс конфига нифига")
-            self.main_form.SettButtSeve.setEnabled(True)
-            return
-
+        # Проверка конфига и отображение
         self.checkApplyConfig()
         self.configViewUpdate(self.main_form.current_config)
 
         self.main_form.SettButtSeve.setEnabled(True)
 
     def clickedCancel(self):
+        """
+        Обработка нажатия кнопки:\n
+        Выбрать отмены изменений
+        :return:
+        """
         self.configViewUpdate(self.main_form.current_config)
 
     def setPathTLE(self):
-        path = self.__getPathDir__()
+        path = self.__get_path_dir__()
         if path != "Err":
             self.main_form.SettPathEditTLE.setText(path)
 
     def setPathCAT(self):
-        path = self.__getPathDir__()
+        path = self.__get_path_dir__()
         if path != "Err":
             self.main_form.SettPathEditCAT.setText(path)
 
     def setPathConf(self):
-        path = self.__getPathDir__()
+        path = self.__get_path_dir__()
         if path != "Err":
             self.main_form.SettPathEditFilterConf.setText(path)
 
     def setPathANG(self):
-        path = self.__getPathDir__()
+        """
+        Обработка нажатия кнопки:\n
+        Выбрать директорию ANG файлов
+        :return:
+        """
+
+        path = self.__get_path_dir__()
         if path != "Err":
             self.main_form.SettPathEditANG.setText(path)
 
 
 class ActionCalculate:
-    def __init__(self, main_form: GuiFormMain):
+    """
+    Клас взаимодействия с окном расчёта и фильтрации
+    """
+
+    def __init__(self, main_form: GuiFormMain = None):
         # print("__init__ actionCalic")
+        """
+        Конструктор класса обработки взаимодействий с окном расчёта
+        :param main_form: Экземпляр главной формы
+        """
+
+        if main_form is None:
+            raise ValueError("Ошибка создания ActionCalculate")
 
         self.path_filter_dir = "viewFilterTemplates"
 
@@ -445,9 +543,14 @@ class ActionCalculate:
         self.main_form.calicFilterDistanceEditMax.valueChanged.connect(
             lambda value: self.main_form.calicFilterDistanceEditMin.setMaximum(value))
 
-    def calic_view_update(self, current_config):
+    def calic_view_update(self, current_config: dict[str, dict] = None):
+        """
+        Заполнение полей согласно фильтру
+        :param current_config:
+        :return:
+        """
 
-        if not bool(current_config):
+        if current_config is None:
             return
 
         try:
@@ -506,10 +609,15 @@ class ActionCalculate:
             # self.main_form.calcSystemStreamEdit.setValue(int(current_config['System']['threads']))
             self.main_form.calicCheckClearCuDir.setChecked(str2bool(current_config['Path']['delete_existing']))
             self.main_form.calicCheckCalculatePhase.setChecked(str2bool(current_config['Basic']['calculate_phase']))
-        except KeyError:
-            print("Ошибка чтения конфигурации")
+        except KeyError as e:
+            print(f"Ошибка чтения конфигурации Ключ {e}")
 
     def least_one_mark(self, currentCheckBoxType: QtWidgets.QCheckBox):
+        """
+        Механизм заперта снятия последней галочки в типах объектов
+        :param currentCheckBoxType: CheckBox котрый вызвал событие
+        :return:
+        """
 
         if not ((self.main_form.calicFilterByTypeCheckPayload.isChecked()) or
                 (self.main_form.calicFilterByTypeCheckBody.isChecked()) or
@@ -517,9 +625,17 @@ class ActionCalculate:
             currentCheckBoxType.setChecked(Qt.Checked)
 
     def filter_list_update(self):
+        """
+        Обновление списка сохранённых фильтров
+        :return:
+        """
+
+        if not self.path_filter_dir:
+            return
 
         self.main_form.calicTemplateList.clear()
 
+        # Если директории с фильтрами нет Создаём и выходим
         if not os.path.exists(self.path_filter_dir):
             os.mkdir(os.path.join(os.getcwd(), self.path_filter_dir))
             return
@@ -533,7 +649,8 @@ class ActionCalculate:
         self.main_form.calicTemplateList.setCurrentRow(-1)
         # self.main_form.tabCalic.setFocus(self.main_form.calicButtCancel)
 
-    def filter_list_apply_or_save(self, mold_name='', current_config=None, flag_save_as_mold=True):
+    def filter_list_apply_or_save(self, mold_name: str = '', current_config: dict[str, dict] = None,
+                                  flag_save_as_mold: bool = True):
         """
         Применение параметров фильтрации или сохранение в шаблон
         :param mold_name: имя шаблона фильтра если flag_save_as_mold = True
@@ -578,8 +695,10 @@ class ActionCalculate:
 
         filter_mold["Filter"].update(
             {'filter_by_name': "True" if (self.main_form.calicFilterNameBox.isChecked()) else "False"})
-        filter_mold["Filter"].update({'names_string': str(self.main_form.calicFilterNameEdit.text()).
-                                     replace(", ", "|").replace(",", "|")})
+
+        filter_mold["Filter"].update({'names_string':
+            "|".join(
+                word.strip() for word in self.main_form.calicFilterNameEdit.text().split(",") if word != " ")})
 
         filter_mold["Filter"].update(
             {'filter_by_period': "True" if (self.main_form.calicFilterPeriodBox.isChecked()) else "False"})
@@ -628,16 +747,20 @@ class ActionCalculate:
 
         # print("seveFilterMold")
 
-    def filter_list_select(self, text_select_row=''):
+    def filter_list_select(self, text_select_row: str = None):
         """
-        Подгрузка выбранной конфигурации фильтров
+        Заполние таблицы с фильтрами конфигурации фильтров
 
         :param text_select_row: Текст выбранной ячейки
         """
 
         if text_select_row:
             filter_mold = read_mold_file(self.path_filter_dir, text_select_row)
-            self.calic_view_update(filter_mold)
+            if filter_mold is None:
+                self.filter_list_update()
+                return
+            else:
+                self.calic_view_update(filter_mold)
 
         self.main_form.calicTemplateButDel.setEnabled(bool(text_select_row))
         self.main_form.calicTemplateButSeve.setEnabled(bool(text_select_row))
@@ -648,7 +771,15 @@ class ActionCalculate:
         #         filter_mold = read_mold_file(self.path_filter_dir, selected_items[0].text())
         #         self.calic_view_update(filter_mold)
 
-    def filter_tle_list_update(self, path_tle_dir: str):
+    def filter_tle_list_update(self, path_tle_dir: str = None):
+        """
+        Заполние таблицы с фильтрами TLE файлами
+        :param path_tle_dir: Путь к директории с TLE файлами
+        :return:
+        """
+
+        if path_tle_dir is None or not os.path.exists(path_tle_dir):
+            return
 
         self.main_form.calicTLELableDate.setText(
             f"от {self.main_form.manager.get_full_tle_date().strftime('%d-%m-%Y %H:%M')}")
@@ -663,6 +794,12 @@ class ActionCalculate:
         # print("updateTleList")
 
     def calic_butt_tle_update(self):
+        """
+        Обработка нажатия кнопки: \n
+        Обновление файла начальных условий
+        :return:
+        """
+
         self.main_form.show_massage_method("Обновление TLE Файла")
         self.main_form.calicTLEUpdateButt.setEnabled(False)
         self.main_form.repaint()
@@ -676,6 +813,7 @@ class ActionCalculate:
 
     def calic_butt_start(self):
         """
+        Обработка нажатия кнопки: \n
         Начать расчёт целеуказаний
         :return:
         """
@@ -699,19 +837,22 @@ class ActionCalculate:
 
         # print("calicStart")
 
-    def calic_process_calculate(self, tle_file: str):
+    def calic_process_calculate(self, tle_file: str = None):
         """
         Функфия для запуска расчёта в отдельном потоке
         :param tle_file: Имя Tle-файла для расчёта
         :return:
         """
+        if tle_file is None:
+            return
+
         self.main_form.calicStartButt.setEnabled(False)
         self.main_form.calicStopButt.setEnabled(True)
         self.main_form.tabViewer.setEnabled(False)
 
         # print("Start Calic")
         self.main_form.manager.calculate(tle_file)
-        self.main_form.action_view.updateKAData()
+        self.main_form.action_view.update_ka_data()
         # print("finish Calic")
 
         self.main_form.calicStartButt.setEnabled(True)
@@ -720,49 +861,69 @@ class ActionCalculate:
         self.main_form.tabViewer.setEnabled(True)
 
     def calic_butt_stop(self):
+        """
+        Обработка нажатия кнопки: \n
+        Отправить сигнал об останновки расчёта
+        :return:
+        """
         self.main_form.manager.terminate()
 
     def calic_butt_clear_ang_dir(self):
+        """
+        Обработка нажатия кнопки: \n
+        Удаление насчитанных целеуказаний
+        :return:
+        """
         self.main_form.manager.delete_all()
-        self.main_form.action_view.updateKAData()
+        self.main_form.action_view.update_ka_data()
 
     def calic_butt_filter_save(self):
         """
+        Обработка нажатия кнопки: \n
         Сохранить изменения выбранного шаблона
         :return:
         """
 
         selected_items = self.main_form.calicTemplateList.selectedItems()
-        if len(selected_items):
+        if len(selected_items) == 1:
             if selected_items[0].text().find('.conf') != -1:
                 self.filter_list_apply_or_save(selected_items[0].text())
         # print("calicButtFilterSave")
 
     def calic_butt_update_all_lists(self):
         """
+        Обработка нажатия кнопки: \n
         Пересканировать каталоги шаблонов и Tle файлов с последующим
         обновлением списков
         :return:
         """
 
+        # Сохранить выбранную строку таблицы с шаблонами
         selected_items_mold = self.main_form.calicTemplateList.selectedItems()
-        if len(selected_items_mold):
+        if len(selected_items_mold) == 1:
             selected_items_mold = selected_items_mold[0].text()
 
+        # Заполнение таблицы с шаблонами
         self.filter_list_update()
 
+        # если был выбранный элемент выберем его повторно
         if selected_items_mold:
             selected_items_mold = self.main_form.calicTemplateList.findItems(
                 selected_items_mold, Qt.MatchRegExp | Qt.MatchWildcard)
             if len(selected_items_mold):
                 selected_items_mold[0].setSelected(True)
 
+        # =======================================================================
+
+        # Сохранить выбранную строку
         selected_items_tle = self.main_form.calicTLEList.selectedItems()
-        if len(selected_items_tle):
+        if len(selected_items_tle) == 1:
             selected_items_tle = selected_items_tle[0].text()
 
+        # Заполнение таблицы с TLE
         self.filter_tle_list_update(self.main_form.current_config['Path']['tle_directory'])
 
+        # если был выбранный элемент выберем его повторно
         if selected_items_tle:
             selected_items_tle = self.main_form.calicTLEList.findItems(
                 selected_items_tle, Qt.MatchRegExp | Qt.MatchWildcard)
@@ -771,6 +932,7 @@ class ActionCalculate:
 
     def calic_butt_filter_save_as(self):
         """
+        Обработка нажатия кнопки: \n
         Сохранить установленный шаблон как file_name
         :return:
         """
@@ -784,19 +946,24 @@ class ActionCalculate:
 
     def calic_butt_filter_del(self):
         """
+        Обработка нажатия кнопки: \n
         Удалить выбранный шаблон
         :return:
         """
         selected_items = self.main_form.calicTemplateList.selectedItems()
-        if len(selected_items) == 1:
-            if selected_items[0].text().find('.conf') != -1:
-                os.remove(os.getcwd() + "/" + self.path_filter_dir + "/" + selected_items[0].text())
-                self.filter_list_update()
+
+        if len(selected_items) != 1:
+            return
+
+        if selected_items[0].text().find('.conf') != -1:
+            os.remove(os.getcwd() + "/" + self.path_filter_dir + "/" + selected_items[0].text())
+            self.filter_list_update()
 
         # print("calicButtFilterDel")
 
     def calic_butt_filter_cansel(self):
         """
+        Обработка нажатия кнопки: \n
         Установить последний использованный шаблон
         :return:
         """
@@ -804,6 +971,11 @@ class ActionCalculate:
         self.calic_view_update(self.main_form.current_config)
 
     def calc_butt_data_time_now(self):
+        """
+        Обработка нажатия кнопки: \n
+        Установить текущее астрономическое время для расчёта
+        :return:
+        """
 
         # d_date_time = (self.main_form.calicFilterTimeEditMin.dateTime().
         #                secsTo(self.main_form.calicFilterTimeEditMax.dateTime()))
@@ -819,17 +991,38 @@ class ActionCalculate:
         self.main_form.calicFilterTimeEditMax.setDateTime(current_date[1])
 
 
-def save_mold_to_file(filter_mold, path_filtr_dir, mold_name):
+def save_mold_to_file(filter_mold: dict[str, dict] = None,
+                      path_filter_dir: str = "",
+                      mold_name: str = ""):
+    """
+    Сохранить файл шаблона фильтрации
+    :param filter_mold: Словарь с настройками
+    :param path_filter_dir: путь к директории с шаблонами
+    :param mold_name: имя файла шаблона
+    :return:
+    """
+    if (filter_mold is None) or (path_filter_dir == "") or (mold_name == ""):
+        return
+
     parser = ConfigParser(inline_comment_prefixes="#")
     parser.read_dict(filter_mold)
-    file = os.path.join(os.getcwd() + "/" + path_filtr_dir, mold_name)
+    file = os.path.join(os.getcwd() + "/" + path_filter_dir, mold_name)
     with open(file, 'w') as configfile:
         parser.write(configfile)
 
 
-def read_mold_file(path_filtr_dir, filename):
+def read_mold_file(path_filter_dir: str = None, filename: str = None):
+    """
+    Прочитать файл шаблона фильтрации
+    :param path_filter_dir: путь к директории с шаблонами
+    :param filename: имя файла шаблона
+    :return: Словарь с настройками
+    """
+    if (filename is None) or (path_filter_dir is None):
+        return None
+
     parser = ConfigParser(inline_comment_prefixes="#")
-    parser.read(os.path.join(os.getcwd() + "/" + path_filtr_dir, filename))
+    parser.read(os.path.join(os.getcwd() + "/" + path_filter_dir, filename))
     conf = {}
     try:
         for section in parser.sections():
@@ -838,7 +1031,7 @@ def read_mold_file(path_filtr_dir, filename):
                 conf[section][key] = val
     except (NoSectionError, NoOptionError) as e:
         logging.error(str(e))
-        return
+        return None
     return conf
 
 
@@ -847,13 +1040,19 @@ class ActionView:
     Клас взаимодействия с окном Анализа
     """
 
-    def __init__(self, main_form: GuiFormMain):
+    def __init__(self, main_form: GuiFormMain = None):
+        """
+        Конструктор взаимодействий с Анализом
+        :param main_form: Экземпляр главной формы
+        """
+        if main_form is None:
+            raise ValueError("Ошибка создания ActionView")
 
         self.main_form = main_form
-        self.main_form.tabViewer.setEnabled(False)
+        """Главная форма"""
 
-        self.figGraphPolar, self.axGraphPolar = self.createGraphPolar()
-        self.figGraphTime, self.axGraphTime, self.ToolGraphTime = self.createGraphTime()
+        # Настройка формы
+        self.main_form.tabViewer.setEnabled(False)
 
         self.main_form.tableListKA.header().setStretchLastSection(False)
         self.main_form.tableListKA.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -865,16 +1064,31 @@ class ActionView:
         self.main_form.buttInvertCheck.setVisible(False)
         self.main_form.buttDelNoCheck.setVisible(False)
 
-        self.all_angs = dict()
-        self.ang_Line = dict()  # Time, TimeShadow, polar, polarShadow
-        self.ang_Line_Check = set()  # Time, TimeShadow, polar, polarShadow
+        # Создание графиков
+        self.figGraphPolar, self.axGraphPolar = self.createGraphPolar()
+        self.figGraphTime, self.axGraphTime, self.ToolGraphTime = self.createGraphTime()
 
-        # Select
+        # Обявление Переменных
+        self.all_angs = dict()
+        """Все анги из каталога"""
+
+        self.ang_Line = dict()
+        """ Словарь отрисованных фигур\n
+        dict(Name_Ang : Line2D,Line2D,Line2D,Line2D,Line2D)\n
+        [0]Time, [1]TimeShadow, [2]polar, [3]polarShadow \n 
+        [4]polarStartDot"""
+
+        self.ang_Line_Check = set()
+        """Не нужен??? """
+
         self.selectAngGraph = set()
-        # self.listCheckAng = set()
+        """ Список имён выбранных ANG файлов ***.ang:str"""
 
         self.selectEffectsSel = [pe.Stroke(linewidth=5, foreground='magenta'), pe.Normal()]
+        """"Стиль эффекта для выделенных фигур"""
+
         self.selectEffectsUnsel = [pe.Stroke(), pe.Normal()]
+        """"Стиль эффекта для невыделенных фигур"""
 
         inf_label = list(zip(["Номер", "Имя", "Идентификатор", "Страна", "Запущен", "Период",
                               "Время начала", "Время конца", "Дальность", "Угол"],
@@ -882,8 +1096,9 @@ class ActionView:
                               "TIME_START", "TIME_STOP", "MAX_DISTANS", "MAX_EVAL"]))
 
         self.important_inf = dict(zip(range(10), inf_label))
+        """Сгенерированный словарь с для вывода информации о КА"""
 
-        self.updateKAData()
+        self.update_ka_data()
         # threading.Thread(target=self.updateKAData,
         #                  args=()).start()
 
@@ -891,7 +1106,11 @@ class ActionView:
             # self.main_form.tabWidget.setCurrentIndex(2)
             self.main_form.set_tab_view_current_index(2)
 
-    def createGraphPolar(self):
+    def createGraphPolar(self) -> tuple[plt.Figure, plt.PolarAxes]:
+        """
+        Создание полярного графика
+        :return: Поле для графика, График
+        """
 
         fig, ax = plt.subplots(facecolor="#e5e5e5", subplot_kw={'projection': 'polar'})
         ax.set_facecolor("#e5e5e5")
@@ -904,7 +1123,8 @@ class ActionView:
         return fig, ax
 
     @staticmethod
-    def graph_polar_tuner(ax):
+    def graph_polar_tuner(ax: plt.PolarAxes):
+        """Настройка полей полярного графика"""
 
         ax.set_theta_zero_location("S")  # Начало север
         # ax.set_theta_direction(-1)  # Отразить
@@ -919,7 +1139,11 @@ class ActionView:
             compass += compass[:1]
             ax.set_xticks(compass[:-1], labels)
 
-    def createGraphTime(self):
+    def createGraphTime(self) -> tuple[plt.Figure, plt.Axes, NavigationToolbar]:
+        """"
+        Создание графика Аз/Время
+        :return: Поле для графика, График, Панель управления графиком
+        """
 
         fig, ax = plt.subplots(facecolor="#e5e5e5")
         ax.set_facecolor("#e5e5e5")
@@ -941,7 +1165,8 @@ class ActionView:
         return fig, ax, toolbar
 
     @staticmethod
-    def graph_time_tuner(ax):
+    def graph_time_tuner(ax: plt.Axes):
+        """Настройка полей графика"""
         ax.grid(True)
 
         ax.set_ylabel("Elevation")
@@ -997,6 +1222,11 @@ class ActionView:
         # ax.grid(axis='x', which='minor', linewidth=1.5,  color='g')
 
     def clear_KA(self, flag_clear_dir=True):
+        """
+        Сброс отображаемых аппаратов
+        :param flag_clear_dir: очистить ANG директорию ДА/НЕТ
+        :return:
+        """
         # print("clear_KA")
 
         self.main_form.status_gui = "Очистка списка аппаратов"
@@ -1029,7 +1259,11 @@ class ActionView:
         self.set_enable_button(len(self.all_angs) != 0)
         # print("finish_claer")
 
-    def updateKAData(self):
+    def update_ka_data(self):
+        """
+        Отобразить ANG файлы с графиками
+        :return:
+        """
         # print("updateKAData")
 
         self.clear_KA(False)
@@ -1086,8 +1320,18 @@ class ActionView:
                     d = current_sat.get(ang)
                     # --------Отрисовка на графиках---------
 
-                    df_shine = d[d["Ph"] != 0.0]
-                    df_shadow = d[d["Ph"] == 0.0]
+                    # df_shine = d[d["Ph"] != 0.0]
+                    # df_shadow = d[d["Ph"] == 0.0]
+
+                    df_shine = d.copy(deep=True)
+                    df_shine['Az'] = np.deg2rad(df_shine['Az'].values)
+                    df_shine.loc[df_shine["Ph"] == 0, 'Time'] = NaT
+                    df_shine.loc[df_shine["Ph"] == 0, 'Az'] = np.nan
+
+                    df_shadow = d.copy(deep=True)
+                    df_shadow['Az'] = np.deg2rad(df_shadow['Az'].values)
+                    df_shadow.loc[df_shadow["Ph"] != 0, 'Time'] = NaT
+                    df_shadow.loc[df_shadow["Ph"] != 0, 'Az'] = np.nan
 
                     self.ang_Line[ang] = [
                         self.axGraphTime.plot(df_shine.Time.values, df_shine.Elev.values, linewidth=2, )[0],
@@ -1095,9 +1339,11 @@ class ActionView:
                                               linewidth=1, color="white")[0],
                         # linewidth= 1, color="grey", marker='.' , markersize = 1)[0],
 
-                        self.axGraphPolar.plot(np.deg2rad(df_shine.Az.values), 90 - df_shine.Elev.values,
+                        self.axGraphPolar.plot(df_shine.Az.values,
+                                               90 - df_shine.Elev.values,
                                                visible=False, linewidth=2)[0],
-                        self.axGraphPolar.plot(np.deg2rad(df_shadow.Az.values), 90 - df_shadow.Elev.values,
+                        self.axGraphPolar.plot(df_shadow.Az.values,
+                                               90 - df_shadow.Elev.values,
                                                visible=False, linewidth=1, color="white")[0],
                         # visible = False, linewidth = 1, color = "grey", marker = '.', markersize = 1)[0]
 
@@ -1114,7 +1360,8 @@ class ActionView:
                                                     #        len(df_shine) != 0
                                                     #        else Qt.white))
                                                     QBrush(QColor(self.ang_Line[ang][0].get_color()),
-                                                           Qt.SolidPattern if len(df_shine) != 0 else Qt.Dense2Pattern))
+                                                           # Qt.SolidPattern if len(df_shine) != 0 else Qt.Dense2Pattern))
+                                                           Qt.SolidPattern if df_shine.Time.notna().sum() != 0 else Qt.Dense2Pattern))
 
                     # ========================================
                 # self.tableListKA.addTopLevelItem(itemKa);
@@ -1146,7 +1393,12 @@ class ActionView:
 
         self.main_form.status_gui = ""
 
-    def set_enable_button(self, state_enable=False):
+    def set_enable_button(self, state_enable: bool = False):
+        """
+        Установить доступность кнопок управления окна
+        :param state_enable: доступность кнопок
+        :return:
+        """
         self.main_form.calicClearAngDirButt.setEnabled(state_enable)
         self.main_form.buttResetSelection.setEnabled(state_enable)
         self.main_form.buttOnlyCheck.setEnabled(state_enable)
@@ -1155,6 +1407,12 @@ class ActionView:
         self.main_form.viewButtSieve.setEnabled(state_enable)
 
     def fillKaInfo(self, id_ka: int, ang_name: str):
+        """
+        Вывод информации о КА и уточнение из ANG
+        :param id_ka: NORAD КА
+        :param ang_name: имя ANG файла
+        :return:
+        """
         # print("fillKaInfo")
 
         dataKA = self.main_form.manager.get_sat_info(id_ka)
@@ -1188,8 +1446,8 @@ class ActionView:
     def get_ang_info(self, id_ka: int, ang_name: str) -> dict:
         """
         Получит информацию по ANG файлу
-        :param id_ka:
-        :param ang_name:
+        :param id_ka: номер КА
+        :param ang_name: Имя файла с проходом
         :return: dict("TIME_START":str, "TIME_STOP":str, "MAX_DISTANS":str, "MAX_EVAL:str")
         """
         data_ang = dict()
@@ -1200,29 +1458,39 @@ class ActionView:
         return data_ang
 
     def slotSelectKaList(self):
-        # start_time = time.time()
+        """
+        Обработка события выделения строк
+        :return:
+        """
 
-        newSelectAng = set()
+        selectedColumns = self.main_form.tableListKA.selectedItems()
+        """Список выделенных строк:list[QTreeWidgetItem]"""
 
+        if len(selectedColumns) == 0:
+            self.view_butt_selection_reset()
+            return
+
+        # Сделать все фигуры на графике прозрачными
         if not self.selectAngGraph:  # нет выбранных
             for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
                 self.ang_Line[keyLines][1].set(lw=1, alpha=0.2, path_effects=[pe.Stroke(), pe.Normal()])
 
+        newSelectAng = set()
+        """Выделенные впервые"""
+
+        # Очистить таблицу информации о КА
         self.main_form.tableKAInfo.clear()
-
-        selectedColumns = self.main_form.tableListKA.selectedItems()
-
-        if len(selectedColumns) == 0:
-            self.view_butt_selection_reset()
 
         # Заполнение информации
         if len(selectedColumns) == 1:
-            idKA = (int(selectedColumns[0].data(0, Qt.EditRole)  # если родителя нет
-                        if (selectedColumns[0].parent() is None)
-                        else selectedColumns[0].parent().data(0, Qt.EditRole)))  # если родитель есть
+            # Получить номер КА
+            idKA: int = (int(selectedColumns[0].data(0, Qt.EditRole)  # если родителя нет
+                             if (selectedColumns[0].parent() is None)
+                             else selectedColumns[0].parent().data(0, Qt.EditRole)))  # если родитель есть
 
-            ang_name = selectedColumns[0].data(1, Qt.EditRole)
+            # Получить имя ANG файла
+            ang_name: str = selectedColumns[0].data(1, Qt.EditRole)
 
             self.fillKaInfo(idKA, ang_name)
 
@@ -1230,16 +1498,19 @@ class ActionView:
         # Selected New
         for item in selectedColumns:
 
+            # Проверка выделен ли ANG
             if item.data(1, Qt.EditRole) in self.selectAngGraph:
                 newSelectAng.add(item.data(1, Qt.EditRole))
-                continue  # Если КА уже отображён
+                continue  # Если ANG уже выделен
 
             if item.childCount() == 0:
+                # Если КА имеет 1 ANG
                 newSelectAng.add(
                     self.selectGraph(item.data(1, Qt.EditRole))
                 )
 
             else:
+                # Если КА имеет >1 ANG
                 for childIndex in range(item.childCount()):  # проход по вложенным
                     newSelectAng.add(
                         self.selectGraph(item.child(childIndex).data(1, Qt.EditRole))
@@ -1247,15 +1518,18 @@ class ActionView:
 
         # ===========================
         #   Unselected old
+        # Проход по строкам с которых сняли выделение
         for item in self.selectAngGraph - newSelectAng:
             self.selectAngGraph.discard(
                 self.selectGraph(item, True)
             )
 
+        # Добавление впервые выделенных в список выделенных
         self.selectAngGraph.update(newSelectAng)
 
         # print('repaint time: ', time.time() - start_time)
 
+        # Перерисовка графиков (Самая долгая)
         self.figGraphPolar.canvas.draw()
         self.figGraphPolar.canvas.flush_events()
         self.figGraphTime.canvas.draw()
@@ -1265,7 +1539,15 @@ class ActionView:
         # print('end time: ', time.time() - start_time)
         # print("\n")
 
-    def selectGraph(self, angName: str, unselection=False) -> str:
+    def selectGraph(self, angName: str, unselection: bool = False) -> str:
+        """
+        Функция выделения фигур на графиках
+
+        :param angName: имя Ang Файла для взаимодействия
+        :param unselection:
+        :return: имя Ang Файла
+        """
+
         if not self.ang_Line:
             return ''
 
@@ -1287,8 +1569,11 @@ class ActionView:
 
     def view_butt_selection_reset(self):
         """
-        Отобразить всё
+        Обработка нажатия кнопки: \n
+        Сброс выбора
         """
+        if self.main_form.tableListKA.topLevelItemCount() == 0:
+            return
 
         self.main_form.tableListKA.clearSelection()
 
@@ -1296,8 +1581,7 @@ class ActionView:
             self.selectGraph(item, True)
         self.selectAngGraph.clear()
 
-        size2 = len(self.selectAngGraph) == 0
-        if size2:  # нет выбранных
+        if len(self.selectAngGraph) == 0:  # нет выбранных
             for keyLines in self.ang_Line_Check if bool(self.ang_Line_Check) else self.ang_Line.keys():
                 self.ang_Line[keyLines][0].set(lw=2, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
                 self.ang_Line[keyLines][1].set(lw=1, alpha=1, path_effects=[pe.Stroke(), pe.Normal()])
@@ -1305,12 +1589,14 @@ class ActionView:
         self.figGraphPolar.canvas.draw()
         self.figGraphTime.canvas.draw()
 
-    def view_butt_show_only_marked(self, check_state=True):
+    def view_butt_show_only_marked(self, check_state: bool = True):
         """
+        Обработка нажатия кнопки: \n
         Отобразить только выделенные?
-
         :param check_state: Отобразить только выделенные Да/Нет:
         """
+        if len(self.all_angs) == 0:
+            return
 
         for angSet in self.ang_Line.values():
             angSet[0].set_visible(not check_state)
@@ -1342,14 +1628,20 @@ class ActionView:
 
     def view_butt_move_cu(self):
         """
-        Перенос целеуказаний в новую папку
+        Обработка нажатия кнопки: \n
+        Копирование целеуказаний в новую папку
         :return:
         """
+
+        if len(self.all_angs) == 0:
+            return
+
         self.main_form.show_massage_method("Копирование данных")
         self.main_form.viewButtMoveCU.setEnabled(False)
         self.main_form.repaint()
+
         path = QFileDialog.getExistingDirectory(self.main_form,
-                                                "Open Directory",
+                                                "Копировать",
                                                 os.getcwd(),
                                                 QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
                                                 )
@@ -1362,7 +1654,17 @@ class ActionView:
         # print("moveAng")
 
     def view_butt_sieve(self):
+        """
+        Обработка нажатия кнопки: \n
+        Прореживание
+        """
+
+        if len(self.all_angs) == 0:
+            return
+
+        self.main_form.show_massage_method("Прореживание данных")
         self.main_form.viewButtSieve.setEnabled(False)
         self.main_form.manager.thin_out(self.main_form.viewButtSieveEdit.value())
-        self.updateKAData()
+        self.update_ka_data()
         self.main_form.viewButtSieve.setEnabled(True)
+        self.main_form.show_massage_method("")

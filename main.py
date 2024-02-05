@@ -77,8 +77,10 @@ if __name__ == "__main__":
 
         try:
             app.window = GuiFormMain(current_manager, splash.showMessage)
-        except SystemExit:
+        except (SystemExit, ValueError) as e:
             splash.close()
+            print(f"Error {e}")
+            exit()
 
         # rect = app.window.frameGeometry()
         # rect.moveCenter(app.desktop().availableGeometry().center())

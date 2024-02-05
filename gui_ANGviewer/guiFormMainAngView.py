@@ -734,7 +734,7 @@ class Ui_guiFormMain(object):
         self.toolBar.addAction(self.buttViewer)
 
         self.retranslateUi(guiFormMain)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(guiFormMain)
 
     def retranslateUi(self, guiFormMain):
@@ -821,7 +821,7 @@ class Ui_guiFormMain(object):
         self.calicFilterByTypeBox.setTitle(_translate("guiFormMain", "Фильтровать по типу"))
         self.calicFilterByTypeCheckPayload.setText(_translate("guiFormMain", "Полезная нагрузка"))
         self.calicFilterByTypeCheckBody.setText(_translate("guiFormMain", "Р/Б"))
-        self.calicFilterByTypeCheckDebris.setText(_translate("guiFormMain", "Прочий мусор"))
+        self.calicFilterByTypeCheckDebris.setText(_translate("guiFormMain", "Прочие"))
         self.calicButtCancel.setText(_translate("guiFormMain", "Отмена"))
         self.calicButtApply.setText(_translate("guiFormMain", "Применить"))
         self.buttResetSelection.setText(_translate("guiFormMain", "Сбросить выделение"))

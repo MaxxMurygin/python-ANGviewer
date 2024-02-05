@@ -21,7 +21,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabSettings">
        <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -1366,7 +1366,7 @@
                 <item>
                  <widget class="QCheckBox" name="calicFilterByTypeCheckDebris">
                   <property name="text">
-                   <string>Прочий мусор</string>
+                   <string>Прочие</string>
                   </property>
                  </widget>
                 </item>
