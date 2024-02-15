@@ -1323,12 +1323,12 @@ class ActionView:
                     # df_shine = d[d["Ph"] != 0.0]
                     # df_shadow = d[d["Ph"] == 0.0]
 
-                    df_shine = d.copy(deep=True)
+                    df_shine = d[['Time', 'Az', "Elev", "Ph"]].copy(deep=True)
                     df_shine['Az'] = np.deg2rad(df_shine['Az'].values)
                     df_shine.loc[df_shine["Ph"] == 0, 'Time'] = NaT
                     df_shine.loc[df_shine["Ph"] == 0, 'Az'] = np.nan
 
-                    df_shadow = d.copy(deep=True)
+                    df_shadow = d[['Time', 'Az', "Elev", "Ph"]].copy(deep=True)
                     df_shadow['Az'] = np.deg2rad(df_shadow['Az'].values)
                     df_shadow.loc[df_shadow["Ph"] != 0, 'Time'] = NaT
                     df_shadow.loc[df_shadow["Ph"] != 0, 'Az'] = np.nan
@@ -1361,7 +1361,9 @@ class ActionView:
                                                     #        else Qt.white))
                                                     QBrush(QColor(self.ang_Line[ang][0].get_color()),
                                                            # Qt.SolidPattern if len(df_shine) != 0 else Qt.Dense2Pattern))
-                                                           Qt.SolidPattern if df_shine.Time.notna().sum() != 0 else Qt.Dense2Pattern))
+                                                           Qt.SolidPattern if
+                                                           df_shine.Time.notna().sum() != 0 else
+                                                           Qt.Dense2Pattern))
 
                     # ========================================
                 # self.tableListKA.addTopLevelItem(itemKa);
