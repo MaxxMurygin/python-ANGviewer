@@ -4,7 +4,7 @@ import os
 from datetime import timedelta, datetime
 from math import cos
 
-import pandas
+# import pandas
 import pandas as pd
 from skyfield import almanac
 from skyfield.api import load
@@ -152,7 +152,7 @@ class Calculator:
             ts_current = ts_current + timedelta(seconds=step)
             t_current_in_sec = t_current_in_sec + step
 
-        df = pandas.DataFrame(arr, columns=["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"])
+        df = pd.DataFrame(arr, columns=["Time", "Distance", "Az", "Elev", "RA", "DEC", "Ph"])
         df["Az"] = rotate_by_pi(df["Az"])
         if df["Time"].max() > 86400:
             df["Time"] = correct_midnight(df["Time"])

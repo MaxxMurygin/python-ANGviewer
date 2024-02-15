@@ -23,21 +23,18 @@ class EffectiveManager:
         self.ang_dict = dict()
         self.status = ""
         self.config = get_config_from_file(config_file)
-        # self.tle_dir = self.config["Path"]["tle_directory"]
-        # self.ang_dir = self.config["Path"]["ang_directory"]
-        # self.cat_dir = self.config["Path"]["cat_directory"]
-        # self.cat_file = self.config["Path"]["cat_file"]
-        # self.full_tle_file = self.config["TLE"]["default_file"]
-        # self.eph_file = self.config["Path"]["eph_file"]
-        # self.delete_existing = bool(self.config["Path"]["delete_existing"] == "True")
         self.__init_vars()
         self.check_files()
+        print("Files checked")
         self.catalog = self.__get_catalog()
+        print("Cat get")
         self.mp_manager = multiprocessing.Manager()
+        print("MP manager created")
         self.lock = self.mp_manager.Lock()
         self.global_ang_list = self.mp_manager.list()
         self.global_counter = self.mp_manager.dict()
         self.global_commander = ""
+        print("Init complete")
 
     def calculate(self, tle_file):
         work_cat = self.catalog
@@ -138,7 +135,12 @@ class EffectiveManager:
             pass
 
     def delete_all(self):
-        utils.thin_out(self.ang_dir, 0)
+        files = os.listdir(utils.check_dirs(self.ang_dir))
+        for file in files:
+            try:
+                os.remove(os.path.join(self.ang_dir, file))
+            except IOError:
+                logging.error("<thin_out> Не могу удалить файл " + file)
         self.ang_dict.clear()
 
     def get_config(self):
@@ -162,10 +164,12 @@ class EffectiveManager:
         self.global_commander = "STOP"
 
     def copy_ang_to_dst(self, dst):
+        self.status = "Идет копирование..."
         try:
             shutil.copytree(os.path.join(os.getcwd(), self.ang_dir), dst, dirs_exist_ok=True)
         except IOError as e:
             logging.error(e)
+        self.status = ""
 
     def get_sunrise_sunset(self):
         """
@@ -253,7 +257,7 @@ class EffectiveManager:
             print(self.status)
             sleep(2)
         perf = datetime.now() - perf_start
-        calc_time_str = f"Время расчета : {perf.seconds + perf.microseconds / 1000000} сек"
+        calc_time_str = f"Время расчета : {round((perf.seconds + perf.microseconds / 1000000), 2)} сек"
         print(calc_time_str)
         self.status = calc_time_str + ". Идет запись результатов расчета..."
         for items in self.global_ang_list:

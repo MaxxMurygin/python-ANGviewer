@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import os
 import time
 from configparser import ConfigParser
@@ -52,6 +53,9 @@ class GifSplashScreen(QSplashScreen):
 
 
 if __name__ == "__main__":
+    if sys.platform.startswith('win'):
+        multiprocessing.freeze_support()
+
     app = QtWidgets.QApplication(sys.argv)
 
     splash = GifSplashScreen()

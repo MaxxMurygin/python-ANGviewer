@@ -23,13 +23,13 @@ if __name__ == "__main__":
 
     # manager.copy_to_dst("c:\!nu\EOP")
 
-    manager.calculate(conf["TLE"]["default_file"])
+    # manager.calculate(conf["TLE"]["default_file"])
     # t0, t1 = manager.get_sunrise_sunset()
     # print(t0, t1)
     # dt = manager.get_full_tle_date()
     # manager.thin_out(1)
-    # app = Viewer()  # Отображение
-    # app.view(ang_dir)
+    app = Viewer()  # Отображение
+    app.view(ang_dir)
 
     # all_angs = manager.get_ang_dict()
     # for norad_id in all_angs.keys():

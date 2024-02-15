@@ -42,10 +42,6 @@ def download_tle(tle_dir, norad_cred):
 
 def download_cat(norad_cred, cat_dir="CAT"):
     catalog_file = os.path.join(os.getcwd(), cat_dir, "catalog.csv")
-    # if os.path.isfile(catalog_file):
-    #     cat_file_time = datetime.fromtimestamp(os.path.getmtime(catalog_file))
-    #     if datetime.now() - cat_file_time < timedelta(days=30):
-    #         return
     url = "https://www.space-track.org/basicspacedata/query/class/satcat/orderby/NORAD_CAT_ID%20asc/format/csv"
     dl_spacetrack(url, catalog_file, norad_cred)
 
