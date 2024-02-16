@@ -25,16 +25,12 @@ class EffectiveManager:
         self.config = get_config_from_file(config_file)
         self.__init_vars()
         self.check_files()
-        print("Files checked")
         self.catalog = self.__get_catalog()
-        print("Cat get")
         self.mp_manager = multiprocessing.Manager()
-        print("MP manager created")
         self.lock = self.mp_manager.Lock()
         self.global_ang_list = self.mp_manager.list()
         self.global_counter = self.mp_manager.dict()
         self.global_commander = ""
-        print("Init complete")
 
     def calculate(self, tle_file):
         work_cat = self.catalog
