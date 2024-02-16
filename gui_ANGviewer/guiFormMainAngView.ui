@@ -642,7 +642,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tabCalic">
-       <layout class="QGridLayout" name="gridLayout_3">
+       <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1,1,1,1">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -663,9 +663,6 @@
              <string>Шаблоны</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">
-             <property name="sizeConstraint">
-              <enum>QLayout::SetMinAndMaxSize</enum>
-             </property>
              <property name="leftMargin">
               <number>0</number>
              </property>
@@ -680,16 +677,10 @@
              </property>
              <item>
               <widget class="QListWidget" name="calicTemplateList">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="maximumSize">
+               <property name="minimumSize">
                 <size>
                  <width>250</width>
-                 <height>16777215</height>
+                 <height>0</height>
                 </size>
                </property>
                <property name="focusPolicy">
@@ -725,12 +716,6 @@
                </property>
                <item row="1" column="0">
                 <widget class="QPushButton" name="calicTemplateButDel">
-                 <property name="maximumSize">
-                  <size>
-                   <width>120</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
                  <property name="text">
                   <string>Удалить шаблон</string>
                  </property>
@@ -738,12 +723,6 @@
                </item>
                <item row="1" column="1">
                 <widget class="QPushButton" name="calicTemplateButCancel">
-                 <property name="maximumSize">
-                  <size>
-                   <width>120</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
                  <property name="text">
                   <string>Отмена</string>
                  </property>
@@ -751,12 +730,6 @@
                </item>
                <item row="0" column="1">
                 <widget class="QPushButton" name="calicTemplateButSeveAs">
-                 <property name="maximumSize">
-                  <size>
-                   <width>120</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
                  <property name="text">
                   <string>Сохранить как</string>
                  </property>
@@ -764,12 +737,6 @@
                </item>
                <item row="0" column="0">
                 <widget class="QPushButton" name="calicTemplateButSeve">
-                 <property name="maximumSize">
-                  <size>
-                   <width>120</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
                  <property name="text">
                   <string>Сохранить</string>
                  </property>
@@ -866,9 +833,6 @@
            <string>Выбор каталога НУ</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
-           <property name="sizeConstraint">
-            <enum>QLayout::SetMinAndMaxSize</enum>
-           </property>
            <property name="leftMargin">
             <number>1</number>
            </property>
@@ -883,9 +847,6 @@
            </property>
            <item>
             <layout class="QHBoxLayout" name="calicTLEAllLeyout">
-             <property name="sizeConstraint">
-              <enum>QLayout::SetMinAndMaxSize</enum>
-             </property>
              <item>
               <widget class="QRadioButton" name="calicTLEAllRadio">
                <property name="text">
@@ -1433,7 +1394,7 @@
           <widget class="QWidget" name="horizontalLayoutWidget">
            <layout class="QHBoxLayout" name="layoutTop" stretch="3">
             <item>
-             <layout class="QHBoxLayout" name="layoutKAlistInfo">
+             <layout class="QHBoxLayout" name="layoutKAlistInfo" stretch="2,1,1,1">
               <item>
                <layout class="QHBoxLayout" name="layoutGraphPolar"/>
               </item>
@@ -1581,12 +1542,6 @@
                   <height>0</height>
                  </size>
                 </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>250</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
                 <property name="styleSheet">
                  <string notr="true">QTreeView::item { height: 16px;}</string>
                 </property>
@@ -1654,12 +1609,6 @@
                   <height>200</height>
                  </size>
                 </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>230</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
                 <property name="styleSheet">
                  <string notr="true">background-color: rgb(229, 229, 229);</string>
                 </property>
@@ -1667,6 +1616,9 @@
                  <enum>QFrame::NoFrame</enum>
                 </property>
                 <property name="verticalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="horizontalScrollBarPolicy">
                  <enum>Qt::ScrollBarAlwaysOff</enum>
                 </property>
                 <property name="editTriggers">
@@ -1692,9 +1644,6 @@
                 </property>
                 <attribute name="horizontalHeaderVisible">
                  <bool>false</bool>
-                </attribute>
-                <attribute name="horizontalHeaderDefaultSectionSize">
-                 <number>115</number>
                 </attribute>
                 <attribute name="verticalHeaderVisible">
                  <bool>false</bool>
