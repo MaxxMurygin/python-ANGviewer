@@ -188,6 +188,9 @@ def loop_check_manager_state(gui_form: GuiFormMain = None,
 
     old_status = ""
 
+
+    print("loopCheckManagerStateStart")
+
     while gui_form.flag_checked_state:
 
         new_status = f"{current_manager.get_status()}  {gui_form.get_status()}"
@@ -1235,6 +1238,9 @@ class ActionView:
             self.main_form.repaint()
 
         if len(self.all_angs) == 0:
+            self.main_form.status_gui = ""
+            if threading.current_thread().name == "MainThread":
+                self.main_form.repaint()
             return
 
         self.axGraphTime.cla()
@@ -1257,6 +1263,8 @@ class ActionView:
             self.main_form.manager.delete_all()
 
         self.set_enable_button(len(self.all_angs) != 0)
+
+        self.main_form.status_gui = ""
         # print("finish_claer")
 
     def update_ka_data(self):
