@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1166</width>
+    <width>1260</width>
     <height>797</height>
    </rect>
   </property>
@@ -21,7 +21,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tabSettings">
        <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -642,7 +642,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tabCalic">
-       <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1,1,1,1">
+       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,0,1">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -655,7 +655,7 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item row="0" column="0">
+        <item>
          <layout class="QVBoxLayout" name="calicLayout">
           <item>
            <widget class="QGroupBox" name="calicTemplateBox">
@@ -749,85 +749,7 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="4">
-         <widget class="QGroupBox" name="calicFilterBox">
-          <property name="title">
-           <string>Настройки расчёта</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_6">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <item>
-              <widget class="QLabel" name="calicSystemStreamLabel">
-               <property name="text">
-                <string>Количество потоков для расчета:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="calicSystemStreamEdit"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="calicCheckClearCuDir">
-             <property name="text">
-              <string>Удалять предыдущие ЦУ</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="calicCheckCalculatePhase">
-             <property name="text">
-              <string>Cчитать фазу</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="Line" name="line_4">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="calicStartButt">
-             <property name="text">
-              <string>Начать расчёт</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="calicStopButt">
-             <property name="text">
-              <string>Остановиить расчёт</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="calicClearAngDirButt">
-             <property name="text">
-              <string>Очистить ANG директорию</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer_4">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="0" column="1">
+        <item>
          <widget class="QGroupBox" name="calicTleBox">
           <property name="title">
            <string>Выбор каталога НУ</string>
@@ -892,16 +814,10 @@
              <property name="enabled">
               <bool>false</bool>
              </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
+             <property name="minimumSize">
               <size>
                <width>350</width>
-               <height>16777215</height>
+               <height>0</height>
               </size>
              </property>
              <property name="styleSheet">
@@ -932,7 +848,7 @@
           </layout>
          </widget>
         </item>
-        <item row="0" column="3">
+        <item>
          <layout class="QVBoxLayout" name="calicPreFilterLayout">
           <item>
            <widget class="QGroupBox" name="calicFilterTimeBox">
@@ -947,12 +863,6 @@
               <layout class="QHBoxLayout" name="calicFilterTimeLayout">
                <item>
                 <widget class="QLabel" name="calicFilterTimeLabelMin">
-                 <property name="maximumSize">
-                  <size>
-                   <width>30</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
                  <property name="text">
                   <string>с</string>
                  </property>
@@ -973,12 +883,6 @@
                </item>
                <item>
                 <widget class="QLabel" name="calicFilterTimeLabelMax">
-                 <property name="maximumSize">
-                  <size>
-                   <width>30</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
                  <property name="text">
                   <string>до</string>
                  </property>
@@ -1008,12 +912,6 @@
           </item>
           <item>
            <widget class="QGroupBox" name="calicPreFilterBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="title">
              <string>Фильтрация</string>
             </property>
@@ -1046,12 +944,6 @@
                    <size>
                     <width>170</width>
                     <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>250</width>
-                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="placeholderText">
@@ -1146,12 +1038,6 @@
                 </property>
                 <item>
                  <widget class="QLabel" name="calicFilterElevationLableMin">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
                   <property name="text">
                    <string>Min.</string>
                   </property>
@@ -1166,12 +1052,6 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="calicFilterElevationLabelMax">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
                   <property name="text">
                    <string>Max.</string>
                   </property>
@@ -1242,12 +1122,6 @@
                <layout class="QHBoxLayout" name="horizontalLayout_10">
                 <item>
                  <widget class="QLabel" name="calicFilterDistanceLabelMin">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
                   <property name="text">
                    <string>Min.</string>
                   </property>
@@ -1262,12 +1136,6 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="calicFilterDistanceLabelMax">
-                  <property name="maximumSize">
-                   <size>
-                    <width>30</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
                   <property name="text">
                    <string>Max.</string>
                   </property>
@@ -1370,6 +1238,84 @@
           </item>
          </layout>
         </item>
+        <item>
+         <widget class="QGroupBox" name="calicFilterBox">
+          <property name="title">
+           <string>Настройки расчёта</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QLabel" name="calicSystemStreamLabel">
+               <property name="text">
+                <string>Количество потоков для расчета:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="calicSystemStreamEdit"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="calicCheckClearCuDir">
+             <property name="text">
+              <string>Удалять предыдущие ЦУ</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="calicCheckCalculatePhase">
+             <property name="text">
+              <string>Cчитать фазу</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="Line" name="line_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="calicStartButt">
+             <property name="text">
+              <string>Начать расчёт</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="calicStopButt">
+             <property name="text">
+              <string>Остановиить расчёт</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="calicClearAngDirButt">
+             <property name="text">
+              <string>Очистить ANG директорию</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tabViewer">
@@ -1394,7 +1340,7 @@
           <widget class="QWidget" name="horizontalLayoutWidget">
            <layout class="QHBoxLayout" name="layoutTop" stretch="3">
             <item>
-             <layout class="QHBoxLayout" name="layoutKAlistInfo" stretch="2,1,1,1">
+             <layout class="QHBoxLayout" name="layoutKAlistInfo" stretch="2,0,1,1">
               <item>
                <layout class="QHBoxLayout" name="layoutGraphPolar"/>
               </item>
@@ -1404,12 +1350,6 @@
                  <size>
                   <width>200</width>
                   <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>200</width>
-                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="title">
