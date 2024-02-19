@@ -146,9 +146,18 @@ class GuiFormMain(QtWidgets.QMainWindow, Ui_guiFormMain):
         # после загрузки переключаем метод вывода сообщений
         self.show_massage_method = self.statusbar.showMessage
 
+        # self.installEventFilter(self)
+
     def closeEvent(self, event):
         self.flag_checked_state = False
         self.loop_check.join()
+
+    # def eventFilter(self, source, event):
+    #
+    #     if source == self.layoutKAlistInfo:
+    #         print(event.type())
+    #
+    #     return super(GuiFormMain, self).eventFilter(source, event)
 
     def get_status(self) -> str:
         """
@@ -187,7 +196,6 @@ def loop_check_manager_state(gui_form: GuiFormMain = None,
         return None
 
     old_status = ""
-
 
     print("loopCheckManagerStateStart")
 
@@ -1094,12 +1102,13 @@ class ActionView:
         """"Стиль эффекта для невыделенных фигур"""
 
         inf_label = list(zip(["Номер", "Имя", "Идентификатор", "Страна", "Запущен", "Период",
-                              "Время начала", "Время конца", "Дальность", "Угол"],
+                              "Время начала", "Время конца", "max.Дальность", "max.Угол", "min.Дальность", "min.Угол"],
                              ["OBJECT_NUMBER", "OBJECT_NAME", "OBJECT_ID", "COUNTRY", "LAUNCH", "PERIOD",
-                              "TIME_START", "TIME_STOP", "MAX_DISTANS", "MAX_EVAL"]))
+                              "TIME_START", "TIME_STOP", "MAX_DISTANS", "MAX_EVAL", "MIN_DISTANS", "MIN_EVAL"]))
 
-        self.important_inf = dict(zip(range(10), inf_label))
+        self.important_inf = dict(zip(range(len(inf_label)), inf_label))
         """Сгенерированный словарь с для вывода информации о КА"""
+        self.main_form.tableKAInfo.setRowCount(len(self.important_inf))
 
         self.update_ka_data()
         # threading.Thread(target=self.updateKAData,
@@ -1438,8 +1447,6 @@ class ActionView:
                     not ang_name.endswith('.ang')):
                 break
 
-            self.main_form.tableKAInfo.insertRow(idInf)
-
             item_label = QTableWidgetItem()
             item_label.setData(Qt.EditRole, titleInf[0])
             self.main_form.tableKAInfo.setItem(idInf, 0, item_label)
@@ -1465,6 +1472,9 @@ class ActionView:
         data_ang.update({"TIME_STOP": self.all_angs[id_ka][ang_name]["Time"].max().strftime('%d-%m-%Y %H:%M')})
         data_ang.update({"MAX_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.max() / 1000:.2f} Км."})
         data_ang.update({"MAX_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.max():.2f}°"})
+        data_ang.update({"MIN_DISTANS": f"{self.all_angs[id_ka][ang_name].Distance.min() / 1000:.2f} Км."})
+        data_ang.update({"MIN_EVAL": f"{self.all_angs[id_ka][ang_name].Elev.min():.2f}°"})
+
         return data_ang
 
     def slotSelectKaList(self):

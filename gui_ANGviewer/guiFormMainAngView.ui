@@ -1111,7 +1111,7 @@
                 <bool>true</bool>
                </property>
                <property name="title">
-                <string>Фильтровать по дистанции</string>
+                <string>Фильтровать по дистанции в Км.</string>
                </property>
                <property name="checkable">
                 <bool>true</bool>
@@ -1337,10 +1337,13 @@
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
+          <property name="handleWidth">
+           <number>15</number>
+          </property>
           <widget class="QWidget" name="horizontalLayoutWidget">
            <layout class="QHBoxLayout" name="layoutTop" stretch="3">
             <item>
-             <layout class="QHBoxLayout" name="layoutKAlistInfo" stretch="2,0,1,1">
+             <layout class="QHBoxLayout" name="layoutKAlistInfo" stretch="2,0,0,1">
               <item>
                <layout class="QHBoxLayout" name="layoutGraphPolar"/>
               </item>
@@ -1536,7 +1539,7 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string/>
+                  <string>-</string>
                  </property>
                 </column>
                </widget>
@@ -1561,6 +1564,9 @@
                 <property name="horizontalScrollBarPolicy">
                  <enum>Qt::ScrollBarAlwaysOff</enum>
                 </property>
+                <property name="autoScroll">
+                 <bool>false</bool>
+                </property>
                 <property name="editTriggers">
                  <set>QAbstractItemView::NoEditTriggers</set>
                 </property>
@@ -1576,9 +1582,6 @@
                 <property name="gridStyle">
                  <enum>Qt::SolidLine</enum>
                 </property>
-                <property name="rowCount">
-                 <number>9</number>
-                </property>
                 <property name="columnCount">
                  <number>2</number>
                 </property>
@@ -1588,15 +1591,6 @@
                 <attribute name="verticalHeaderVisible">
                  <bool>false</bool>
                 </attribute>
-                <row/>
-                <row/>
-                <row/>
-                <row/>
-                <row/>
-                <row/>
-                <row/>
-                <row/>
-                <row/>
                 <column/>
                 <column/>
                </widget>
