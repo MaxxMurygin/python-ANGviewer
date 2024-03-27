@@ -4,7 +4,6 @@ import os
 from datetime import timedelta, datetime
 from math import cos
 
-# import pandas
 import pandas as pd
 from skyfield import almanac
 from skyfield.api import load
